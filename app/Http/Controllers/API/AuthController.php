@@ -16,44 +16,14 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
-/**
- * @group Autenticación
- *
- * APIs para gestionar la autenticación de usuarios
- */
 class AuthController extends Controller
 {
-    /**
-     * Registrar un nuevo usuario
-     *
-     * Crea una nueva cuenta de usuario en el sistema.
-     *
-     * @bodyParam name string required El nombre del usuario. Example: Juan Pérez
-     * @bodyParam email string required Email del usuario. Example: juan@example.com
-     * @bodyParam password string required Contraseña (mínimo 8 caracteres). Example: secreto123
-     * @bodyParam password_confirmation string required Confirmación de la contraseña. Example: secreto123
-     *
-     * @response 201 {
-     *  "user": {
-     *      "id": 1,
-     *      "name": "Juan Pérez",
-     *      "email": "juan@example.com"
-     *  },
-     *  "access_token": "1|laravel_sanctum_token",
-     *  "token_type": "Bearer"
-     * }
-     *
-     * @response 422 {
-     *  "message": "The email has already been taken.",
-     *  "errors": {
-     *    "email": ["Este correo ya está registrado."]
-     *  }
-     * }
-     */
+
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:50|unique:users',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => [
                 'required',
@@ -63,13 +33,51 @@ class AuthController extends Controller
                     ->mixedCase()
                     ->numbers()
             ],
+            'profile_picture' => 'nullable|string',
+            'bio' => 'nullable|string|max:500',
+            'location' => 'nullable|string|max:255',
+            'birthdate' => 'nullable|date',
+            'website' => 'nullable|string|max:255|url',
+            'phone' => 'nullable|string|max:20',
+            'instagram' => 'nullable|string|max:255',
+            'twitter' => 'nullable|string|max:255',
+            'facebook' => 'nullable|string|max:255',
+            'private_profile' => 'nullable|boolean',
+            'allow_mentions' => 'nullable|boolean',
+            'email_notifications' => 'nullable|boolean',
         ]);
 
-        $user = User::create([
+        // Preparamos los datos para la creación del usuario
+        $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-        ]);
+        ];
+
+        // Añadimos los campos opcionales si están presentes
+        $optionalFields = [
+            'username',
+            'profile_picture',
+            'bio',
+            'location',
+            'birthdate',
+            'website',
+            'phone',
+            'instagram',
+            'twitter',
+            'facebook',
+            'private_profile',
+            'allow_mentions',
+            'email_notifications'
+        ];
+
+        foreach ($optionalFields as $field) {
+            if (isset($validated[$field])) {
+                $userData[$field] = $validated[$field];
+            }
+        }
+
+        $user = User::create($userData);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -80,28 +88,6 @@ class AuthController extends Controller
         ], 201);
     }
 
-    /**
-     * Iniciar sesión
-     *
-     * Autentica al usuario y devuelve un token de acceso.
-     *
-     * @bodyParam email string required Email del usuario. Example: juan@example.com
-     * @bodyParam password string required Contraseña del usuario. Example: secreto123
-     *
-     * @response {
-     *  "user": {
-     *      "id": 1,
-     *      "name": "Juan Pérez",
-     *      "email": "juan@example.com"
-     *  },
-     *  "access_token": "1|laravel_sanctum_token",
-     *  "token_type": "Bearer"
-     * }
-     *
-     * @response 422 {
-     *  "message": "Las credenciales proporcionadas son incorrectas."
-     * }
-     */
     public function login(Request $request): JsonResponse
     {
         Log::info('Intento de login iniciado', [
@@ -179,65 +165,12 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Cerrar sesión
-     *
-     * Revoca el token de acceso actual del usuario.
-     *
-     * @authenticated
-     *
-     * @response {
-     *  "message": "Sesión cerrada correctamente"
-     * }
-     */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
-    /**
-     * Obtener usuario autenticado
-     *
-     * Devuelve la información del usuario actualmente autenticado.
-     *
-     * @authenticated
-     *
-     * @response {
-     *  "id": 1,
-     *  "name": "Juan Pérez",
-     *  "email": "juan@example.com",
-     *  "bio": "Amante de las cervezas artesanales",
-     *  "location": "Madrid, España",
-     *  "profile_picture": "https://example.com/avatars/juan.jpg",
-     *  "created_at": "2023-01-01T00:00:00.000000Z"
-     * }
-     */
-    public function me(Request $request): JsonResponse
-    {
-        return response()->json(new UserResource($request->user()->load([
-            'followers',
-            'following',
-            'checkIns',
-            'favorites'
-        ])));
-    }
-
-    /**
-     * Solicitar restablecimiento de contraseña
-     *
-     * Envía un correo con un enlace para restablecer la contraseña.
-     *
-     * @bodyParam email string required Email del usuario. Example: juan@example.com
-     *
-     * @response {
-     *  "message": "Se ha enviado un enlace para restablecer la contraseña"
-     * }
-     *
-     * @response 422 {
-     *  "message": "No podemos encontrar un usuario con ese correo electrónico."
-     * }
-     */
     public function forgotPassword(Request $request): JsonResponse
     {
         $request->validate(['email' => 'required|email']);
@@ -254,25 +187,6 @@ class AuthController extends Controller
             'email' => [__($status)],
         ]);
     }
-
-    /**
-     * Restablecer contraseña
-     *
-     * Restablece la contraseña del usuario usando el token recibido por email.
-     *
-     * @bodyParam token string required El token de reset recibido por email. Example: abcdef123456
-     * @bodyParam email string required Email del usuario. Example: juan@example.com
-     * @bodyParam password string required Nueva contraseña (mínimo 8 caracteres). Example: nuevaContraseña123
-     * @bodyParam password_confirmation string required Confirmación de la nueva contraseña. Example: nuevaContraseña123
-     *
-     * @response {
-     *  "message": "La contraseña ha sido restablecida correctamente"
-     * }
-     *
-     * @response 422 {
-     *  "message": "El token es inválido."
-     * }
-     */
     public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
@@ -309,25 +223,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Cambiar contraseña
-     *
-     * Permite al usuario autenticado cambiar su contraseña.
-     *
-     * @authenticated
-     *
-     * @bodyParam current_password string required La contraseña actual. Example: contraseñaActual123
-     * @bodyParam password string required Nueva contraseña (mínimo 8 caracteres). Example: nuevaContraseña123
-     * @bodyParam password_confirmation string required Confirmación de la nueva contraseña. Example: nuevaContraseña123
-     *
-     * @response {
-     *  "message": "Contraseña cambiada correctamente"
-     * }
-     *
-     * @response 422 {
-     *  "message": "La contraseña actual es incorrecta."
-     * }
-     */
     public function changePassword(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -339,6 +234,8 @@ class AuthController extends Controller
                 PasswordRule::min(8)
                     ->mixedCase()
                     ->numbers()
+                    ->letters()
+                    ->symbols()
             ],
         ]);
 
@@ -356,6 +253,35 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Contraseña cambiada correctamente',
+        ]);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'username' => 'nullable|string|max:50|unique:users,username,',
+            'email' => 'nullable|string|email|max:255|unique:users,email,',
+            'profile_picture' => 'nullable|string',
+            'bio' => 'nullable|string|max:500',
+            'location' => 'nullable|string|max:255',
+            'birthdate' => 'nullable|date',
+            'website' => 'nullable|string|max:255|url',
+            'phone' => 'nullable|string|max:20',
+            'instagram' => 'nullable|string|max:255',
+            'twitter' => 'nullable|string|max:255',
+            'facebook' => 'nullable|string|max:255',
+            'private_profile' => 'nullable|boolean',
+            'allow_mentions' => 'nullable|boolean',
+            'email_notifications' => 'nullable|boolean',
+        ]);
+
+        $user = $request->user();
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente',
+            'user' => new UserResource($user),
         ]);
     }
 }

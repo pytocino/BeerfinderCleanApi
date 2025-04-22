@@ -7,52 +7,25 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ReportResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        // Datos básicos del reporte
-        $data = [
+        return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
+            'reportable_type' => $this->reportable_type,
+            'reportable_id' => $this->reportable_id,
             'reason' => $this->reason,
             'details' => $this->details,
             'status' => $this->status,
-            'created_at' => $this->created_at->format('Y-m-d\TH:i:s.u\Z'),
+            'reviewed_by' => $this->reviewed_by,
+            'resolved_at' => $this->resolved_at,
+            'public' => $this->public,
+            'screenshot_url' => $this->screenshot_url,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'user' => $this->user,
+            'reviewer' => $this->reviewer,
+            'reportable' => $this->reportable,
         ];
-
-        // Información del usuario que reportó (si se cargó la relación)
-        if ($this->relationLoaded('user')) {
-            $data['reporter'] = [
-                'id' => $this->user->id,
-                'name' => $this->user->name,
-            ];
-        }
-
-        // Información básica sobre el contenido reportado
-        $data['content_type'] = $this->reportable_type;
-        $data['content_id'] = $this->reportable_id;
-
-        // Si el reporte fue resuelto
-        if ($this->resolved_at) {
-            $data['resolved_at'] = $this->resolved_at->format('Y-m-d\TH:i:s.u\Z');
-
-            // Información del administrador que lo revisó (si se cargó la relación)
-            if ($this->relationLoaded('reviewer')) {
-                $data['reviewer'] = [
-                    'id' => $this->reviewer->id,
-                    'name' => $this->reviewer->name,
-                ];
-            }
-        }
-
-        // Para administradores, incluir notas administrativas
-        if ($request->user() && $request->user()->is_admin) {
-            $data['admin_notes'] = $this->admin_notes;
-        }
-
-        return $data;
     }
 }

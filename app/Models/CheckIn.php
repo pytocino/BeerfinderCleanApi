@@ -21,12 +21,6 @@ class CheckIn extends Model
         'beer_id',
         'location_id',
         'rating',
-        'comment', // Cambié 'review' por 'comment' para consistencia con el controller
-        'photo_url',
-        'serving',
-        'purchase_price',
-        'purchase_currency',
-        'flavor_notes',
     ];
 
     /**
@@ -36,7 +30,6 @@ class CheckIn extends Model
      */
     protected $casts = [
         'rating' => 'decimal:1',
-        'flavor_notes' => 'array',
     ];
 
     /**
@@ -44,7 +37,7 @@ class CheckIn extends Model
      *
      * @var array
      */
-    protected $with = ['user'];
+    protected $with = ['user', 'beer'];
 
     /**
      * Obtiene el usuario que realizó el check-in.
@@ -68,21 +61,5 @@ class CheckIn extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
-    }
-
-    /**
-     * Obtiene los likes asociados al check-in.
-     */
-    public function likes(): HasMany
-    {
-        return $this->hasMany(Like::class);
-    }
-
-    /**
-     * Obtiene los comentarios asociados al check-in.
-     */
-    public function comments(): HasMany
-    {
-        return $this->hasMany(Comment::class);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Brewery extends Model
 {
@@ -25,6 +26,13 @@ class Brewery extends Model
         'description',
         'logo_url',
         'website',
+        'email',
+        'phone',
+        'instagram',
+        'facebook',
+        'twitter',
+        'cover_photo',
+        'founded'
     ];
 
     /**
@@ -35,6 +43,7 @@ class Brewery extends Model
     protected $casts = [
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'founded' => 'integer',
     ];
 
     /**

@@ -26,17 +26,20 @@ class Report extends Model
         'reviewed_by',
         'admin_notes',
         'resolved_at',
+        'public',
+        'screenshot_url',
+        'ip_address',
+        'user_agent'
     ];
 
     /**
-     * Los atributos que deben convertirse a fechas.
+     * Los atributos que deben ser convertidos.
      *
-     * @var array<int, string>
+     * @var array<string, string>
      */
-    protected $dates = [
-        'resolved_at',
-        'created_at',
-        'updated_at',
+    protected $casts = [
+        'resolved_at' => 'datetime',
+        'public' => 'boolean',
     ];
 
     /**
@@ -46,6 +49,8 @@ class Report extends Model
      */
     protected $hidden = [
         'admin_notes',
+        'ip_address',
+        'user_agent'
     ];
 
     /**

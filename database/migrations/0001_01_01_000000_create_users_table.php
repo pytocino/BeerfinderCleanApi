@@ -11,14 +11,32 @@ return new class extends Migration
      */
     public function up(): void
     {
+
+        // ...existing code...
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
             $table->string('profile_picture')->nullable();
             $table->text('bio')->nullable();
             $table->string('location')->nullable();
+            $table->date('birthdate')->nullable();
+            $table->string('website')->nullable();
+            $table->string('phone')->nullable();
+
+            // Redes sociales
+            $table->string('instagram')->nullable();
+            $table->string('twitter')->nullable();
+            $table->string('facebook')->nullable();
+
+            // Configuración y privacidad
+            $table->boolean('private_profile')->default(false);  // Si el perfil es privado
+            $table->boolean('allow_mentions')->default(true);    // Si permite menciones
+            $table->boolean('email_notifications')->default(true);
+            $table->timestamp('last_active_at')->nullable();     // Última actividad
+
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

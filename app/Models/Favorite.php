@@ -35,4 +35,18 @@ class Favorite extends Model
     {
         return $this->belongsTo(Beer::class);
     }
+
+    /**
+     * Verifica si un usuario ya tiene una cerveza como favorita.
+     *
+     * @param int $userId
+     * @param int $beerId
+     * @return bool
+     */
+    public static function isFavorite(int $userId, int $beerId): bool
+    {
+        return self::where('user_id', $userId)
+            ->where('beer_id', $beerId)
+            ->exists();
+    }
 }

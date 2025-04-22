@@ -17,7 +17,17 @@ class Like extends Model
      */
     protected $fillable = [
         'user_id',
-        'check_in_id',
+        'post_id',
+        'liked_at',
+    ];
+
+    /**
+     * Los atributos que deben ser convertidos.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'liked_at' => 'datetime',
     ];
 
     /**
@@ -29,10 +39,24 @@ class Like extends Model
     }
 
     /**
-     * Obtiene el check-in al que pertenece este like.
+     * Obtiene el post al que pertenece este like.
      */
-    public function checkIn(): BelongsTo
+    public function post(): BelongsTo
     {
-        return $this->belongsTo(CheckIn::class);
+        return $this->belongsTo(Post::class);
+    }
+
+    /**
+     * Verifica si un usuario ya dio like a un post específico.
+     *
+     * @param int $userId
+     * @param int $postId
+     * @return bool
+     */
+    public static function isLiked(int $userId, int $postId): bool
+    {
+        return self::where('user_id', $userId)
+            ->where('post_id', $postId)
+            ->exists();
     }
 }

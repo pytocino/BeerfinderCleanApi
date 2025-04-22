@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -22,11 +23,21 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'profile_picture',
         'bio',
         'location',
+        'birthdate',
+        'website',
+        'phone',
+        'instagram',
+        'twitter',
+        'facebook',
+        'private_profile',
+        'allow_mentions',
+        'email_notifications',
     ];
 
     /**
@@ -49,16 +60,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'birthdate' => 'date',
+            'last_active_at' => 'datetime',
+            'private_profile' => 'boolean',
+            'allow_mentions' => 'boolean',
+            'email_notifications' => 'boolean',
         ];
-    }
-
-    /**
-     * Obtiene todos los check-ins del usuario.
-     * Necesario para calcular 'check_ins_count'.
-     */
-    public function checkIns(): HasMany
-    {
-        return $this->hasMany(CheckIn::class);
     }
 
     /**
@@ -85,6 +92,27 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    // --- Otras relaciones y métodos del modelo ---
+    /**
+     * Obtiene los posts del usuario.
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
 
+    /**
+     * Obtiene las notificaciones del usuario.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Obtiene los check-ins realizados por esta persona.
+     */
+    public function checkIns(): HasMany
+    {
+        return $this->hasMany(CheckIn::class);
+    }
 }

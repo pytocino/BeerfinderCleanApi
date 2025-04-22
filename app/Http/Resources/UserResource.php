@@ -4,42 +4,38 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth; // Necesario para comprobar el usuario autenticado
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * Devuelve los datos del usuario con los campos especificados.
-     * Asegúrate de que los contadores ('check_ins_count', 'followers_count', 'following_count')
-     * se hayan cargado en el modelo User (usando withCount o loadCount) antes de usar este Resource.
-     * El email solo se incluirá si es el usuario autenticado.
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
-        $data = [
-            'id'              => $this->id, // Es buena práctica incluir el ID
-            'name'            => $this->name,
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'username' => $this->username,
             'profile_picture' => $this->profile_picture,
-            'bio'             => $this->whenNotNull($this->bio), // Incluir solo si no es null
-            'location'        => $this->whenNotNull($this->location), // Incluir solo si no es null
+            'bio' => $this->bio,
+            'location' => $this->location,
+            'birthdate' => $this->birthdate,
+            'website' => $this->website,
+            'phone' => $this->phone,
+            'instagram' => $this->instagram,
+            'twitter' => $this->twitter,
+            'facebook' => $this->facebook,
+            'private_profile' => $this->private_profile,
+            'allow_mentions' => $this->allow_mentions,
+            'email_notifications' => $this->email_notifications,
+            'last_active_at' => $this->last_active_at,
+            'email_verified_at' => $this->when(Auth::id() === $this->id, $this->email_verified_at),
+            'email' => $this->when(Auth::id() === $this->id, $this->email),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
 
-            // Incluir contadores solo si están cargados en el modelo
-            'check_ins_count' => $this->when(isset($this->check_ins_count), fn() => (int) $this->check_ins_count),
-            'followers_count' => $this->when(isset($this->followers_count), fn() => (int) $this->followers_count),
-            'following_count' => $this->when(isset($this->following_count), fn() => (int) $this->following_count),
+            // Contadores calculados en la consulta
+            'check_ins_count' => isset($this->check_ins_count) ? (int)$this->check_ins_count : null,
+            'followers_count' => isset($this->followers_count) ? (int)$this->followers_count : null,
+            'following_count' => isset($this->following_count) ? (int)$this->following_count : null,
         ];
-
-        // Incluir email solo si es el usuario autenticado el que solicita sus propios datos
-        // o si la ruta específica lo permite (ej. 'auth.me').
-        // Comprobamos que el atributo 'email' existe en el modelo antes de intentar accederlo.
-        if (isset($this->email) && Auth::check() && Auth::id() === $this->id) {
-            $data['email'] = $this->email;
-        }
-
-
-        return $data;
     }
 }

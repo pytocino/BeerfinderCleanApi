@@ -14,7 +14,17 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('type'); // bar, restaurant, store, etc.
+            $table->enum('type', [
+                'bar',
+                'brewery',
+                'restaurant',
+                'store',
+                'taproom',
+                'pub',
+                'club',
+                'festival',
+                'hotel'
+            ]);
             $table->string('country');
             $table->string('city');
             $table->string('address')->nullable();
@@ -22,6 +32,15 @@ return new class extends Migration
             $table->decimal('longitude', 11, 8)->nullable();
             $table->text('description')->nullable();
             $table->string('image_url')->nullable();
+            $table->string('cover_photo')->nullable();
+            $table->string('website')->nullable();
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('instagram')->nullable();
+            $table->string('facebook')->nullable();
+            $table->string('twitter')->nullable();
+            $table->boolean('verified')->default(false);
+            $table->integer('check_ins_count')->default(0);
             $table->timestamps();
         });
     }

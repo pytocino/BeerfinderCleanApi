@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Location extends Model
 {
@@ -25,6 +26,15 @@ class Location extends Model
         'longitude',
         'description',
         'image_url',
+        'cover_photo',
+        'website',
+        'email',
+        'phone',
+        'instagram',
+        'facebook',
+        'twitter',
+        'verified',
+        'check_ins_count'
     ];
 
     /**
@@ -35,6 +45,8 @@ class Location extends Model
     protected $casts = [
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
+        'verified' => 'boolean',
+        'check_ins_count' => 'integer'
     ];
 
     /**

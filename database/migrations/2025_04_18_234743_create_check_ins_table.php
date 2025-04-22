@@ -17,8 +17,6 @@ return new class extends Migration
             $table->foreignId('beer_id')->constrained()->onDelete('cascade');
             $table->foreignId('location_id')->nullable()->constrained();
             $table->decimal('rating', 2, 1)->nullable(); // Valoración de 0 a 5 con un decimal
-            $table->text('review')->nullable();
-            $table->string('photo_url')->nullable();
             $table->timestamps();
         });
     }

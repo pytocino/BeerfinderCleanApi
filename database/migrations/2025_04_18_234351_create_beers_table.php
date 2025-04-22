@@ -1,4 +1,3 @@
-ers_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -16,11 +15,18 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('brewery_id')->constrained();
-            $table->foreignId('style_id')->constrained('beer_styles'); // Cambiado para referenciar a beer_styles
-            $table->decimal('abv', 4, 2)->nullable(); // Alcohol by volume (%)
-            $table->integer('ibu')->nullable();       // International Bitterness Units
+            $table->foreignId('style_id')->constrained('beer_styles');
+            $table->decimal('abv', 4, 2)->nullable();
+            $table->integer('ibu')->nullable();
+            $table->string('color')->nullable();
+            $table->string('label_image_url')->nullable();
+            $table->string('package_type')->nullable();
+            $table->string('availability')->nullable();
+            $table->string('origin_country')->nullable();
+            $table->string('collaboration')->nullable();
             $table->text('description')->nullable();
             $table->string('image_url')->nullable();
+            $table->year('first_brewed')->nullable();
             $table->timestamps();
         });
     }

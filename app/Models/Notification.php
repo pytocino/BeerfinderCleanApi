@@ -16,12 +16,12 @@ class Notification extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id', // El usuario que recibe la notificación
-        'from_user_id', // El usuario que genera la notificación
-        'type', // El tipo de notificación (like, comment, follow, etc.)
-        'related_id', // ID de la entidad relacionada (check-in, comentario, etc.)
-        'is_read', // Si la notificación ha sido leída
-        'data', // Datos adicionales de la notificación
+        'user_id',
+        'from_user_id',
+        'type',
+        'related_id',
+        'is_read',
+        'read_at',
     ];
 
     /**
@@ -31,7 +31,7 @@ class Notification extends Model
      */
     protected $casts = [
         'is_read' => 'boolean',
-        'data' => 'array',
+        'read_at' => 'datetime',
     ];
 
     /**
@@ -55,6 +55,9 @@ class Notification extends Model
      */
     public function markAsRead(): void
     {
-        $this->update(['is_read' => true]);
+        $this->update([
+            'is_read' => true,
+            'read_at' => now(),
+        ]);
     }
 }

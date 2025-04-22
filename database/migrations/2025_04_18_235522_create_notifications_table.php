@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('from_user_id')->constrained('users')->onDelete('cascade');
-            $table->string('type'); // like, comment, follow, etc.
-            $table->unsignedBigInteger('related_id'); // ID de la entidad relacionada (check-in, comentario, etc.)
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Usuario que recibe la notificación
+            $table->foreignId('from_user_id')->nullable()->constrained('users')->onDelete('cascade'); // Usuario que genera la acción (puede ser null para sistema)
+            $table->string('type'); // like, comment, follow, mention, system, etc.
+            $table->unsignedBigInteger('related_id')->nullable(); // ID de la entidad relacionada (like, comentario, follow, etc.)
             $table->boolean('is_read')->default(false);
-            $table->json('data')->nullable(); // Datos adicionales de la notificación
+            $table->timestamp('read_at')->nullable(); // Fecha/hora de lectura
             $table->timestamps();
         });
     }

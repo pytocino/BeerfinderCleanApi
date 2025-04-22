@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\DB;
 
 class Beer extends Model
 {
@@ -22,8 +24,15 @@ class Beer extends Model
         'style_id',
         'abv',
         'ibu',
+        'color',
+        'label_image_url',
+        'package_type',
+        'availability',
+        'origin_country',
+        'collaboration',
         'description',
         'image_url',
+        'first_brewed',
     ];
 
     /**
@@ -34,6 +43,7 @@ class Beer extends Model
     protected $casts = [
         'abv' => 'decimal:2',
         'ibu' => 'integer',
+        'first_brewed' => 'integer',
     ];
 
     /**
@@ -53,18 +63,10 @@ class Beer extends Model
     }
 
     /**
-     * Obtiene los check-ins asociados a esta cerveza.
+     * Obtiene los check-ins que tiene esta cerveza.
      */
     public function checkIns(): HasMany
     {
         return $this->hasMany(CheckIn::class);
-    }
-
-    /**
-     * Obtiene los usuarios que han marcado esta cerveza como favorita.
-     */
-    public function favorites(): HasMany
-    {
-        return $this->hasMany(Favorite::class);
     }
 }

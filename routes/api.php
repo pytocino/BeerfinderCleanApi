@@ -3,10 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\BeerController;
 use App\Http\Controllers\API\BreweryController;
 use App\Http\Controllers\API\BeerStyleController;
-use App\Http\Controllers\API\CheckInController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
@@ -15,7 +13,8 @@ use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\FeedController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\SocialController;
-use App\Http\Controllers\API\StatsController;
+use App\Http\Controllers\API\PostController;
+use App\Http\Controllers\API\FavoriteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,116 +35,79 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 
-    // Búsqueda pública
-    Route::get('/search', [SearchController::class, 'search']);
-
-    // Información pública
-    Route::get('/beers', [BeerController::class, 'index']);
-    Route::get('/beers/{id}', [BeerController::class, 'show']);
-    Route::get('/beers/{id}/similar', [BeerController::class, 'getSimilar']);
-
-    Route::get('/breweries', [BreweryController::class, 'index']);
-    Route::get('/breweries/{id}', [BreweryController::class, 'show']);
-    Route::get('/breweries/{id}/beers', [BreweryController::class, 'getBeers']);
-    Route::get('/breweries/top', [BreweryController::class, 'getTopBreweries']);
-
-    Route::get('/beer-styles', [BeerStyleController::class, 'index']);
-    Route::get('/beer-styles/{id}', [BeerStyleController::class, 'show']);
-    Route::get('/beer-styles/{id}/beers', [BeerStyleController::class, 'getBeers']);
-
-    Route::get('/locations', [LocationController::class, 'index']);
-    Route::get('/locations/{id}', [LocationController::class, 'show']);
-    Route::get('/locations/nearby', [LocationController::class, 'getNearby']);
-    Route::get('/locations/{id}/beers', [LocationController::class, 'getBeers']);
-
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::get('/check-ins/{id}', [CheckInController::class, 'show']);
-    Route::get('/check-ins/{id}/comments', [CommentController::class, 'getCheckInComments']);
-    Route::get('/beers/{id}/check-ins', [CheckInController::class, 'getBeerCheckIns']);
-
-    // Feed público
-    Route::get('/feed/trending/beers', [FeedController::class, 'trendingBeers']);
-    Route::get('/feed/trending/breweries', [FeedController::class, 'trendingBreweries']);
-    Route::get('/feed/trending/styles', [FeedController::class, 'trendingStyles']);
-    Route::get('/feed/beer/{id}', [FeedController::class, 'beerFeed']);
-
-    // Rutas protegidas que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::get('/search', [SearchController::class, 'search']);
+
         // Auth
         Route::post('/auth/logout', [AuthController::class, 'logout']);
-        Route::get('/auth/me', [AuthController::class, 'me']);
         Route::put('/auth/update-profile', [AuthController::class, 'updateProfile']);
         Route::put('/auth/change-password', [AuthController::class, 'changePassword']);
 
         // Usuarios
-        Route::get('/users', [UserController::class, 'index']);
-        Route::put('/users/{id}', [UserController::class, 'update']);
-        Route::delete('/users/{id}', [UserController::class, 'destroy']);
+        Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::get('/users/me', [UserController::class, 'me']);
 
         // Relaciones sociales (usando SocialController)
         Route::post('/users/{id}/follow', [SocialController::class, 'follow']);
         Route::delete('/users/{id}/unfollow', [SocialController::class, 'unfollow']);
         Route::get('/users/{id}/followers', [SocialController::class, 'followers']);
-        Route::get('/users/{id}/following', [SocialController::class, 'following']);
+        Route::get('/users/{id}/following', [SocialController::class, 'followings']);
 
         // Feed social
-        Route::get('/feed', [FeedController::class, 'index']);
-        Route::get('/feed/friends', [FeedController::class, 'friendsFeed']);
-        Route::get('/feed/popular', [FeedController::class, 'popularFeed']);
+        Route::get('/feed', [FeedController::class, 'feedGeneral']);
+        Route::get('/feed/friends', [FeedController::class, 'feedAmigos']);
 
-        // Cervezas
-        Route::post('/beers', [BeerController::class, 'store']);
-        Route::put('/beers/{id}', [BeerController::class, 'update']);
-        Route::delete('/beers/{id}', [BeerController::class, 'destroy']);
-        Route::post('/beers/{id}/favorite', [BeerController::class, 'favorite']);
-        Route::delete('/beers/{id}/unfavorite', [BeerController::class, 'unfavorite']);
-        Route::get('/favorites', [BeerController::class, 'favorites']);
+        // Favorites (rutas REST adicionales)
+        Route::get('/favorites', [FavoriteController::class, 'index']);
+        Route::post('/favorites', [FavoriteController::class, 'store']);
+        Route::get('/favorites/{id}', [FavoriteController::class, 'show']);
+        Route::put('/favorites/{id}', [FavoriteController::class, 'update']);
+        Route::delete('/favorites/{id}', [FavoriteController::class, 'destroy']);
 
         // Cervecerías
-        Route::post('/breweries', [BreweryController::class, 'store']);
-        Route::put('/breweries/{id}', [BreweryController::class, 'update']);
-        Route::delete('/breweries/{id}', [BreweryController::class, 'destroy']);
+        Route::post('/breweries', [BreweryController::class, 'index']);
+        Route::put('/breweries/{id}', [BreweryController::class, 'show']);
 
         // Estilos de cerveza
-        Route::post('/beer-styles', [BeerStyleController::class, 'store']);
-        Route::put('/beer-styles/{id}', [BeerStyleController::class, 'update']);
-        Route::delete('/beer-styles/{id}', [BeerStyleController::class, 'destroy']);
-
-        // Check-ins
-        Route::get('/check-ins', [CheckInController::class, 'index']);
-        Route::post('/check-ins', [CheckInController::class, 'store']);
-        Route::put('/check-ins/{id}', [CheckInController::class, 'update']);
-        Route::delete('/check-ins/{id}', [CheckInController::class, 'destroy']);
-        Route::get('/users/{id}/check-ins', [CheckInController::class, 'getUserCheckIns']);
+        Route::post('/beer-styles', [BeerStyleController::class, 'get']);
+        Route::put('/beer-styles/{id}', [BeerStyleController::class, 'show']);
 
         // Ubicaciones
-        Route::post('/locations', [LocationController::class, 'store']);
-        Route::put('/locations/{id}', [LocationController::class, 'update']);
-        Route::delete('/locations/{id}', [LocationController::class, 'destroy']);
-        Route::post('/locations/{id}/beers', [LocationController::class, 'addBeer']);
-        Route::delete('/locations/{id}/beers/{beer_id}', [LocationController::class, 'removeBeer']);
+        Route::post('/locations', [LocationController::class, 'index']);
+        Route::put('/locations/{id}', [LocationController::class, 'show']);
 
-        // Comentarios
-        Route::post('/check-ins/{id}/comments', [CommentController::class, 'store']);
+        // Posts - Rutas RESTful completas
+        Route::get('/posts', [PostController::class, 'index']);
+        Route::get('/posts/{id}', [PostController::class, 'show']);
+        Route::post('/posts', [PostController::class, 'store']);
+        Route::put('/posts/{id}', [PostController::class, 'update']);
+        Route::patch('/posts/{id}', [PostController::class, 'update']);
+        Route::delete('/posts/{id}', [PostController::class, 'destroy']);
+
+        // Comentarios - Rutas RESTful
+        Route::get('/posts/{id}/comments', [CommentController::class, 'index']);
+        Route::get('/comments/{id}', [CommentController::class, 'show']);
+        Route::post('/posts/{id}/comments', [CommentController::class, 'store']);
         Route::put('/comments/{id}', [CommentController::class, 'update']);
+        Route::patch('/comments/{id}', [CommentController::class, 'update']);
         Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
 
-        // Likes
-        Route::post('/check-ins/{id}/like', [LikeController::class, 'likeCheckIn']);
-        Route::delete('/check-ins/{id}/unlike', [LikeController::class, 'unlikeCheckIn']);
-        Route::get('/check-ins/{id}/likes', [LikeController::class, 'getLikes']);
+        // Likes - Rutas RESTful
+        Route::get('/posts/{id}/likes', [LikeController::class, 'getPostLikes']);
+        Route::post('/posts/{id}/likes', [LikeController::class, 'likePost']);
+        Route::delete('/posts/{id}/likes', [LikeController::class, 'unlikePost']);
+
 
         // Notificaciones
         Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+        Route::post('/notifications', [NotificationController::class, 'store']);
+        Route::put('/notifications/{id}', [NotificationController::class, 'update']);
+        Route::patch('/notifications/{id}', [NotificationController::class, 'update']);
+        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
         Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-
-        // Reportes
-        Route::post('/reports', [ReportController::class, 'store']);
-
-        // Estadísticas y recomendaciones (usando StatsController)
-        Route::get('/users/{id}/stats', [StatsController::class, 'getUserStats']);
-        Route::get('/recommendations', [StatsController::class, 'getRecommendations']);
     });
 
     // Rutas específicas para administradores
@@ -153,6 +115,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/reports', [ReportController::class, 'index']);
         Route::get('/reports/{id}', [ReportController::class, 'show']);
         Route::put('/reports/{id}', [ReportController::class, 'update']);
+        Route::patch('/reports/{id}', [ReportController::class, 'update']);
     });
 });
 

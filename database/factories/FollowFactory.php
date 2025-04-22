@@ -5,9 +5,9 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Beer>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Follow>
  */
-class BeerFactory extends Factory
+class FollowFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -18,13 +18,8 @@ class BeerFactory extends Factory
     {
         return [
             'id' => fake()->text(),
-            'name' => fake()->name(),
-            'brewery_id' => fake()->text(),
-            'style_id' => fake()->text(),
-            'abv' => fake()->text(),
-            'ibu' => fake()->text(),
-            'description' => $this->faker->paragraph(),
-            'image_url' => fake()->text(),
+            'follower_id' => fake()->text(),
+            'following_id' => fake()->text(),
             'created_at' => $this->faker->dateTime(),
             'updated_at' => $this->faker->dateTime(),
         ];

@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
+            $table->string('origin_country')->nullable();
+            $table->string('color')->nullable();
+            $table->decimal('abv_min', 4, 2)->nullable();
+            $table->decimal('abv_max', 4, 2)->nullable();
+            $table->integer('ibu_min')->nullable();
+            $table->integer('ibu_max')->nullable();
             $table->timestamps();
         });
     }

@@ -18,6 +18,20 @@ class Follow extends Model
     protected $fillable = [
         'follower_id',
         'following_id',
+        'accepted',
+        'followed_at',
+        'unfollowed_at'
+    ];
+
+    /**
+     * Los atributos que deben ser convertidos.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'accepted' => 'boolean',
+        'followed_at' => 'datetime',
+        'unfollowed_at' => 'datetime',
     ];
 
     /**
@@ -34,5 +48,21 @@ class Follow extends Model
     public function following(): BelongsTo
     {
         return $this->belongsTo(User::class, 'following_id');
+    }
+
+    /**
+     * Determina si el seguimiento está activo.
+     */
+    public function isActive(): bool
+    {
+        return $this->accepted && is_null($this->unfollowed_at);
+    }
+
+    /**
+     * Determina si el seguimiento está pendiente.
+     */
+    public function isPending(): bool
+    {
+        return !$this->accepted && is_null($this->unfollowed_at);
     }
 }

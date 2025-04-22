@@ -5,62 +5,102 @@ namespace App\Http\Controllers\API;
 use App\Models\Favorite;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class FavoriteController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mostrar todos los favoritos del usuario autenticado.
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+        $favorites = Favorite::with('beer')
+            ->where('user_id', $user->id)
+            ->get();
+
+        return response()->json($favorites);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Añadir una cerveza a favoritos.
      */
-    public function create()
+    public function store(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+        $beerId = $request->input('beer_id');
+
+        if (Favorite::isFavorite($user->id, $beerId)) {
+            return response()->json(['message' => 'La cerveza ya está en favoritos.'], 409);
+        }
+
+        $favorite = Favorite::create([
+            'user_id' => $user->id,
+            'beer_id' => $beerId,
+        ]);
+
+        return response()->json($favorite, 201);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Mostrar un favorito específico del usuario autenticado.
      */
-    public function store(Request $request)
+    public function show(Request $request, $id): JsonResponse
     {
-        //
+        $user = $request->user();
+        $favorite = Favorite::with('beer')
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$favorite) {
+            return response()->json(['message' => 'Favorito no encontrado.'], 404);
+        }
+
+        return response()->json($favorite);
     }
 
     /**
-     * Display the specified resource.
+     * Actualizar el favorito (por ejemplo, cambiar la cerveza favorita).
      */
-    public function show(Favorite $favorite)
+    public function update(Request $request, $id): JsonResponse
     {
-        //
+        $user = $request->user();
+        $favorite = Favorite::where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$favorite) {
+            return response()->json(['message' => 'Favorito no encontrado.'], 404);
+        }
+
+        $beerId = $request->input('beer_id');
+        if (Favorite::isFavorite($user->id, $beerId)) {
+            return response()->json(['message' => 'La cerveza ya está en favoritos.'], 409);
+        }
+
+        $favorite->beer_id = $beerId;
+        $favorite->save();
+
+        return response()->json($favorite);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Eliminar un favorito.
      */
-    public function edit(Favorite $favorite)
+    public function destroy(Request $request, $id): JsonResponse
     {
-        //
-    }
+        $user = $request->user();
+        $favorite = Favorite::where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Favorite $favorite)
-    {
-        //
-    }
+        if (!$favorite) {
+            return response()->json(['message' => 'Favorito no encontrado.'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Favorite $favorite)
-    {
-        //
+        $favorite->delete();
+
+        return response()->json(['message' => 'Favorito eliminado correctamente.']);
     }
 }

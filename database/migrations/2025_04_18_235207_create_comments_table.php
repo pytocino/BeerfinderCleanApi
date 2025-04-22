@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('check_in_id')->constrained()->onDelete('cascade');
             $table->text('content');
+            $table->foreignId('parent_id')->nullable()->constrained('comments')->onDelete('cascade'); // Para respuestas/hilos
+            $table->boolean('edited')->default(false); // Si el comentario fue editado
+            $table->timestamp('edited_at')->nullable(); // Fecha de edición
+            $table->boolean('pinned')->default(false); // Si el comentario está fijado
             $table->timestamps();
         });
     }
