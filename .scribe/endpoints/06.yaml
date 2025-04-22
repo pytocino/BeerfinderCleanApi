@@ -1,0 +1,915 @@
+name: Usuarios
+description: |-
+
+  APIs para gestionar usuarios y sus relaciones sociales
+endpoints:
+  - httpMethods:
+      - GET
+    uri: "api/v1/users/{id}"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Ver usuario"
+      description: "Muestra información detallada de un usuario específico."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": {
+             "id": 1,
+             "name": "Juan Pérez",
+             "bio": "Amante de las IPA y cervecero casero",
+             "location": "Madrid, España",
+             "profile_picture": "https://example.com/avatars/juan.jpg",
+             "check_ins_count": 42,
+             "followers_count": 12,
+             "following_count": 25,
+             "is_following": false,
+             "recent_check_ins": [
+               {
+                 "id": 123,
+                 "beer": {
+                   "id": 5,
+                   "name": "Founders Breakfast Stout",
+                   "brewery": {
+                     "id": 3,
+                     "name": "Founders Brewing Co."
+                   }
+                 },
+                 "rating": 4.5,
+                 "comment": "Excelente combinación de café y chocolate",
+                 "created_at": "2023-04-17T19:30:00.000000Z"
+               }
+             ],
+             "top_beers": [
+               {
+                 "id": 5,
+                 "name": "Founders Breakfast Stout",
+                 "brewery": {
+                   "id": 3,
+                   "name": "Founders Brewing Co."
+                 },
+                 "rating": 4.5
+               }
+             ],
+             "created_at": "2023-01-15T00:00:00.000000Z"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: api/v1/users
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Listar usuarios"
+      description: "Obtiene un listado paginado de usuarios con opciones de filtrado y ordenamiento."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      name:
+        name: name
+        description: "Filtrar por nombre."
+        required: false
+        example: Juan
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: "Ordenar por: name, created_at, check_ins_count."
+        required: false
+        example: created_at
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      order:
+        name: order
+        description: "Dirección: asc, desc."
+        required: false
+        example: desc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      name: Juan
+      sort: created_at
+      order: desc
+      per_page: 15
+    bodyParameters:
+      name:
+        name: name
+        description: "Must not be greater than 100 characters."
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      sort:
+        name: sort
+        description: ""
+        required: false
+        example: name
+        type: string
+        enumValues:
+          - name
+          - created_at
+          - check_ins_count
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      order:
+        name: order
+        description: ""
+        required: false
+        example: desc
+        type: string
+        enumValues:
+          - asc
+          - desc
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      per_page:
+        name: per_page
+        description: "Must be at least 5. Must not be greater than 50."
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      name: b
+      sort: name
+      order: desc
+      per_page: 22
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 1,
+               "name": "Juan Pérez",
+               "bio": "Amante de las IPA y cervecero casero",
+               "location": "Madrid, España",
+               "profile_picture": "https://example.com/avatars/juan.jpg",
+               "check_ins_count": 42,
+               "followers_count": 12,
+               "following_count": 25,
+               "created_at": "2023-01-15T00:00:00.000000Z"
+             }
+           ],
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - PUT
+    uri: "api/v1/users/{id}"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Actualizar usuario"
+      description: "Actualiza la información de un usuario existente."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: "Nombre del usuario."
+        required: false
+        example: "Juan García Pérez"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      bio:
+        name: bio
+        description: "Biografía del usuario."
+        required: false
+        example: "Cervecero aficionado desde 2015"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      location:
+        name: location
+        description: "Ubicación del usuario."
+        required: false
+        example: "Barcelona, España"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      profile_picture:
+        name: profile_picture
+        description: "URL del avatar."
+        required: false
+        example: "http://www.bailey.biz/quos-velit-et-fugiat-sunt-nihil-accusantium-harum.html"
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
+      avatar:
+        name: avatar
+        description: "Imagen del avatar (JPG, PNG, WebP, máx 2MB)."
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      name: "Juan García Pérez"
+      bio: "Cervecero aficionado desde 2015"
+      location: "Barcelona, España"
+      profile_picture: "http://www.bailey.biz/quos-velit-et-fugiat-sunt-nihil-accusantium-harum.html"
+    fileParameters:
+      avatar: null
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": {
+             "id": 1,
+             "name": "Juan García Pérez",
+             "bio": "Cervecero aficionado desde 2015",
+             "location": "Barcelona, España",
+             "profile_picture": "https://example.com/avatars/juan_nuevo.jpg",
+             "check_ins_count": 42,
+             "followers_count": 12,
+             "following_count": 25,
+             "created_at": "2023-01-15T00:00:00.000000Z"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 403
+        content: |-
+          {
+           "message": "No tienes permisos para actualizar este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - DELETE
+    uri: "api/v1/users/{id}"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Eliminar usuario"
+      description: "Elimina un usuario del sistema."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 204
+        content: "{}"
+        headers: []
+        description: ""
+        custom: []
+      - status: 403
+        content: |-
+          {
+           "message": "No tienes permisos para eliminar este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: "api/v1/users/{id}/follow"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Seguir usuario"
+      description: "Comienza a seguir a un usuario."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario a seguir."
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 2
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Ahora sigues a este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 400
+        content: |-
+          {
+           "message": "No puedes seguirte a ti mismo."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 409
+        content: |-
+          {
+           "message": "Ya sigues a este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - DELETE
+    uri: "api/v1/users/{id}/unfollow"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Dejar de seguir usuario"
+      description: "Deja de seguir a un usuario."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario que se dejará de seguir."
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 2
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Has dejado de seguir a este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No estás siguiendo a este usuario."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/users/{id}/followers"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Seguidores del usuario"
+      description: "Obtiene la lista de usuarios que siguen al usuario especificado."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters:
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      per_page: 15
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 2,
+               "name": "María López",
+               "bio": "Aficionada a las cervezas belgas",
+               "location": "Valencia, España",
+               "profile_picture": "https://example.com/avatars/maria.jpg",
+               "check_ins_count": 28,
+               "is_following": true,
+               "created_at": "2023-02-10T00:00:00.000000Z"
+             }
+           ],
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/users/{id}/following"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Usuarios seguidos"
+      description: "Obtiene la lista de usuarios que el usuario especificado sigue."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters:
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      per_page: 15
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 3,
+               "name": "Carlos Ruiz",
+               "bio": "Homebrewer y juez certificado BJCP",
+               "location": "Barcelona, España",
+               "profile_picture": "https://example.com/avatars/carlos.jpg",
+               "check_ins_count": 150,
+               "is_following": false,
+               "created_at": "2022-11-05T00:00:00.000000Z"
+             }
+           ],
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/users/{id}/stats"
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Estadísticas de usuario"
+      description: "Obtiene estadísticas detalladas sobre la actividad del usuario."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": {
+             "user": {
+               "id": 1,
+               "name": "Juan Pérez",
+               "profile_picture": "https://example.com/avatars/juan.jpg"
+             },
+             "total_check_ins": 42,
+             "unique_beers": 38,
+             "avg_rating": 3.8,
+             "favorite_styles": [
+               {
+                 "name": "IPA",
+                 "count": 15
+               },
+               {
+                 "name": "Stout",
+                 "count": 8
+               }
+             ],
+             "favorite_breweries": [
+               {
+                 "id": 3,
+                 "name": "Founders Brewing Co.",
+                 "count": 7
+               }
+             ],
+             "top_rated_beers": [
+               {
+                 "id": 15,
+                 "name": "KBS (Kentucky Breakfast Stout)",
+                 "brewery": "Founders Brewing Co.",
+                 "rating": 4.9
+               }
+             ],
+             "check_ins_by_month": {
+               "2023-01": 5,
+               "2023-02": 8,
+               "2023-03": 12,
+               "2023-04": 17
+             }
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: api/v1/recommendations
+    metadata:
+      groupName: Usuarios
+      groupDescription: |-
+
+        APIs para gestionar usuarios y sus relaciones sociales
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Recomendaciones para el usuario"
+      description: "Obtiene recomendaciones de cervezas personalizadas para el usuario autenticado."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      limit:
+        name: limit
+        description: "Número de recomendaciones a obtener (1-20)."
+        required: false
+        example: 10
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      limit: 10
+    bodyParameters:
+      limit:
+        name: limit
+        description: "Must be at least 1. Must not be greater than 20."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      limit: 16
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 25,
+               "name": "La Chouffe",
+               "brewery": {
+                 "id": 12,
+                 "name": "Brasserie d'Achouffe"
+               },
+               "style": {
+                 "id": 6,
+                 "name": "Belgian Strong Golden Ale"
+               },
+               "abv": 8.0,
+               "description": "Cerveza belga dorada con notas de frutas y especias",
+               "image_url": "https://example.com/beers/lachouffe.png",
+               "rating_avg": 4.2,
+               "check_ins_count": 87,
+               "recommendation_reason": "Basado en tu gusto por cervezas belgas"
+             }
+           ]
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

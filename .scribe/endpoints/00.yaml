@@ -1,0 +1,583 @@
+name: Autenticación
+description: |-
+
+  APIs para gestionar la autenticación de usuarios
+endpoints:
+  - httpMethods:
+      - POST
+    uri: api/v1/auth/register
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Registrar un nuevo usuario"
+      description: "Crea una nueva cuenta de usuario en el sistema."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: "El nombre del usuario."
+        required: true
+        example: "Juan Pérez"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      email:
+        name: email
+        description: "Email del usuario."
+        required: true
+        example: juan@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: "Contraseña (mínimo 8 caracteres)."
+        required: true
+        example: secreto123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password_confirmation:
+        name: password_confirmation
+        description: "Confirmación de la contraseña."
+        required: true
+        example: secreto123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      name: "Juan Pérez"
+      email: juan@example.com
+      password: secreto123
+      password_confirmation: secreto123
+    fileParameters: []
+    responses:
+      - status: 201
+        content: |-
+          {
+           "user": {
+               "id": 1,
+               "name": "Juan Pérez",
+               "email": "juan@example.com"
+           },
+           "access_token": "1|laravel_sanctum_token",
+           "token_type": "Bearer"
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "The email has already been taken.",
+           "errors": {
+             "email": ["Este correo ya está registrado."]
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Iniciar sesión"
+      description: "Autentica al usuario y devuelve un token de acceso."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        name: email
+        description: "Email del usuario."
+        required: true
+        example: juan@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: "Contraseña del usuario."
+        required: true
+        example: secreto123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      email: juan@example.com
+      password: secreto123
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "user": {
+               "id": 1,
+               "name": "Juan Pérez",
+               "email": "juan@example.com"
+           },
+           "access_token": "1|laravel_sanctum_token",
+           "token_type": "Bearer"
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "Las credenciales proporcionadas son incorrectas."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: api/v1/auth/forgot-password
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Solicitar restablecimiento de contraseña"
+      description: "Envía un correo con un enlace para restablecer la contraseña."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        name: email
+        description: "Email del usuario."
+        required: true
+        example: juan@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      email: juan@example.com
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Se ha enviado un enlace para restablecer la contraseña"
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "No podemos encontrar un usuario con ese correo electrónico."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: api/v1/auth/reset-password
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Restablecer contraseña"
+      description: "Restablece la contraseña del usuario usando el token recibido por email."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      token:
+        name: token
+        description: "El token de reset recibido por email."
+        required: true
+        example: abcdef123456
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      email:
+        name: email
+        description: "Email del usuario."
+        required: true
+        example: juan@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: "Nueva contraseña (mínimo 8 caracteres)."
+        required: true
+        example: nuevaContraseña123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password_confirmation:
+        name: password_confirmation
+        description: "Confirmación de la nueva contraseña."
+        required: true
+        example: nuevaContraseña123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      token: abcdef123456
+      email: juan@example.com
+      password: nuevaContraseña123
+      password_confirmation: nuevaContraseña123
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "La contraseña ha sido restablecida correctamente"
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "El token es inválido."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Cerrar sesión"
+      description: "Revoca el token de acceso actual del usuario."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Sesión cerrada correctamente"
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: api/v1/auth/me
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Obtener usuario autenticado"
+      description: "Devuelve la información del usuario actualmente autenticado."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "id": 1,
+           "name": "Juan Pérez",
+           "email": "juan@example.com",
+           "bio": "Amante de las cervezas artesanales",
+           "location": "Madrid, España",
+           "profile_picture": "https://example.com/avatars/juan.jpg",
+           "created_at": "2023-01-01T00:00:00.000000Z"
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - PUT
+    uri: api/v1/auth/update-profile
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Actualizar perfil"
+      description: "Actualiza la información del perfil del usuario autenticado."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: "El nombre del usuario."
+        required: false
+        example: "Juan Pérez Actualizado"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      bio:
+        name: bio
+        description: "La biografía del usuario."
+        required: false
+        example: "Cervecero aficionado desde 2010"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        custom: []
+      location:
+        name: location
+        description: "La ubicación del usuario."
+        required: false
+        example: "Barcelona, España"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        custom: []
+      profile_picture:
+        name: profile_picture
+        description: "La URL de la imagen de perfil."
+        required: false
+        example: "https://example.com/avatars/nuevo.jpg"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      name: "Juan Pérez Actualizado"
+      bio: "Cervecero aficionado desde 2010"
+      location: "Barcelona, España"
+      profile_picture: "https://example.com/avatars/nuevo.jpg"
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Perfil actualizado correctamente",
+           "user": {
+               "id": 1,
+               "name": "Juan Pérez Actualizado",
+               "bio": "Cervecero aficionado desde 2010",
+               "location": "Barcelona, España",
+               "profile_picture": "https://example.com/avatars/nuevo.jpg"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - PUT
+    uri: api/v1/auth/change-password
+    metadata:
+      groupName: Autenticación
+      groupDescription: |-
+
+        APIs para gestionar la autenticación de usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Cambiar contraseña"
+      description: "Permite al usuario autenticado cambiar su contraseña."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      current_password:
+        name: current_password
+        description: "La contraseña actual."
+        required: true
+        example: contraseñaActual123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password:
+        name: password
+        description: "Nueva contraseña (mínimo 8 caracteres)."
+        required: true
+        example: nuevaContraseña123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      password_confirmation:
+        name: password_confirmation
+        description: "Confirmación de la nueva contraseña."
+        required: true
+        example: nuevaContraseña123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      current_password: contraseñaActual123
+      password: nuevaContraseña123
+      password_confirmation: nuevaContraseña123
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "message": "Contraseña cambiada correctamente"
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "La contraseña actual es incorrecta."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

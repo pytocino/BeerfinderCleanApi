@@ -1,0 +1,358 @@
+name: Búsqueda
+description: |-
+
+  APIs para buscar diferentes entidades en el sistema
+endpoints:
+  -
+    httpMethods:
+      - GET
+    uri: api/v1/search
+    metadata:
+      groupName: Búsqueda
+      groupDescription: |-
+
+        APIs para buscar diferentes entidades en el sistema
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Búsqueda global'
+      description: 'Permite buscar cervezas, cervecerías, estilos, ubicaciones y usuarios según los criterios especificados.'
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      q:
+        name: q
+        description: 'Término de búsqueda general.'
+        required: false
+        example: IPA
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      type:
+        name: type
+        description: 'Tipo de entidad a buscar (beers, breweries, styles, locations, users). Si no se especifica, busca en todas.'
+        required: false
+        example: beers
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      country:
+        name: country
+        description: 'Filtrar resultados por país (para cervezas, cervecerías y ubicaciones).'
+        required: false
+        example: España
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      city:
+        name: city
+        description: 'Filtrar resultados por ciudad (para cervecerías y ubicaciones).'
+        required: false
+        example: Madrid
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      style_id:
+        name: style_id
+        description: 'Filtrar cervezas por estilo.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      min_rating:
+        name: min_rating
+        description: 'Filtrar cervezas por calificación mínima (1.0-5.0).'
+        required: false
+        example: 4.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      max_distance:
+        name: max_distance
+        description: 'Filtrar ubicaciones por distancia máxima en km (requiere lat y lng).'
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      lat:
+        name: lat
+        description: 'Latitud para búsqueda por proximidad (para ubicaciones).'
+        required: false
+        example: 40.416775
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      lng:
+        name: lng
+        description: 'Longitud para búsqueda por proximidad (para ubicaciones).'
+        required: false
+        example: -3.70379
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: 'Criterio de ordenamiento (name, rating, distance, created_at).'
+        required: false
+        example: rating
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      order:
+        name: order
+        description: 'Dirección de ordenamiento (asc, desc).'
+        required: false
+        example: desc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      per_page:
+        name: per_page
+        description: 'Número de resultados por página.'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      q: IPA
+      type: beers
+      country: España
+      city: Madrid
+      style_id: 1
+      min_rating: 4.0
+      max_distance: 5
+      lat: 40.416775
+      lng: -3.70379
+      sort: rating
+      order: desc
+      per_page: 15
+    bodyParameters:
+      q:
+        name: q
+        description: 'Must be at least 2 characters. Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      type:
+        name: type
+        description: ''
+        required: false
+        example: beers
+        type: string
+        enumValues:
+          - beers
+          - breweries
+          - styles
+          - locations
+          - users
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      country:
+        name: country
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      city:
+        name: city
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: g
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      style_id:
+        name: style_id
+        description: 'The <code>id</code> of an existing record in the beer_styles table.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      min_rating:
+        name: min_rating
+        description: 'Must be at least 1. Must not be greater than 5.'
+        required: false
+        example: 2
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      max_distance:
+        name: max_distance
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 7
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      lat:
+        name: lat
+        description: ''
+        required: false
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      lng:
+        name: lng
+        description: ''
+        required: false
+        example: 4326.41688
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      sort:
+        name: sort
+        description: ''
+        required: false
+        example: created_at
+        type: string
+        enumValues:
+          - name
+          - rating
+          - distance
+          - created_at
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      order:
+        name: order
+        description: ''
+        required: false
+        example: asc
+        type: string
+        enumValues:
+          - asc
+          - desc
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      per_page:
+        name: per_page
+        description: 'Must be at least 5. Must not be greater than 50.'
+        required: false
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      q: b
+      type: beers
+      country: 'n'
+      city: g
+      style_id: 16
+      min_rating: 2
+      max_distance: 7
+      lat: 4326.41688
+      lng: 4326.41688
+      sort: created_at
+      order: asc
+      per_page: 17
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+           "beers": {
+             "data": [
+               {
+                 "id": 1,
+                 "name": "Mahou Clásica",
+                 "brewery": {
+                   "id": 1,
+                   "name": "Cervecería Mahou"
+                 },
+                 "style": {
+                   "id": 2,
+                   "name": "Lager"
+                 },
+                 "abv": 4.8,
+                 "ibu": 20,
+                 "description": "Cerveza rubia tipo Lager, suave y refrescante.",
+                 "rating_avg": 3.75,
+                 "check_ins_count": 42
+               }
+             ],
+             "total": 1
+           },
+           "breweries": {
+             "data": [],
+             "total": 0
+           },
+           "styles": {
+             "data": [],
+             "total": 0
+           },
+           "locations": {
+             "data": [],
+             "total": 0
+           },
+           "users": {
+             "data": [],
+             "total": 0
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

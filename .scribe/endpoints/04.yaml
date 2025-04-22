@@ -1,0 +1,585 @@
+name: 'Estilos de Cerveza'
+description: |-
+
+  APIs para gestionar estilos de cerveza
+endpoints:
+  -
+    httpMethods:
+      - GET
+    uri: api/v1/beer-styles
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Listar estilos de cerveza'
+      description: 'Obtiene un listado paginado de estilos de cerveza con opciones de filtrado y ordenamiento.'
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      name:
+        name: name
+        description: 'Filtrar por nombre.'
+        required: false
+        example: IPA
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: 'Ordenar por: name, created_at.'
+        required: false
+        example: name
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      order:
+        name: order
+        description: 'Dirección: asc, desc.'
+        required: false
+        example: asc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      per_page:
+        name: per_page
+        description: 'Elementos por página (5-50).'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      name: IPA
+      sort: name
+      order: asc
+      per_page: 15
+    bodyParameters:
+      name:
+        name: name
+        description: 'Must not be greater than 100 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      sort:
+        name: sort
+        description: ''
+        required: false
+        example: created_at
+        type: string
+        enumValues:
+          - name
+          - created_at
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      order:
+        name: order
+        description: ''
+        required: false
+        example: asc
+        type: string
+        enumValues:
+          - asc
+          - desc
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      per_page:
+        name: per_page
+        description: 'Must be at least 5. Must not be greater than 50.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      name: b
+      sort: created_at
+      order: asc
+      per_page: 22
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 1,
+               "name": "IPA (India Pale Ale)",
+               "description": "Cerveza pálida y lupulada con un amargor característico",
+               "beers_count": 12,
+               "created_at": "2023-04-18T00:00:00.000000Z",
+               "updated_at": "2023-04-18T00:00:00.000000Z"
+             }
+           ],
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: 'api/v1/beer-styles/{id}'
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ver estilo de cerveza'
+      description: 'Muestra información detallada de un estilo de cerveza específico.'
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: 'ID del estilo de cerveza.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+           "data": {
+             "id": 1,
+             "name": "IPA (India Pale Ale)",
+             "description": "Cerveza pálida y lupulada con un amargor característico",
+             "beers_count": 12,
+             "created_at": "2023-04-18T00:00:00.000000Z",
+             "updated_at": "2023-04-18T00:00:00.000000Z"
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el estilo de cerveza solicitado."
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - POST
+    uri: api/v1/beer-styles
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Crear estilo de cerveza'
+      description: 'Crea un nuevo estilo de cerveza en el sistema.'
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: 'Nombre del estilo de cerveza.'
+        required: true
+        example: 'American Pale Ale'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      description:
+        name: description
+        description: 'Descripción del estilo de cerveza.'
+        required: false
+        example: 'Similar a la IPA pero menos amarga'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      name: 'American Pale Ale'
+      description: 'Similar a la IPA pero menos amarga'
+    fileParameters: []
+    responses:
+      -
+        status: 201
+        content: |-
+          {
+           "data": {
+             "id": 8,
+             "name": "American Pale Ale",
+             "description": "Similar a la IPA pero menos amarga",
+             "beers_count": 0,
+             "created_at": "2023-04-18T00:00:00.000000Z",
+             "updated_at": "2023-04-18T00:00:00.000000Z"
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 422
+        content: |-
+          {
+           "message": "Los datos proporcionados no son válidos.",
+           "errors": {
+             "name": ["El campo nombre es obligatorio."]
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - PUT
+    uri: 'api/v1/beer-styles/{id}'
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Actualizar estilo de cerveza'
+      description: 'Actualiza la información de un estilo de cerveza existente.'
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: 'ID del estilo de cerveza.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        name: name
+        description: 'Nombre del estilo de cerveza.'
+        required: false
+        example: 'IPA - India Pale Ale'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      description:
+        name: description
+        description: 'Descripción del estilo de cerveza.'
+        required: false
+        example: 'Cerveza con alto contenido en lúpulo'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      name: 'IPA - India Pale Ale'
+      description: 'Cerveza con alto contenido en lúpulo'
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+           "data": {
+             "id": 1,
+             "name": "IPA - India Pale Ale",
+             "description": "Cerveza con alto contenido en lúpulo",
+             "beers_count": 12,
+             "created_at": "2023-04-18T00:00:00.000000Z",
+             "updated_at": "2023-04-18T00:00:00.000000Z"
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el estilo de cerveza solicitado."
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 422
+        content: |-
+          {
+           "message": "Los datos proporcionados no son válidos.",
+           "errors": {
+             "name": ["El nombre ya está en uso."]
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/beer-styles/{id}'
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Eliminar estilo de cerveza'
+      description: 'Elimina un estilo de cerveza del sistema.'
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: 'ID del estilo de cerveza.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 204
+        content: '{}'
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el estilo de cerveza solicitado."
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 409
+        content: |-
+          {
+           "message": "No se puede eliminar este estilo porque tiene cervezas asociadas."
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  -
+    httpMethods:
+      - GET
+    uri: 'api/v1/beer-styles/{id}/beers'
+    metadata:
+      groupName: 'Estilos de Cerveza'
+      groupDescription: |-
+
+        APIs para gestionar estilos de cerveza
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cervezas de un estilo'
+      description: 'Obtiene todas las cervezas que pertenecen a un estilo específico.'
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: 'ID del estilo de cerveza.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 1
+    queryParameters:
+      sort:
+        name: sort
+        description: 'Ordenar por: name, abv, ibu, rating, created_at.'
+        required: false
+        example: rating
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      order:
+        name: order
+        description: 'Dirección: asc, desc.'
+        required: false
+        example: desc
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      per_page:
+        name: per_page
+        description: 'Elementos por página (5-50).'
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      sort: rating
+      order: desc
+      per_page: 15
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 3,
+               "name": "Founders All Day IPA",
+               "brewery": {
+                 "id": 5,
+                 "name": "Founders Brewing Co."
+               },
+               "abv": 4.7,
+               "ibu": 42,
+               "description": "Session IPA de sabor intenso pero bajo alcohol",
+               "image_url": "https://example.com/beers/founders_allday.png",
+               "rating_avg": 4.2,
+               "check_ins_count": 87,
+               "is_favorite": false
+             }
+           ],
+           "links": {...},
+           "meta": {...},
+           "style": {
+             "id": 1,
+             "name": "IPA (India Pale Ale)",
+             "description": "Cerveza pálida y lupulada con un amargor característico"
+           }
+          }
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el estilo de cerveza solicitado."
+          }
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

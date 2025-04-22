@@ -1,0 +1,14 @@
+[90m= [39m[34;4mApp\Models\User[39;24m {#6083
+    [34mid[39m: [35m1[39m,
+    [34mname[39m: "[32mAdmin[39m",
+    [34memail[39m: "[32madmin@beerfinder.com[39m",
+    #[33mpassword[39m: "[32m$2y$12$i/6HqxnEtd9sqFcxpY5WRe8RbRGM64LaolAwig0omo1o9pmjbx56e[39m",
+    [34mprofile_picture[39m: [36mnull[39m,
+    [34mbio[39m: "[32mAdministrador de la plataforma BeerFinder[39m",
+    [34mlocation[39m: "[32mMadrid, España[39m",
+    [34memail_verified_at[39m: "[32m2025-04-21 19:34:31[39m",
+    #[33mremember_token[39m: [36mnull[39m,
+    [34mcreated_at[39m: "[32m2025-04-21 19:34:31[39m",
+    [34mupdated_at[39m: "[32m2025-04-21 19:34:31[39m",
+  }
+

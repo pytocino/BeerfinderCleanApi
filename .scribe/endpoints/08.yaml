@@ -1,0 +1,1036 @@
+name: Check-ins
+description: |-
+
+  APIs para gestionar check-ins de cervezas de los usuarios
+endpoints:
+  - httpMethods:
+      - GET
+    uri: api/v1/check-ins
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Listar check-ins"
+      description: "Obtiene un listado paginado de check-ins con opciones de filtrado y ordenamiento."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      beer_id:
+        name: beer_id
+        description: "Filtrar por cerveza."
+        required: false
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      brewery_id:
+        name: brewery_id
+        description: "Filtrar por cervecería."
+        required: false
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      style_id:
+        name: style_id
+        description: "Filtrar por estilo de cerveza."
+        required: false
+        example: 8
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      location_id:
+        name: location_id
+        description: "Filtrar por ubicación."
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      min_rating:
+        name: min_rating
+        description: "Calificación mínima (1-5)."
+        required: false
+        example: 4
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      user_id:
+        name: user_id
+        description: "Filtrar por usuario."
+        required: false
+        example: 7
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: "Ordenar por: recent, rating, likes."
+        required: false
+        example: recent
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      beer_id: 5
+      brewery_id: 3
+      style_id: 8
+      location_id: 2
+      min_rating: 4
+      user_id: 7
+      sort: recent
+      per_page: 15
+    bodyParameters:
+      beer_id:
+        name: beer_id
+        description: "The <code>id</code> of an existing record in the beers table."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      brewery_id:
+        name: brewery_id
+        description: "The <code>id</code> of an existing record in the breweries table."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      style_id:
+        name: style_id
+        description: "The <code>id</code> of an existing record in the beer_styles table."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      location_id:
+        name: location_id
+        description: "The <code>id</code> of an existing record in the locations table."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      min_rating:
+        name: min_rating
+        description: "Must be at least 1. Must not be greater than 5."
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      user_id:
+        name: user_id
+        description: "The <code>id</code> of an existing record in the users table."
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      sort:
+        name: sort
+        description: ""
+        required: false
+        example: rating
+        type: string
+        enumValues:
+          - recent
+          - rating
+          - likes
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+      per_page:
+        name: per_page
+        description: "Must be at least 5. Must not be greater than 50."
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        custom: []
+    cleanBodyParameters:
+      beer_id: 16
+      brewery_id: 16
+      style_id: 16
+      location_id: 16
+      min_rating: 2
+      user_id: 16
+      sort: rating
+      per_page: 22
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 42,
+               "user": {
+                 "id": 3,
+                 "name": "Carlos Ruiz",
+                 "profile_picture": "https://example.com/avatars/carlos.jpg"
+               },
+               "beer": {
+                 "id": 5,
+                 "name": "Founders Breakfast Stout",
+                 "brewery": {
+                   "id": 3,
+                   "name": "Founders Brewing Co."
+                 },
+                 "style": {
+                   "id": 8,
+                   "name": "Imperial Stout"
+                 }
+               },
+               "rating": 4.5,
+               "comment": "Excelente balance entre café y chocolate",
+               "photo_url": "https://example.com/photos/check_in_42.jpg",
+               "location": {
+                 "id": 2,
+                 "name": "Beer Garden Madrid"
+               },
+               "likes_count": 15,
+               "comments_count": 3,
+               "is_liked": false,
+               "created_at": "2023-04-18T18:30:00.000000Z",
+               "updated_at": "2023-04-18T18:30:00.000000Z"
+             }
+           ],
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - POST
+    uri: api/v1/check-ins
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Crear check-in"
+      description: "Registra un nuevo check-in de cerveza."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      beer_id:
+        name: beer_id
+        description: "ID de la cerveza."
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      rating:
+        name: rating
+        description: "Calificación de 1 a 5."
+        required: true
+        example: "4.5"
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      comment:
+        name: comment
+        description: "Comentario sobre la cerveza."
+        required: false
+        example: "Excelente balance entre café y chocolate"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      location_id:
+        name: location_id
+        description: "ID de la ubicación donde se consumió."
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      photo:
+        name: photo
+        description: "Foto de la cerveza (JPG, PNG, WebP, máx 2MB)."
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
+      serving:
+        name: serving
+        description: "Forma de servir (draft, bottle, can)."
+        required: false
+        example: draft
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      purchase_price:
+        name: purchase_price
+        description: "Precio pagado por la cerveza."
+        required: false
+        example: "6.50"
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      purchase_currency:
+        name: purchase_currency
+        description: "Moneda del precio (EUR, USD, etc)."
+        required: false
+        example: EUR
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      flavor_notes:
+        name: flavor_notes
+        description: "Array de notas de sabor."
+        required: false
+        example:
+          - café
+          - chocolate
+          - vainilla
+        type: "string[]"
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      beer_id: 5
+      rating: "4.5"
+      comment: "Excelente balance entre café y chocolate"
+      location_id: 2
+      serving: draft
+      purchase_price: "6.50"
+      purchase_currency: EUR
+      flavor_notes:
+        - café
+        - chocolate
+        - vainilla
+    fileParameters:
+      photo: null
+    responses:
+      - status: 201
+        content: |-
+          {
+           "data": {
+             "id": 42,
+             "user": {
+               "id": 3,
+               "name": "Carlos Ruiz",
+               "profile_picture": "https://example.com/avatars/carlos.jpg"
+             },
+             "beer": {
+               "id": 5,
+               "name": "Founders Breakfast Stout",
+               "brewery": {
+                 "id": 3,
+                 "name": "Founders Brewing Co."
+               },
+               "style": {
+                 "id": 8,
+                 "name": "Imperial Stout"
+               }
+             },
+             "rating": 4.5,
+             "comment": "Excelente balance entre café y chocolate",
+             "photo_url": "https://example.com/photos/check_in_42.jpg",
+             "location": {
+               "id": 2,
+               "name": "Beer Garden Madrid"
+             },
+             "likes_count": 0,
+             "comments_count": 0,
+             "serving": "draft",
+             "purchase_price": 6.50,
+             "purchase_currency": "EUR",
+             "flavor_notes": ["café", "chocolate", "vainilla"],
+             "created_at": "2023-04-18T18:30:00.000000Z",
+             "updated_at": "2023-04-18T18:30:00.000000Z"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 422
+        content: |-
+          {
+           "message": "Los datos proporcionados no son válidos.",
+           "errors": {
+             "beer_id": ["El campo beer id es obligatorio."],
+             "rating": ["El campo rating debe estar entre 1 y 5."]
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/check-ins/{id}"
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Ver check-in"
+      description: "Muestra información detallada de un check-in específico, incluyendo comentarios."
+      authenticated: false
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del check-in."
+        required: true
+        example: 42
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 42
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": {
+             "id": 42,
+             "user": {
+               "id": 3,
+               "name": "Carlos Ruiz",
+               "profile_picture": "https://example.com/avatars/carlos.jpg"
+             },
+             "beer": {
+               "id": 5,
+               "name": "Founders Breakfast Stout",
+               "brewery": {
+                 "id": 3,
+                 "name": "Founders Brewing Co."
+               },
+               "style": {
+                 "id": 8,
+                 "name": "Imperial Stout"
+               }
+             },
+             "rating": 4.5,
+             "comment": "Excelente balance entre café y chocolate",
+             "photo_url": "https://example.com/photos/check_in_42.jpg",
+             "location": {
+               "id": 2,
+               "name": "Beer Garden Madrid"
+             },
+             "likes_count": 15,
+             "comments": [
+               {
+                 "id": 112,
+                 "user": {
+                   "id": 7,
+                   "name": "María López",
+                   "profile_picture": "https://example.com/avatars/maria.jpg"
+                 },
+                 "content": "Totalmente de acuerdo, una maravilla de cerveza.",
+                 "created_at": "2023-04-18T19:15:00.000000Z"
+               }
+             ],
+             "is_liked": false,
+             "created_at": "2023-04-18T18:30:00.000000Z",
+             "updated_at": "2023-04-18T18:30:00.000000Z"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el check-in solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - PUT
+    uri: "api/v1/check-ins/{id}"
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Actualizar check-in"
+      description: "Actualiza la información de un check-in existente."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del check-in."
+        required: true
+        example: 42
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 42
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      rating:
+        name: rating
+        description: "Calificación de 1 a 5."
+        required: false
+        example: "4.0"
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      comment:
+        name: comment
+        description: "Comentario sobre la cerveza."
+        required: false
+        example: "Un sabor potente pero equilibrado"
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      location_id:
+        name: location_id
+        description: "ID de la ubicación donde se consumió."
+        required: false
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      photo:
+        name: photo
+        description: "Foto de la cerveza (JPG, PNG, WebP, máx 2MB)."
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
+      serving:
+        name: serving
+        description: "Forma de servir (draft, bottle, can)."
+        required: false
+        example: bottle
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      purchase_price:
+        name: purchase_price
+        description: "Precio pagado por la cerveza."
+        required: false
+        example: "5.95"
+        type: numeric
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      purchase_currency:
+        name: purchase_currency
+        description: "Moneda del precio (EUR, USD, etc)."
+        required: false
+        example: EUR
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      flavor_notes:
+        name: flavor_notes
+        description: "Array de notas de sabor."
+        required: false
+        example:
+          - café
+          - chocolate
+          - avellanas
+        type: "string[]"
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanBodyParameters:
+      rating: "4.0"
+      comment: "Un sabor potente pero equilibrado"
+      location_id: 3
+      serving: bottle
+      purchase_price: "5.95"
+      purchase_currency: EUR
+      flavor_notes:
+        - café
+        - chocolate
+        - avellanas
+    fileParameters:
+      photo: null
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": {
+             "id": 42,
+             "user": {
+               "id": 3,
+               "name": "Carlos Ruiz",
+               "profile_picture": "https://example.com/avatars/carlos.jpg"
+             },
+             "beer": {
+               "id": 5,
+               "name": "Founders Breakfast Stout",
+               "brewery": {
+                 "id": 3,
+                 "name": "Founders Brewing Co."
+               },
+               "style": {
+                 "id": 8,
+                 "name": "Imperial Stout"
+               }
+             },
+             "rating": 4.0,
+             "comment": "Un sabor potente pero equilibrado",
+             "photo_url": "https://example.com/photos/check_in_42.jpg",
+             "location": {
+               "id": 3,
+               "name": "Craft Beer Shop"
+             },
+             "likes_count": 15,
+             "comments_count": 3,
+             "serving": "bottle",
+             "purchase_price": 5.95,
+             "purchase_currency": "EUR",
+             "flavor_notes": ["café", "chocolate", "avellanas"],
+             "created_at": "2023-04-18T18:30:00.000000Z",
+             "updated_at": "2023-04-18T19:45:00.000000Z"
+           }
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 403
+        content: |-
+          {
+           "message": "No tienes permiso para actualizar este check-in."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el check-in solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - DELETE
+    uri: "api/v1/check-ins/{id}"
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Eliminar check-in"
+      description: "Elimina un check-in del sistema."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del check-in."
+        required: true
+        example: 42
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 42
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 204
+        content: "{}"
+        headers: []
+        description: ""
+        custom: []
+      - status: 403
+        content: |-
+          {
+           "message": "No tienes permiso para eliminar este check-in."
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el check-in solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/users/{id}/check-ins"
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Check-ins de un usuario"
+      description: "Obtiene todos los check-ins realizados por un usuario específico."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID del usuario."
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 3
+    queryParameters:
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: "Ordenar por: recent, rating."
+        required: false
+        example: recent
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      per_page: 15
+      sort: recent
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 42,
+               "beer": {
+                 "id": 5,
+                 "name": "Founders Breakfast Stout",
+                 "brewery": {
+                   "id": 3,
+                   "name": "Founders Brewing Co."
+                 },
+                 "style": {
+                   "id": 8,
+                   "name": "Imperial Stout"
+                 }
+               },
+               "rating": 4.5,
+               "comment": "Excelente balance entre café y chocolate",
+               "photo_url": "https://example.com/photos/check_in_42.jpg",
+               "location": {
+                 "id": 2,
+                 "name": "Beer Garden Madrid"
+               },
+               "likes_count": 15,
+               "comments_count": 3,
+               "is_liked": false,
+               "created_at": "2023-04-18T18:30:00.000000Z"
+             }
+           ],
+           "user": {
+             "id": 3,
+             "name": "Carlos Ruiz",
+             "profile_picture": "https://example.com/avatars/carlos.jpg",
+             "check_ins_count": 42
+           },
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado el usuario solicitado."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
+  - httpMethods:
+      - GET
+    uri: "api/v1/beers/{id}/check-ins"
+    metadata:
+      groupName: Check-ins
+      groupDescription: |-
+
+        APIs para gestionar check-ins de cervezas de los usuarios
+      subgroup: ""
+      subgroupDescription: ""
+      title: "Check-ins de una cerveza"
+      description: "Obtiene todos los check-ins realizados para una cerveza específica."
+      authenticated: true
+      custom: []
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        name: id
+        description: "ID de la cerveza."
+        required: true
+        example: 5
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanUrlParameters:
+      id: 5
+    queryParameters:
+      per_page:
+        name: per_page
+        description: "Elementos por página (5-50)."
+        required: false
+        example: 15
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+      sort:
+        name: sort
+        description: "Ordenar por: recent, rating, likes."
+        required: false
+        example: likes
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        custom: []
+    cleanQueryParameters:
+      per_page: 15
+      sort: likes
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      - status: 200
+        content: |-
+          {
+           "data": [
+             {
+               "id": 42,
+               "user": {
+                 "id": 3,
+                 "name": "Carlos Ruiz",
+                 "profile_picture": "https://example.com/avatars/carlos.jpg"
+               },
+               "rating": 4.5,
+               "comment": "Excelente balance entre café y chocolate",
+               "photo_url": "https://example.com/photos/check_in_42.jpg",
+               "location": {
+                 "id": 2,
+                 "name": "Beer Garden Madrid"
+               },
+               "likes_count": 15,
+               "comments_count": 3,
+               "is_liked": false,
+               "created_at": "2023-04-18T18:30:00.000000Z"
+             }
+           ],
+           "beer": {
+             "id": 5,
+             "name": "Founders Breakfast Stout",
+             "brewery": {
+               "id": 3,
+               "name": "Founders Brewing Co."
+             },
+             "style": {
+               "id": 8,
+               "name": "Imperial Stout"
+             },
+             "check_ins_count": 87,
+             "avg_rating": 4.3
+           },
+           "links": {...},
+           "meta": {...}
+          }
+        headers: []
+        description: ""
+        custom: []
+      - status: 404
+        content: |-
+          {
+           "message": "No se ha encontrado la cerveza solicitada."
+          }
+        headers: []
+        description: ""
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []
