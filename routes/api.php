@@ -70,7 +70,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/breweries/{id}', [BreweryController::class, 'show']);
 
         // Estilos de cerveza
-        Route::post('/beer-styles', [BeerStyleController::class, 'get']);
+        Route::post('/beer-styles', [BeerStyleController::class, 'index']);
         Route::put('/beer-styles/{id}', [BeerStyleController::class, 'show']);
 
         // Ubicaciones

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             BeerStyleSeeder::class,
             BeerSeeder::class,
             LocationSeeder::class,
+            PostSeeder::class,
             CheckInSeeder::class,
             CommentSeeder::class,
             LikeSeeder::class,

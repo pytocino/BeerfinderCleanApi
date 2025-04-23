@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,11 +18,48 @@ class FollowFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => fake()->text(),
-            'follower_id' => fake()->text(),
-            'following_id' => fake()->text(),
-            'created_at' => $this->faker->dateTime(),
-            'updated_at' => $this->faker->dateTime(),
+            'follower_id' => User::factory(),
+            'following_id' => User::factory(),
+            'accepted' => true,
+            'followed_at' => now(),
+            'unfollowed_at' => null,
         ];
+    }
+
+    /**
+     * Configura el seguimiento como pendiente de aceptación.
+     */
+    public function pending(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'accepted' => false,
+            ];
+        });
+    }
+
+    /**
+     * Configura el seguimiento como dejado de seguir.
+     */
+    public function unfollowed(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'unfollowed_at' => now(),
+            ];
+        });
+    }
+
+    /**
+     * Configura el seguimiento para usuarios específicos.
+     */
+    public function between(User $follower, User $following): static
+    {
+        return $this->state(function (array $attributes) use ($follower, $following) {
+            return [
+                'follower_id' => $follower->id,
+                'following_id' => $following->id,
+            ];
+        });
     }
 }

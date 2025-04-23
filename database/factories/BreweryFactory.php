@@ -17,18 +17,22 @@ class BreweryFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => fake()->text(),
-            'name' => fake()->name(),
-            'country' => fake()->text(),
-            'city' => fake()->text(),
-            'address' => fake()->address(),
-            'latitude' => fake()->text(),
-            'longitude' => fake()->text(),
-            'description' => $this->faker->paragraph(),
-            'logo_url' => fake()->text(),
-            'website' => fake()->text(),
-            'created_at' => $this->faker->dateTime(),
-            'updated_at' => $this->faker->dateTime(),
+            'name' => fake()->company() . ' Brewery',
+            'country' => fake()->country(),
+            'city' => fake()->city(),
+            'address' => fake()->streetAddress(),
+            'latitude' => fake()->latitude(),
+            'longitude' => fake()->longitude(),
+            'description' => $this->faker->paragraph(3),
+            'logo_url' => fake()->imageUrl(200, 200, 'brewery'),
+            'website' => fake()->url(),
+            'email' => fake()->companyEmail(),
+            'phone' => fake()->phoneNumber(),
+            'instagram' => '@' . fake()->userName(),
+            'facebook' => fake()->userName(),
+            'twitter' => '@' . fake()->userName(),
+            'cover_photo' => fake()->imageUrl(800, 400, 'brewery'),
+            'founded' => fake()->year(),
         ];
     }
 }

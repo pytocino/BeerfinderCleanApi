@@ -73,4 +73,19 @@ class Post extends Model
     {
         return $this->hasMany(Like::class);
     }
+
+    /**
+     * Obtiene la cerveza asociada al post.
+     */
+    public function beer(): BelongsTo
+    {
+        return $this->belongsTo(Beer::class);
+    }
+    /**
+     * Obtiene la ubicación asociada al post.
+     */
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
 }

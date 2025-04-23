@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
         // Usuario administrador
         User::create([
             'name' => 'Admin',
+            'username' => 'ElAdmin',
             'email' => 'admin@beerfinder.com',
             'password' => Hash::make('password'),
             'bio' => 'Administrador de la plataforma BeerFinder',
@@ -23,7 +24,7 @@ class UserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // Crear 20 usuarios regulares
-        User::factory()->count(20)->create();
+        // Crear 30 usuarios regulares
+        User::factory()->count(30)->create();
     }
 }

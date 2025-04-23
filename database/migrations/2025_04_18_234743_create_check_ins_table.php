@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('check_ins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('post_id')->constrained()->onDelete('cascade'); // Relación con Post
             $table->foreignId('beer_id')->constrained()->onDelete('cascade');
             $table->foreignId('location_id')->nullable()->constrained();
             $table->decimal('rating', 2, 1)->nullable(); // Valoración de 0 a 5 con un decimal

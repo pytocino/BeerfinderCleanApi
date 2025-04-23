@@ -16,19 +16,80 @@ class LocationFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'id' => fake()->text(),
-            'name' => fake()->name(),
-            'type' => fake()->text(),
-            'country' => fake()->text(),
-            'city' => fake()->text(),
-            'address' => fake()->address(),
-            'latitude' => fake()->text(),
-            'longitude' => fake()->text(),
-            'description' => $this->faker->paragraph(),
-            'image_url' => fake()->text(),
-            'created_at' => $this->faker->dateTime(),
-            'updated_at' => $this->faker->dateTime(),
+        $locationTypes = [
+            'bar',
+            'brewery',
+            'restaurant',
+            'store',
+            'taproom',
+            'pub',
+            'club',
+            'festival',
+            'hotel'
         ];
+
+        return [
+            'name' => fake()->company() . ' ' . fake()->randomElement(['Bar', 'Pub', 'Brewery', 'Taproom']),
+            'type' => fake()->randomElement($locationTypes),
+            'country' => fake()->country(),
+            'city' => fake()->city(),
+            'address' => fake()->streetAddress(),
+            'latitude' => fake()->latitude(),
+            'longitude' => fake()->longitude(),
+            'description' => $this->faker->paragraph(3),
+            'image_url' => fake()->imageUrl(640, 480, 'beer'),
+            'cover_photo' => fake()->imageUrl(1280, 720, 'bar'),
+            'website' => fake()->url(),
+            'email' => fake()->companyEmail(),
+            'phone' => fake()->phoneNumber(),
+            'instagram' => '@' . fake()->userName(),
+            'facebook' => fake()->userName(),
+            'twitter' => '@' . fake()->userName(),
+            'verified' => fake()->boolean(20), // 20% de probabilidad de estar verificado
+            'check_ins_count' => fake()->numberBetween(0, 500),
+        ];
+    }
+
+    /**
+     * Configurar la ubicación como un bar.
+     */
+    public function bar(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'type' => 'bar',
+            'name' => fake()->company() . ' Bar'
+        ]);
+    }
+
+    /**
+     * Configurar la ubicación como una cervecería.
+     */
+    public function brewery(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'type' => 'brewery',
+            'name' => fake()->company() . ' Brewery'
+        ]);
+    }
+
+    /**
+     * Configurar la ubicación como un restaurante.
+     */
+    public function restaurant(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'type' => 'restaurant',
+            'name' => fake()->company() . ' Restaurant'
+        ]);
+    }
+
+    /**
+     * Configurar la ubicación como verificada.
+     */
+    public function verified(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'verified' => true
+        ]);
     }
 }

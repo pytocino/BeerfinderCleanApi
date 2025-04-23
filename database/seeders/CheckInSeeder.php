@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Beer;
+use App\Models\Post;
 use App\Models\CheckIn;
-use App\Models\Location;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class CheckInSeeder extends Seeder
@@ -15,54 +13,27 @@ class CheckInSeeder extends Seeder
      */
     public function run(): void
     {
-        // Obtener datos necesarios
-        $users = User::all();
-        $beers = Beer::all();
-        $locations = Location::all();
+        // Obtener todos los posts existentes
+        $posts = Post::all();
 
-        // Asegurarnos de que hay suficientes registros
-        if ($users->isEmpty() || $beers->isEmpty()) {
+        // Verificar que existan posts para crear los check-ins
+        if ($posts->isEmpty()) {
+            $this->command->error('No hay posts en la base de datos. Debes ejecutar primero PostSeeder.');
             return;
         }
 
-        // Crear 50 check-ins aleatorios
-        for ($i = 0; $i < 50; $i++) {
-            $user = $users->random();
-            $beer = $beers->random();
-
-            // 70% de probabilidad de incluir una ubicación
-            $location = (rand(1, 10) <= 7) ? $locations->random() : null;
-
-            CheckIn::create([
-                'user_id' => $user->id,
-                'beer_id' => $beer->id,
-                'location_id' => $location ? $location->id : null,
-                'rating' => rand(10, 50) / 10, // Valor entre 1.0 y 5.0
-                'review' => "He probado la " . $beer->name . ". " . $this->getRandomReview(),
-                'photo_url' => rand(0, 1) ? 'https://example.com/check-ins/photo' . rand(1, 20) . '.jpg' : null,
-                'created_at' => now()->subDays(rand(0, 30)),
-            ]);
+        // Crear exactamente un check-in por cada post
+        foreach ($posts as $post) {
+            CheckIn::factory()
+                ->state([
+                    'post_id' => $post->id,
+                    'user_id' => $post->user_id,
+                    'beer_id' => $post->beer_id,
+                    'location_id' => $post->location_id,
+                ])
+                ->create();
         }
-    }
 
-    /**
-     * Obtiene una reseña aleatoria para un check-in.
-     */
-    private function getRandomReview(): string
-    {
-        $reviews = [
-            'Muy buena cerveza, refrescante y con buen sabor.',
-            'Me ha encantado, tiene un sabor equilibrado y un aroma fantástico.',
-            'No está mal, pero esperaba más. Un poco aguada para mi gusto.',
-            'Excelente cerveza con notas a cítricos y un amargor equilibrado.',
-            'Demasiado amarga para mi gusto, pero bien elaborada.',
-            'Una de las mejores que he probado este año. Recomendada.',
-            'Buen equilibrio entre malta y lúpulo, muy bebible.',
-            'No me ha convencido, demasiado dulce para mi gusto.',
-            'Perfecta para el verano, ligera y refrescante.',
-            'Increíble aroma y cuerpo. La recomiendo totalmente.'
-        ];
-
-        return $reviews[array_rand($reviews)];
+        $this->command->info('Se han creado ' . $posts->count() . ' check-ins, uno por cada post.');
     }
 }

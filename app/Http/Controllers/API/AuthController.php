@@ -260,8 +260,8 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
-            'username' => 'nullable|string|max:50|unique:users,username,',
-            'email' => 'nullable|string|email|max:255|unique:users,email,',
+            'username' => 'nullable|string|max:50|unique:users,username,' . $request->user()->id,
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $request->user()->id,
             'profile_picture' => 'nullable|string',
             'bio' => 'nullable|string|max:500',
             'location' => 'nullable|string|max:255',

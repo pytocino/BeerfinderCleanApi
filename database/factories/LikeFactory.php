@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+use App\Models\Post;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,11 +19,33 @@ class LikeFactory extends Factory
     public function definition(): array
     {
         return [
-            'id' => fake()->text(),
-            'user_id' => fake()->text(),
-            'check_in_id' => fake()->text(),
-            'created_at' => $this->faker->dateTime(),
-            'updated_at' => $this->faker->dateTime(),
+            'user_id' => User::factory(),
+            'post_id' => Post::factory(),
+            'liked_at' => now(),
         ];
+    }
+
+    /**
+     * Configura el like para un usuario específico.
+     */
+    public function forUser(User $user): static
+    {
+        return $this->state(function (array $attributes) use ($user) {
+            return [
+                'user_id' => $user->id,
+            ];
+        });
+    }
+
+    /**
+     * Configura el like para un post específico.
+     */
+    public function forPost(Post $post): static
+    {
+        return $this->state(function (array $attributes) use ($post) {
+            return [
+                'post_id' => $post->id,
+            ];
+        });
     }
 }

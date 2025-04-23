@@ -18,6 +18,7 @@ class CheckIn extends Model
      */
     protected $fillable = [
         'user_id',
+        'post_id',
         'beer_id',
         'location_id',
         'rating',
@@ -61,5 +62,13 @@ class CheckIn extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    /**
+     * Obtiene el post asociado al check-in.
+     */
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Post::class);
     }
 }
