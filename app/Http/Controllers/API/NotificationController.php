@@ -6,53 +6,44 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Resources\NotificationResource;
 
 class NotificationController extends Controller
 {
     /**
      * Obtener todas las notificaciones del usuario autenticado.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
         $notifications = Notification::where('user_id', $user->id)
-            ->with('fromUser')
+            ->with(['fromUser', 'user'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return response()->json($notifications);
+        return response()->json(NotificationResource::collection($notifications));
     }
 
     /**
      * Mostrar una notificación específica.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
         $notification = Notification::where('id', $id)
             ->where('user_id', $user->id)
-            ->with('fromUser')
+            ->with(['fromUser', 'user'])
             ->first();
 
         if (!$notification) {
             return response()->json(['message' => 'Notificación no encontrada.'], 404);
         }
 
-        return response()->json($notification);
+        return response()->json(new NotificationResource($notification));
     }
 
     /**
      * Crear una nueva notificación.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -71,19 +62,15 @@ class NotificationController extends Controller
             'is_read' => false,
         ]);
 
-        return response()->json($notification, 201);
+        return response()->json(new NotificationResource($notification), 201);
     }
 
     /**
      * Actualizar una notificación específica.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
         $notification = Notification::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
@@ -103,19 +90,15 @@ class NotificationController extends Controller
             $notification->save();
         }
 
-        return response()->json($notification);
+        return response()->json(new NotificationResource($notification));
     }
 
     /**
      * Eliminar una notificación específica.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function destroy(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
         $notification = Notification::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
@@ -131,14 +114,10 @@ class NotificationController extends Controller
 
     /**
      * Marcar como leída una notificación específica.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function markAsRead(Request $request, $id): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
         $notification = Notification::where('id', $id)
             ->where('user_id', $user->id)
             ->first();
@@ -147,20 +126,21 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notificación no encontrada.'], 404);
         }
 
-        $notification->markAsRead();
+        $notification->is_read = true;
+        if (!$notification->read_at) {
+            $notification->read_at = now();
+        }
+        $notification->save();
 
         return response()->json(['message' => 'Notificación marcada como leída.']);
     }
 
     /**
      * Marcar todas las notificaciones como leídas.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function markAllAsRead(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user();
 
         Notification::where('user_id', $user->id)
             ->where('is_read', false)

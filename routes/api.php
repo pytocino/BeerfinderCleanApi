@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\UserController;
@@ -126,6 +127,12 @@ Route::prefix('v1')->group(function () {
             Route::patch('/{id}', [CommentController::class, 'update']);
             Route::delete('/{id}', [CommentController::class, 'destroy']);
         });
+
+        //Mensajes directos
+        Route::get('/messages/{user}', action: [MessageController::class, 'conversation']);
+        Route::post('/messages', [MessageController::class, 'store']);
+        Route::put('/messages/{message}/read', [MessageController::class, 'markAsRead']);
+        Route::get('/messages', [MessageController::class, 'index']);
 
         // Notificaciones
         Route::prefix('notifications')->group(function () {

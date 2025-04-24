@@ -27,24 +27,29 @@ class SocialController extends Controller
             return response()->json(['message' => 'Ya sigues a este usuario.'], 409);
         }
 
-        Follow::create([
+        $follow = Follow::create([
             'follower_id' => $currentUser->id,
             'following_id' => $id,
             'accepted' => true
         ]);
 
-        return response()->json(['message' => 'Ahora sigues a este usuario.']);
+        return response()->json([
+            'message' => 'Ahora sigues a este usuario.',
+            'data' => new FollowResource($follow)
+        ]);
     }
 
     public function unfollow(Request $request, $id): JsonResponse
     {
         $currentUser = $request->user();
 
-        $deleted = Follow::where('follower_id', $currentUser->id)
+        $follow = Follow::where('follower_id', $currentUser->id)
             ->where('following_id', $id)
-            ->delete();
+            ->first();
 
-        if ($deleted) {
+        if ($follow) {
+            $follow->unfollowed_at = now();
+            $follow->save();
             return response()->json(['message' => 'Has dejado de seguir a este usuario.']);
         } else {
             return response()->json(['message' => 'No estás siguiendo a este usuario.'], 404);
@@ -55,11 +60,10 @@ class SocialController extends Controller
     public function followings(Request $request): JsonResponse
     {
         $currentUser = $request->user();
-        $followings = User::whereIn('id', function ($query) use ($currentUser) {
-            $query->select('following_id')
-                ->from('follows')
-                ->where('follower_id', $currentUser->id);
-        })->get();
+        $followings = Follow::with(['following', 'follower'])
+            ->where('follower_id', $currentUser->id)
+            ->whereNull('unfollowed_at')
+            ->get();
 
         return response()->json(FollowResource::collection($followings));
     }
@@ -68,11 +72,10 @@ class SocialController extends Controller
     public function followers(Request $request): JsonResponse
     {
         $currentUser = $request->user();
-        $followers = User::whereIn('id', function ($query) use ($currentUser) {
-            $query->select('follower_id')
-                ->from('follows')
-                ->where('following_id', $currentUser->id);
-        })->get();
+        $followers = Follow::with(['following', 'follower'])
+            ->where('following_id', $currentUser->id)
+            ->whereNull('unfollowed_at')
+            ->get();
 
         return response()->json(FollowResource::collection($followers));
     }

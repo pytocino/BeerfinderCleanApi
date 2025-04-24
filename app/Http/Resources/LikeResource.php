@@ -19,6 +19,7 @@ class LikeResource extends JsonResource
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
+                'profile_picture' => $this->user->profile_picture,
             ],
         ];
     }

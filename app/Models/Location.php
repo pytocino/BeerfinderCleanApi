@@ -56,4 +56,34 @@ class Location extends Model
     {
         return $this->hasMany(CheckIn::class);
     }
+
+    /**
+     * Obtiene la cantidad de check-ins realizados en esta ubicación.
+     */
+    public function getCheckInsCountAttribute(): int
+    {
+        return DB::table('check_ins')
+            ->where('location_id', $this->id)
+            ->count();
+    }
+
+    public function beersTasted()
+    {
+        // Devuelve las cervezas distintas que se han tomado en esta ubicación
+        return $this->hasMany(CheckIn::class)
+            ->select('beer_id')
+            ->whereNotNull('beer_id')
+            ->groupBy('beer_id');
+    }
+
+    // Si quieres obtener los modelos Beer directamente:
+    public function uniqueBeers()
+    {
+        return $this->belongsToMany(
+            Beer::class,
+            'check_ins',
+            'location_id',
+            'beer_id'
+        )->distinct();
+    }
 }

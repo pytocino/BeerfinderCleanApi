@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brewery;
+use App\Http\Resources\BreweryResource;
 use Illuminate\Http\JsonResponse;
 
 class BreweryController extends Controller
@@ -14,8 +15,8 @@ class BreweryController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $breweries = Brewery::all();
-        return response()->json($breweries);
+        $breweries = Brewery::withCount('beers')->get();
+        return response()->json(BreweryResource::collection($breweries));
     }
 
     /**
@@ -23,12 +24,12 @@ class BreweryController extends Controller
      */
     public function show(Request $request, $id): JsonResponse
     {
-        $brewery = Brewery::with('beers')->find($id);
+        $brewery = Brewery::with('beers')->withCount('beers')->find($id);
 
         if (!$brewery) {
             return response()->json(['message' => 'Cervecería no encontrada.'], 404);
         }
 
-        return response()->json($brewery);
+        return response()->json(new BreweryResource($brewery));
     }
 }

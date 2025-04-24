@@ -39,20 +39,20 @@ class FeedController extends Controller
         // Usar auth() en lugar de $request->user()
         $followingIds = auth()->user()->following()->pluck('users.id')->toArray();
 
-        // Si el usuario no sigue a nadie, devolver colección vacía
+        // Si el usuario no sigue a nadie, devolver null
         if (empty($followingIds)) {
-            return PostResource::collection(collect([]));
+            return response()->json(null);
         }
 
         $posts = Post::whereIn('user_id', $followingIds)
             ->with([
                 'user',
                 'beer',
-                'likes',      // <--- Cargar todos los likes
+                'likes',
                 'comments'
             ])
             ->orderBy('created_at', 'desc')
-            ->paginate(10, ['*'], 'page', $page); // Usar el parámetro page explícitamente
+            ->paginate(10, ['*'], 'page', $page);
 
         return PostResource::collection($posts);
     }

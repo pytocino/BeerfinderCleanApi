@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Location;
+use App\Http\Resources\LocationResource;
 use Illuminate\Http\JsonResponse;
 
 class LocationController extends Controller
@@ -15,7 +16,7 @@ class LocationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $locations = Location::all();
-        return response()->json($locations);
+        return response()->json(LocationResource::collection($locations));
     }
 
     /**
@@ -29,6 +30,6 @@ class LocationController extends Controller
             return response()->json(['message' => 'Ubicación no encontrada.'], 404);
         }
 
-        return response()->json($location);
+        return response()->json(new LocationResource($location));
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\Like;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Resources\LikeResource;
 
 class LikeController extends Controller
 {
@@ -29,7 +30,7 @@ class LikeController extends Controller
             ->where('post_id', $id)
             ->get();
 
-        return response()->json($likes);
+        return response()->json(LikeResource::collection($likes));
     }
 
     /**
@@ -58,10 +59,12 @@ class LikeController extends Controller
             'liked_at' => now(),
         ]);
 
-        // Incrementar el contador de likes del post
-        $post->increment('likes_count');
+        // Incrementar el contador de likes del post si existe la columna
+        if ($post->getConnection()->getSchemaBuilder()->hasColumn($post->getTable(), 'likes_count')) {
+            $post->increment('likes_count');
+        }
 
-        return response()->json($like, 201);
+        return response()->json(new LikeResource($like), 201);
     }
 
     /**
@@ -80,16 +83,20 @@ class LikeController extends Controller
             return response()->json(['message' => 'Post no encontrado.'], 404);
         }
 
-        $deleted = Like::where('user_id', $user->id)
+        $like = Like::where('user_id', $user->id)
             ->where('post_id', $id)
-            ->delete();
+            ->first();
 
-        if (!$deleted) {
+        if (!$like) {
             return response()->json(['message' => 'No has dado like a este post.'], 404);
         }
 
-        // Decrementar el contador de likes del post
-        $post->decrement('likes_count');
+        $like->delete();
+
+        // Decrementar el contador de likes del post si existe la columna
+        if ($post->getConnection()->getSchemaBuilder()->hasColumn($post->getTable(), 'likes_count')) {
+            $post->decrement('likes_count');
+        }
 
         return response()->json(['message' => 'Like eliminado correctamente.']);
     }

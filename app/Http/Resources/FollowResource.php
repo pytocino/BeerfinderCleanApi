@@ -11,9 +11,21 @@ class FollowResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'username' => $this->username,
-            'profile_picture' => $this->profile_picture, // Ajusta el nombre del campo si es diferente en tu modelo User
+            'follower' => [
+                'id' => $this->follower?->id,
+                'name' => $this->follower?->name,
+                'username' => $this->follower?->username,
+                'profile_picture' => $this->follower?->profile_picture,
+            ],
+            'following' => [
+                'id' => $this->following?->id,
+                'name' => $this->following?->name,
+                'username' => $this->following?->username,
+                'profile_picture' => $this->following?->profile_picture,
+            ],
+            'accepted' => $this->accepted,
+            'followed_at' => $this->followed_at,
+            'unfollowed_at' => $this->unfollowed_at,
         ];
     }
 }
