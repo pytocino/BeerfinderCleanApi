@@ -27,99 +27,124 @@ use App\Http\Controllers\API\FavoriteController;
 |
 */
 
-// Rutas públicas
-Route::prefix('v1')->group(function () {
-    // Auth
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
-    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
-
-    Route::middleware('auth:sanctum')->group(function () {
-
-        Route::get('/search', [SearchController::class, 'search']);
-
-        // Auth
-        Route::post('/auth/logout', [AuthController::class, 'logout']);
-        Route::put('/auth/update-profile', [AuthController::class, 'updateProfile']);
-        Route::put('/auth/change-password', [AuthController::class, 'changePassword']);
-
-        // Usuarios
-        Route::get('/users/{id}', [UserController::class, 'show']);
-        Route::get('/users/me', [UserController::class, 'me']);
-
-        // Relaciones sociales (usando SocialController)
-        Route::post('/users/{id}/follow', [SocialController::class, 'follow']);
-        Route::delete('/users/{id}/unfollow', [SocialController::class, 'unfollow']);
-        Route::get('/users/{id}/followers', [SocialController::class, 'followers']);
-        Route::get('/users/{id}/following', [SocialController::class, 'followings']);
-
-        // Feed social
-        Route::get('/feed', [FeedController::class, 'feedGeneral']);
-        Route::get('/feed/friends', [FeedController::class, 'feedAmigos']);
-
-        // Favorites (rutas REST adicionales)
-        Route::get('/favorites', [FavoriteController::class, 'index']);
-        Route::post('/favorites', [FavoriteController::class, 'store']);
-        Route::get('/favorites/{id}', [FavoriteController::class, 'show']);
-        Route::put('/favorites/{id}', [FavoriteController::class, 'update']);
-        Route::delete('/favorites/{id}', [FavoriteController::class, 'destroy']);
-
-        // Cervecerías
-        Route::post('/breweries', [BreweryController::class, 'index']);
-        Route::put('/breweries/{id}', [BreweryController::class, 'show']);
-
-        // Estilos de cerveza
-        Route::post('/beer-styles', [BeerStyleController::class, 'index']);
-        Route::put('/beer-styles/{id}', [BeerStyleController::class, 'show']);
-
-        // Ubicaciones
-        Route::post('/locations', [LocationController::class, 'index']);
-        Route::put('/locations/{id}', [LocationController::class, 'show']);
-
-        // Posts - Rutas RESTful completas
-        Route::get('/posts', [PostController::class, 'index']);
-        Route::get('/posts/{id}', [PostController::class, 'show']);
-        Route::post('/posts', [PostController::class, 'store']);
-        Route::put('/posts/{id}', [PostController::class, 'update']);
-        Route::patch('/posts/{id}', [PostController::class, 'update']);
-        Route::delete('/posts/{id}', [PostController::class, 'destroy']);
-
-        // Comentarios - Rutas RESTful
-        Route::get('/posts/{id}/comments', [CommentController::class, 'index']);
-        Route::get('/comments/{id}', [CommentController::class, 'show']);
-        Route::post('/posts/{id}/comments', [CommentController::class, 'store']);
-        Route::put('/comments/{id}', [CommentController::class, 'update']);
-        Route::patch('/comments/{id}', [CommentController::class, 'update']);
-        Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
-
-        // Likes - Rutas RESTful
-        Route::get('/posts/{id}/likes', [LikeController::class, 'getPostLikes']);
-        Route::post('/posts/{id}/likes', [LikeController::class, 'likePost']);
-        Route::delete('/posts/{id}/likes', [LikeController::class, 'unlikePost']);
-
-
-        // Notificaciones
-        Route::get('/notifications', [NotificationController::class, 'index']);
-        Route::get('/notifications/{id}', [NotificationController::class, 'show']);
-        Route::post('/notifications', [NotificationController::class, 'store']);
-        Route::put('/notifications/{id}', [NotificationController::class, 'update']);
-        Route::patch('/notifications/{id}', [NotificationController::class, 'update']);
-        Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
-        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-        Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-    });
-
-    // Rutas específicas para administradores
-    Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-        Route::get('/reports', [ReportController::class, 'index']);
-        Route::get('/reports/{id}', [ReportController::class, 'show']);
-        Route::put('/reports/{id}', [ReportController::class, 'update']);
-        Route::patch('/reports/{id}', [ReportController::class, 'update']);
-    });
-});
-
 // Ruta para probar que la API está funcionando
 Route::get('/v1/status', function () {
     return response()->json(['status' => 'online', 'version' => '1.0.0']);
+});
+
+// Rutas públicas y protegidas en versión 1 de la API
+Route::prefix('v1')->group(function () {
+    // Rutas de autenticación públicas
+    Route::prefix('auth')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    });
+
+    // Rutas que requieren autenticación
+    Route::middleware('auth:sanctum')->group(function () {
+        // Búsqueda general
+        Route::get('/search', [SearchController::class, 'search']);
+
+        // Rutas de autenticación protegidas
+        Route::prefix('auth')->group(function () {
+            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
+            Route::put('/update-profile', [AuthController::class, 'updateProfile']);
+            Route::put('/change-password', [AuthController::class, 'changePassword']);
+        });
+
+        // Usuarios
+        Route::prefix('users')->group(function () {
+            Route::get('/me', [UserController::class, 'me']);
+            Route::get('/{id}', [UserController::class, 'show']);
+
+            // Relaciones sociales
+            Route::post('/{id}/follow', [SocialController::class, 'follow']);
+            Route::delete('/{id}/unfollow', [SocialController::class, 'unfollow']);
+            Route::get('/{id}/followers', [SocialController::class, 'followers']);
+            Route::get('/{id}/following', [SocialController::class, 'followings']);
+        });
+
+        // Feed social
+        Route::prefix('feed')->group(function () {
+            Route::get('/', [FeedController::class, 'feedGeneral']);
+            Route::get('/friends', [FeedController::class, 'feedAmigos']);
+        });
+
+        // Favoritos
+        Route::prefix('favorites')->group(function () {
+            Route::get('/', [FavoriteController::class, 'index']);
+            Route::post('/', [FavoriteController::class, 'store']);
+            Route::get('/{id}', [FavoriteController::class, 'show']);
+            Route::put('/{id}', [FavoriteController::class, 'update']);
+            Route::delete('/{id}', [FavoriteController::class, 'destroy']);
+        });
+
+        // Cervecerías
+        Route::prefix('breweries')->group(function () {
+            Route::get('/', [BreweryController::class, 'index']);
+            Route::get('/{id}', [BreweryController::class, 'show']);
+        });
+
+        // Estilos de cerveza
+        Route::prefix('beer-styles')->group(function () {
+            Route::get('/', [BeerStyleController::class, 'index']);
+            Route::get('/{id}', [BeerStyleController::class, 'show']);
+        });
+
+        // Ubicaciones
+        Route::prefix('locations')->group(function () {
+            Route::get('/', [LocationController::class, 'index']);
+            Route::get('/{id}', [LocationController::class, 'show']);
+        });
+
+        // Posts
+        Route::prefix('posts')->group(function () {
+            Route::get('/', [PostController::class, 'index']);
+            Route::post('/', [PostController::class, 'store']);
+            Route::get('/{id}', [PostController::class, 'show']);
+            Route::put('/{id}', [PostController::class, 'update']);
+            Route::patch('/{id}', [PostController::class, 'update']);
+            Route::delete('/{id}', [PostController::class, 'destroy']);
+
+            // Comentarios de posts
+            Route::get('/{id}/comments', [CommentController::class, 'index']);
+            Route::post('/{id}/comments', [CommentController::class, 'store']);
+
+            // Likes de posts
+            Route::get('/{id}/likes', [LikeController::class, 'getPostLikes']);
+            Route::post('/{id}/likes', [LikeController::class, 'likePost']);
+            Route::delete('/{id}/likes', [LikeController::class, 'unlikePost']);
+        });
+
+        // Comentarios
+        Route::prefix('comments')->group(function () {
+            Route::get('/{id}', [CommentController::class, 'show']);
+            Route::put('/{id}', [CommentController::class, 'update']);
+            Route::patch('/{id}', [CommentController::class, 'update']);
+            Route::delete('/{id}', [CommentController::class, 'destroy']);
+        });
+
+        // Notificaciones
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::post('/', [NotificationController::class, 'store']);
+            Route::get('/{id}', [NotificationController::class, 'show']);
+            Route::put('/{id}', [NotificationController::class, 'update']);
+            Route::patch('/{id}', [NotificationController::class, 'update']);
+            Route::delete('/{id}', [NotificationController::class, 'destroy']);
+            Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
+            Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
+        });
+    });
+
+    // Rutas específicas para administradores
+    Route::middleware(['auth:sanctum', 'admin'])->prefix('reports')->group(function () {
+        Route::get('/', [ReportController::class, 'index']);
+        Route::get('/{id}', [ReportController::class, 'show']);
+        Route::put('/{id}', [ReportController::class, 'update']);
+        Route::patch('/{id}', [ReportController::class, 'update']);
+    });
 });

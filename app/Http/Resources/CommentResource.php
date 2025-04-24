@@ -10,33 +10,25 @@ class CommentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'user_id' => $this->user_id,
-            'content' => $this->content,
-            'parent_id' => $this->parent_id,
-            'edited' => $this->edited,
-            'edited_at' => $this->edited_at,
-            'pinned' => $this->pinned,
+            'id'         => $this->id,
+            'post_id'    => $this->post_id,
+            'user_id'    => $this->user_id,
+            'parent_id'  => $this->parent_id,
+            'content'    => $this->content,
+            'edited'     => (bool) $this->edited,
+            'edited_at'  => $this->edited_at,
+            'pinned'     => (bool) ($this->pinned ?? false),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'user' => [
-                'id' =>  $this->user->id,
-                'name' => $this->user->name,
-                'profile_picture' => $this->user->profile_picture,
-            ],
-            'parent' => $this->when($this->parent_id !== null, function () {
-                return $this->whenLoaded('parent', function () {
-                    return [
-                        'id' => $this->parent->id,
-                        'content' => $this->parent->content,
-                        'user' => [
-                            'id' =>  $this->parent->user->id,
-                            'name' => $this->parent->user->name,
-                            'profile_picture' => $this->parent->user->profile_picture,
-                        ],
-                    ];
-                });
+            'user'       => $this->whenLoaded('user', function () {
+                return [
+                    'id' => $this->user->id,
+                    'name' => $this->user->name,
+                    'username' => $this->user->username,
+                    'profile_picture' => $this->user->profile_picture,
+                ];
             }),
+            'replies'    => CommentResource::collection($this->whenLoaded('replies')),
         ];
     }
 }

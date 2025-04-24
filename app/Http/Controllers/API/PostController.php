@@ -10,14 +10,35 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PostController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return PostResource::collection(Post::latest()->paginate(15));
+        $query = Post::with([
+            'user',
+            'beer',
+            'likes',
+            'comments'
+        ])->latest();
+
+        // Cambia esto:
+        // if ($request->has('id')) {
+        //     $query->where('id', $request->input('id'));
+        // }
+
+        // Por esto:
+        if ($request->has('userId')) {
+            $query->where('user_id', $request->input('userId'));
+        }
+
+        $posts = $query->paginate(15);
+
+        return PostResource::collection($posts);
     }
 
     public function show($id)
     {
-        return new PostResource(Post::findOrFail($id));
+        // Eager loading de relaciones para un solo post
+        $post = Post::with(['user', 'beer', 'likes', 'comments'])->findOrFail($id);
+        return new PostResource($post);
     }
 
     public function store(Request $request)
@@ -30,6 +51,8 @@ class PostController extends Controller
         ]);
         $data['user_id'] = $request->user()->id;
         $post = Post::create($data);
+        // Cargar relaciones para la respuesta
+        $post->load(['user', 'beer', 'likes', 'comments']);
         return new PostResource($post);
     }
 
@@ -46,6 +69,7 @@ class PostController extends Controller
             'rating' => 'nullable|integer|min:1|max:5',
         ]);
         $post->update($data);
+        $post->load(['user', 'beer', 'likes', 'comments']);
         return new PostResource($post);
     }
 

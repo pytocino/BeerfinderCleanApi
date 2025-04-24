@@ -251,4 +251,47 @@ class AuthControllerTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['username']);
     }
+
+    public function test_user_can_refresh_token()
+    {
+        // Crear usuario de prueba
+        $user = $this->createTestUser();
+
+        // Crear un token real en la base de datos
+        $initialToken = $user->createToken('auth_token')->plainTextToken;
+
+        // Verificar que hay exactamente un token antes de refrescar
+        $this->assertEquals(1, $user->tokens()->count());
+
+        // Realizar la solicitud al endpoint de refresh token usando el token inicial
+        $response = $this->withHeader('Authorization', 'Bearer ' . $initialToken)
+            ->postJson('/api/v1/auth/refresh-token');
+
+        // Verificar respuesta exitosa
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'user',
+                'access_token',
+                'token_type'
+            ]);
+
+        // Recargar el usuario para obtener datos actualizados
+        // Forzamos la carga desde la base de datos
+        $user = User::find($user->id);
+
+        // Verificar que sigue habiendo un solo token (se eliminó uno y se creó uno nuevo)
+        $tokenCount = $user->tokens()->count();
+        $this->assertEquals(1, $tokenCount, "Se esperaba 1 token, pero se encontraron {$tokenCount}");
+
+        // Verificar que el token original ya no funciona
+        $originalTokenResponse = $this->withHeader('Authorization', 'Bearer ' . $initialToken)
+            ->getJson('/api/v1/users/me');
+        $originalTokenResponse->assertStatus(401);
+
+        // Verificar que el nuevo token funciona para acceder a rutas protegidas
+        $newToken = $response->json('access_token');
+        $newTokenResponse = $this->withHeader('Authorization', 'Bearer ' . $newToken)
+            ->getJson('/api/v1/users/me');
+        $newTokenResponse->assertStatus(200);
+    }
 }

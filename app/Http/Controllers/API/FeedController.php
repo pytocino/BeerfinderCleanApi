@@ -7,26 +7,52 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Models\User;
 use App\Http\Resources\PostResource;
+use Illuminate\Support\Facades\Log;
 
 class FeedController extends Controller
 {
     // Feed general: todos los posts
-    public function feedGeneral()
+    public function feedGeneral(Request $request)
     {
-        $posts = Post::orderBy('created_at', 'desc')->get();
+        // Obtener página actual, default: 1
+        $page = $request->input('page', 1);
+
+        Log::info('Página solicitada: ' . $page);
+
+        $posts = Post::with([
+            'user',
+            'beer',
+            'likes',      // <--- Cargar todos los likes
+            'comments'
+        ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10, ['*'], 'page', $page); // Usar el parámetro page explícitamente
+
         return PostResource::collection($posts);
     }
 
-    // Feed de amigos: posts de los usuarios que sigue el usuario autenticado
     public function feedAmigos(Request $request)
     {
-        $user = $request->user();
+        // Obtener página actual, default: 1
+        $page = $request->input('page', 1);
 
-        // Suponiendo que tienes una relación 'following' en el modelo User
-        $followingIds = $user->following()->pluck('id');
+        // Usar auth() en lugar de $request->user()
+        $followingIds = auth()->user()->following()->pluck('users.id')->toArray();
+
+        // Si el usuario no sigue a nadie, devolver colección vacía
+        if (empty($followingIds)) {
+            return PostResource::collection(collect([]));
+        }
+
         $posts = Post::whereIn('user_id', $followingIds)
+            ->with([
+                'user',
+                'beer',
+                'likes',      // <--- Cargar todos los likes
+                'comments'
+            ])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'page', $page); // Usar el parámetro page explícitamente
 
         return PostResource::collection($posts);
     }

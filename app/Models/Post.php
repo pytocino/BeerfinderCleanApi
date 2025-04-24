@@ -28,8 +28,6 @@ class Post extends Model
         'purchase_price',
         'purchase_currency',
         'user_tags',
-        'likes_count',
-        'comments_count',
         'edited',
         'edited_at'
     ];
@@ -44,8 +42,6 @@ class Post extends Model
         'additional_photos' => 'array',
         'purchase_price' => 'decimal:2',
         'user_tags' => 'array',
-        'likes_count' => 'integer',
-        'comments_count' => 'integer',
         'edited' => 'boolean',
         'edited_at' => 'datetime'
     ];

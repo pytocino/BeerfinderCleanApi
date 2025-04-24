@@ -284,4 +284,48 @@ class AuthController extends Controller
             'user' => new UserResource($user),
         ]);
     }
+
+    /**
+     * Refresca el token de acceso del usuario actual.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function refreshToken(Request $request): JsonResponse
+    {
+        try {
+            // Obtenemos el usuario autenticado
+            $user = $request->user();
+
+            Log::info('Intento de refrescar token', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+
+            // Revocamos el token actual
+            $request->user()->currentAccessToken()->delete();
+
+            // Creamos un nuevo token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            Log::info('Token refrescado correctamente', ['user_id' => $user->id]);
+
+            return response()->json([
+                'user' => new UserResource($user),
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al refrescar token', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'No se pudo refrescar el token',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

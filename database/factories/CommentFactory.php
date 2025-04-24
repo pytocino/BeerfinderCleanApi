@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Models\Post;
 use App\Models\Comment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,6 +21,7 @@ class CommentFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'post_id' => Post::factory(), // Relacionar siempre con un post
             'content' => $this->faker->paragraph(),
             'parent_id' => null, // Por defecto, no es una respuesta a otro comentario
             'edited' => false,

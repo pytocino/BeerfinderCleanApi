@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
@@ -18,20 +17,19 @@ class UserController extends Controller
 {
     /**
      * Muestra la información de un usuario específico
-     *
-     * @param int $id ID del usuario a mostrar
-     * @return JsonResponse
      */
     public function show(int $id): JsonResponse
     {
-        $user = User::findOrFail($id);
-
+        $user = User::withCount(['followers', 'following', 'posts'])->findOrFail($id);
         return response()->json(new UserResource($user));
     }
 
-    public function me(Request $request): JsonResponse
+    /**
+     * Muestra la información del usuario autenticado
+     */
+    public function me(): JsonResponse
     {
-        $user = $request->user();
+        $user = auth()->user()?->loadCount(['followers', 'following', 'posts']);
         return response()->json(new UserResource($user));
     }
 }

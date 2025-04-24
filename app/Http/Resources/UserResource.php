@@ -23,19 +23,24 @@ class UserResource extends JsonResource
             'instagram' => $this->instagram,
             'twitter' => $this->twitter,
             'facebook' => $this->facebook,
-            'private_profile' => $this->private_profile,
-            'allow_mentions' => $this->allow_mentions,
-            'email_notifications' => $this->email_notifications,
+            'private_profile' => (bool) $this->private_profile,
+            'allow_mentions' => (bool) $this->allow_mentions,
+            'email_notifications' => (bool) $this->email_notifications,
             'last_active_at' => $this->last_active_at,
             'email_verified_at' => $this->when(Auth::id() === $this->id, $this->email_verified_at),
             'email' => $this->when(Auth::id() === $this->id, $this->email),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
-            // Contadores calculados en la consulta
-            'check_ins_count' => isset($this->check_ins_count) ? (int)$this->check_ins_count : null,
-            'followers_count' => isset($this->followers_count) ? (int)$this->followers_count : null,
-            'following_count' => isset($this->following_count) ? (int)$this->following_count : null,
+            'followers_count' => isset($this->followers_count)
+                ? (int) $this->followers_count
+                : ($this->whenLoaded('followers') ? $this->followers->count() : null),
+            'following_count' => isset($this->following_count)
+                ? (int) $this->following_count
+                : ($this->whenLoaded('following') ? $this->following->count() : null),
+            'posts_count' => isset($this->posts_count)
+                ? (int) $this->posts_count
+                : ($this->whenLoaded('posts') ? $this->posts->count() : null),
         ];
     }
 }

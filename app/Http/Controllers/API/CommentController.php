@@ -7,15 +7,12 @@ use App\Models\Post;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Resources\CommentResource;
 
 class CommentController extends Controller
 {
     /**
      * Mostrar todos los comentarios de un post específico.
-     *
-     * @param Request $request
-     * @param int $id ID del post
-     * @return JsonResponse
      */
     public function index(Request $request, $id): JsonResponse
     {
@@ -25,16 +22,18 @@ class CommentController extends Controller
             return response()->json(['message' => 'Post no encontrado.'], 404);
         }
 
-        $comments = $post->comments()->with('user')->get();
-        return response()->json($comments);
+        // Consulta correcta: comentarios raíz del post, con usuario y replies con usuario
+        $comments = Comment::where('post_id', $post->id)
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json(CommentResource::collection($comments));
     }
 
     /**
      * Mostrar un comentario específico.
-     *
-     * @param Request $request
-     * @param int $id ID del comentario
-     * @return JsonResponse
      */
     public function show(Request $request, $id): JsonResponse
     {
@@ -44,15 +43,11 @@ class CommentController extends Controller
             return response()->json(['message' => 'Comentario no encontrado.'], 404);
         }
 
-        return response()->json($comment);
+        return response()->json(new CommentResource($comment));
     }
 
     /**
      * Almacenar un nuevo comentario para un post específico.
-     *
-     * @param Request $request
-     * @param int $id ID del post
-     * @return JsonResponse
      */
     public function store(Request $request, $id): JsonResponse
     {
@@ -62,7 +57,7 @@ class CommentController extends Controller
             return response()->json(['message' => 'Post no encontrado.'], 404);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'content' => 'required|string|max:500',
             'parent_id' => 'nullable|exists:comments,id',
         ]);
@@ -70,22 +65,18 @@ class CommentController extends Controller
         $comment = new Comment();
         $comment->user_id = $request->user()->id;
         $comment->post_id = $post->id;
-        $comment->content = $request->input('content');
-        $comment->parent_id = $request->input('parent_id');
+        $comment->content = $validated['content'];
+        $comment->parent_id = $validated['parent_id'] ?? null;
         $comment->save();
 
         // Incrementar el contador de comentarios del post
         $post->increment('comments_count');
 
-        return response()->json($comment, 201);
+        return response()->json(new CommentResource($comment), 201);
     }
 
     /**
      * Actualizar un comentario específico.
-     *
-     * @param Request $request
-     * @param int $id ID del comentario
-     * @return JsonResponse
      */
     public function update(Request $request, $id): JsonResponse
     {
@@ -99,24 +90,20 @@ class CommentController extends Controller
             return response()->json(['message' => 'No tienes permiso para editar este comentario.'], 403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'content' => 'required|string|max:500',
         ]);
 
-        $comment->content = $request->input('content');
+        $comment->content = $validated['content'];
         $comment->edited = true;
         $comment->edited_at = now();
         $comment->save();
 
-        return response()->json($comment);
+        return response()->json(new CommentResource($comment));
     }
 
     /**
      * Eliminar un comentario específico.
-     *
-     * @param Request $request
-     * @param int $id ID del comentario
-     * @return JsonResponse
      */
     public function destroy(Request $request, $id): JsonResponse
     {
