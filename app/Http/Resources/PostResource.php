@@ -45,6 +45,16 @@ class PostResource extends JsonResource
                     'image_url' => $this->beer->image_url,
                 ];
             }),
+            // Incluir información mínima de la ubicación
+            'location' => $this->whenLoaded('location', function () {
+                return [
+                    'id' => $this->location->id,
+                    'name' => $this->location->name,
+                    'address' => $this->location->address,
+                    'latitude' => $this->location->latitude,
+                    'longitude' => $this->location->longitude,
+                ];
+            }),
             // En lugar de cargar todos los likes, solo indica si el usuario actual le dio like
             'user_liked' => auth()->check() ? $this->likes->contains('user_id', auth()->id()) : false,
         ];

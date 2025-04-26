@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Notifications\DatabaseNotification;
 
 class User extends Authenticatable
 {
@@ -63,21 +64,19 @@ class User extends Authenticatable
     ];
 
     /**
-     * Usuarios que siguen a este usuario.
-     */
-    public function followers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')
-            ->withTimestamps();
-    }
-
-    /**
      * Usuarios a los que este usuario sigue.
      */
     public function following(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id');
+    }
+
+    /**
+     * Usuarios que siguen a este usuario.
+     */
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id');
     }
 
     /**
@@ -91,9 +90,9 @@ class User extends Authenticatable
     /**
      * Notificaciones del usuario.
      */
-    public function notifications(): HasMany
+    public function notifications()
     {
-        return $this->hasMany(Notification::class);
+        return $this->morphMany(DatabaseNotification::class, 'notifiable');
     }
 
     /**

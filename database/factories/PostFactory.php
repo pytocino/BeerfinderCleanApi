@@ -26,9 +26,9 @@ class PostFactory extends Factory
         $currencies = ['EUR', 'USD', 'GBP'];
 
         return [
-            'user_id' => User::factory(),
-            'beer_id' => Beer::factory(),
-            'location_id' => fake()->boolean(80) ? Location::factory() : null, // 80% con ubicación
+            'user_id' => User::all()->random()->id, // Usuario aleatorio
+            'beer_id' => Beer::all()->random()->id, // Usuario aleatorio
+            'location_id' => fake()->boolean(80) ? Location::all()->random()->id : null, // 80% con ubicación
             'review' => $this->faker->paragraph(3),
             'rating' => fake()->randomFloat(1, 1.0, 5.0), // Valoración de 1.0 a 5.0 con un decimal
             'photo_url' => fake()->boolean(70) ? fake()->imageUrl(800, 600, 'beer') : null,
@@ -39,10 +39,9 @@ class PostFactory extends Factory
             'serving_type' => fake()->randomElement($servingTypes),
             'purchase_price' => fake()->randomFloat(2, 2, 15), // Precio razonable de cerveza
             'purchase_currency' => fake()->randomElement($currencies),
-            'user_tags' => fake()->boolean(30) ? json_encode([
-                fake()->numberBetween(1, 100),
-                fake()->numberBetween(1, 100)
-            ]) : null,
+            'user_tags' => fake()->boolean(50) ? json_encode(
+                User::inRandomOrder()->limit(2)->pluck('id')->toArray()
+            ) : null,
             'likes_count' => fake()->numberBetween(0, 500),
             'comments_count' => fake()->numberBetween(0, 100),
             'edited' => fake()->boolean(20), // 20% editados

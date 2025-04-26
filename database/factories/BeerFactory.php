@@ -21,8 +21,8 @@ class BeerFactory extends Factory
         return [
             'name' => fake()->words(3, true),
             // Asegúrate de tener cervecerías y estilos ya creados, o crea relaciones
-            'brewery_id' => Brewery::factory(),
-            'style_id' => BeerStyle::factory(),
+            'brewery_id' => Brewery::all()->random()->id,
+            'style_id' => BeerStyle::all()->random()->id,
             'abv' => fake()->randomFloat(2, 3.0, 12.0),
             'ibu' => fake()->numberBetween(5, 120),
             'color' => fake()->randomElement(['Golden', 'Amber', 'Red', 'Brown', 'Black']),

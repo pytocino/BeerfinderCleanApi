@@ -16,7 +16,8 @@ class PostController extends Controller
             'user',
             'beer',
             'likes',
-            'comments'
+            'comments',
+            'location'
         ])->latest();
 
         // Cambia esto:
@@ -28,8 +29,7 @@ class PostController extends Controller
         if ($request->has('userId')) {
             $query->where('user_id', $request->input('userId'));
         }
-
-        $posts = $query->paginate(15);
+        $posts = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return PostResource::collection($posts);
     }
@@ -37,7 +37,7 @@ class PostController extends Controller
     public function show($id)
     {
         // Eager loading de relaciones para un solo post
-        $post = Post::with(['user', 'beer', 'likes', 'comments'])->findOrFail($id);
+        $post = Post::with(['user', 'beer', 'likes', 'comments', 'location'])->findOrFail($id);
         return new PostResource($post);
     }
 
@@ -52,7 +52,7 @@ class PostController extends Controller
         $data['user_id'] = $request->user()->id;
         $post = Post::create($data);
         // Cargar relaciones para la respuesta
-        $post->load(['user', 'beer', 'likes', 'comments']);
+        $post->load(['user', 'beer', 'likes', 'comments', 'location']);
         return new PostResource($post);
     }
 

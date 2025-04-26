@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Events\PostCommented;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\Comment;
@@ -26,8 +27,10 @@ class CommentController extends Controller
         $comments = Comment::where('post_id', $post->id)
             ->whereNull('parent_id')
             ->with(['user', 'replies.user'])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->get();
+
+
 
         return response()->json(CommentResource::collection($comments));
     }
@@ -68,6 +71,9 @@ class CommentController extends Controller
         $comment->content = $validated['content'];
         $comment->parent_id = $validated['parent_id'] ?? null;
         $comment->save();
+
+        event(new PostCommented($request->user(), $post, $comment));
+
 
         // Incrementar el contador de comentarios del post
         $post->increment('comments_count');

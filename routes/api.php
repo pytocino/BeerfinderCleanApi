@@ -129,19 +129,16 @@ Route::prefix('v1')->group(function () {
         });
 
         //Mensajes directos
-        Route::get('/messages/{user}', action: [MessageController::class, 'conversation']);
+        Route::get('/messages/conversations', [MessageController::class, 'conversations']);
         Route::post('/messages', [MessageController::class, 'store']);
         Route::put('/messages/{message}/read', [MessageController::class, 'markAsRead']);
-        Route::get('/messages', [MessageController::class, 'index']);
+        Route::get('/messages/{userId}', [MessageController::class, 'index']);
 
         // Notificaciones
         Route::prefix('notifications')->group(function () {
-            Route::get('/', [NotificationController::class, 'index']);
-            Route::post('/', [NotificationController::class, 'store']);
-            Route::get('/{id}', [NotificationController::class, 'show']);
-            Route::put('/{id}', [NotificationController::class, 'update']);
-            Route::patch('/{id}', [NotificationController::class, 'update']);
-            Route::delete('/{id}', [NotificationController::class, 'destroy']);
+            Route::get('/', function () {
+                return auth()->user()->notifications;
+            });
             Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
             Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
         });

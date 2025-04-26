@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Events\PostLiked;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\Like;
@@ -63,6 +64,7 @@ class LikeController extends Controller
         if ($post->getConnection()->getSchemaBuilder()->hasColumn($post->getTable(), 'likes_count')) {
             $post->increment('likes_count');
         }
+        event(new PostLiked($user, $post));
 
         return response()->json(new LikeResource($like), 201);
     }

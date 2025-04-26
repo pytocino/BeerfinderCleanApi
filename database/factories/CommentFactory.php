@@ -20,8 +20,8 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'post_id' => Post::factory(), // Relacionar siempre con un post
+            'user_id' => User::all()->random()->id,
+            'post_id' => Post::all()->random()->id,
             'content' => $this->faker->paragraph(),
             'parent_id' => null, // Por defecto, no es una respuesta a otro comentario
             'edited' => false,
@@ -37,7 +37,7 @@ class CommentFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'parent_id' => Comment::factory(),
+                'parent_id' => Comment::all()->random()->id,
             ];
         });
     }
