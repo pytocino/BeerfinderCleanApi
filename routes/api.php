@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\BeerController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\BreweryController;
 use App\Http\Controllers\API\BeerStyleController;
@@ -95,10 +96,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [BeerStyleController::class, 'show']);
         });
 
+        // Beers
+        Route::prefix('beers')->group(function () {
+            Route::get('/beerlist', [BeerController::class, 'getBeers']);
+        });
+
         // Ubicaciones
         Route::prefix('locations')->group(function () {
-            Route::get('/', [LocationController::class, 'index']);
-            Route::get('/{id}', [LocationController::class, 'show']);
+            Route::get('/locationlist', [LocationController::class, 'getLocations']);
         });
 
         // Posts

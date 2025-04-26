@@ -17,8 +17,6 @@ class FeedController extends Controller
         // Obtener página actual, default: 1
         $page = $request->input('page', 1);
 
-        Log::info('Página solicitada: ' . $page);
-
         $posts = Post::with([
             'user',
             'beer',

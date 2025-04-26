@@ -7,6 +7,7 @@ use App\Http\Resources\BeerResource;
 use App\Http\Resources\CheckInResource;
 use App\Models\Beer;
 use App\Models\Favorite;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -667,6 +668,37 @@ class BeerController extends Controller
             return response()->json(['data' => $beerResources]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'No se ha encontrado la cerveza solicitada.'], 404);
+        }
+    }
+
+    /**
+     * Obtener listado simple de cervezas
+     *
+     * Obtiene una lista ligera de todas las cervezas con solo ID y nombre.
+     * Útil para selectores y autocomplete.
+     *
+     * @response {
+     *  "data": [
+     *    {
+     *      "id": 1,
+     *      "name": "Mahou Clásica"
+     *    },
+     *    {
+     *      "id": 2,
+     *      "name": "Estrella Galicia"
+     *    }
+     *  ]
+     * }
+     */
+    public function getBeers(): JsonResponse
+    {
+        try {
+            $beers = Beer::all()->select('id', 'name');
+            return response()->json(['data' => $beers]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener las cervezas'
+            ], 500);
         }
     }
 }

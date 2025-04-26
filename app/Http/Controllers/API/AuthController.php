@@ -90,11 +90,6 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        Log::info('Intento de login iniciado', [
-            'email' => $request->email,
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent()
-        ]);
 
         try {
             $request->validate([
@@ -102,14 +97,11 @@ class AuthController extends Controller
                 'password' => 'required|string',
             ]);
 
-            Log::info('Validación de datos exitosa');
 
             // Verificar si el usuario existe antes de intentar autenticación
             $userExists = User::where('email', $request->email)->exists();
-            Log::info('Verificación de existencia de usuario', ['exists' => $userExists]);
 
             if (!$userExists) {
-                Log::warning('Intento de login con email inexistente', ['email' => $request->email]);
                 throw ValidationException::withMessages([
                     'email' => ['No existe una cuenta con este email.'],
                 ]);
@@ -117,36 +109,24 @@ class AuthController extends Controller
 
             // Obtener usuario para verificar estado
             $user = User::where('email', $request->email)->first();
-            Log::info('Usuario encontrado en la base de datos', ['user_id' => $user->id]);
 
             // Verificar si la contraseña coincide
             $passwordValid = Hash::check($request->password, $user->password);
-            Log::info('Verificación de contraseña', ['es_valida' => $passwordValid]);
 
             if (!Auth::attempt($request->only('email', 'password'))) {
-                Log::warning('Fallo de autenticación - Auth::attempt falló', [
-                    'email' => $request->email
-                ]);
 
                 throw ValidationException::withMessages([
                     'email' => ['Las credenciales proporcionadas son incorrectas.'],
                 ]);
             }
 
-            Log::info('Usuario autenticado correctamente', ['user_id' => $user->id]);
 
             try {
                 $token = $user->createToken('auth_token')->plainTextToken;
-                Log::info('Token generado correctamente');
             } catch (\Exception $e) {
-                Log::error('Error al generar token', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
                 throw $e;
             }
 
-            Log::info('Login exitoso', ['user_id' => $user->id]);
 
             return response()->json([
                 'user' => new UserResource($user),
@@ -154,13 +134,9 @@ class AuthController extends Controller
                 'token_type' => 'Bearer',
             ]);
         } catch (ValidationException $e) {
-            Log::warning('Error de validación en login', ['errors' => $e->errors()]);
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Error inesperado en login', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+
             throw $e;
         }
     }
@@ -297,19 +273,12 @@ class AuthController extends Controller
             // Obtenemos el usuario autenticado
             $user = $request->user();
 
-            Log::info('Intento de refrescar token', [
-                'user_id' => $user->id,
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent()
-            ]);
-
             // Revocamos el token actual
             $request->user()->currentAccessToken()->delete();
 
             // Creamos un nuevo token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            Log::info('Token refrescado correctamente', ['user_id' => $user->id]);
 
             return response()->json([
                 'user' => new UserResource($user),
@@ -317,10 +286,7 @@ class AuthController extends Controller
                 'token_type' => 'Bearer',
             ]);
         } catch (\Exception $e) {
-            Log::error('Error al refrescar token', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+
 
             return response()->json([
                 'message' => 'No se pudo refrescar el token',

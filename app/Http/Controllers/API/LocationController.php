@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Location;
 use App\Http\Resources\LocationResource;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 class LocationController extends Controller
 {
@@ -31,5 +32,33 @@ class LocationController extends Controller
         }
 
         return response()->json(new LocationResource($location));
+    }
+
+    /**
+     * Obtener listado simple de ubicaciones
+     *
+     * Devuelve una lista de todas las ubicaciones con solo ID y nombre.
+     *
+     * @response {
+     *  "data": [
+     *    {
+     *      "id": 1,
+     *      "name": "Bar El Refugio"
+     *    },
+     *    {
+     *      "id": 2,
+     *      "name": "Cervecería La Cebada"
+     *    }
+     *  ]
+     * }
+     */
+    public function getLocations()
+    {
+        try {
+            $locations = Location::all()->select('id', 'name');
+            return response()->json(['data' => $locations]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al obtener las ubicaciones'], 500);
+        }
     }
 }

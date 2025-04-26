@@ -8,6 +8,7 @@ use App\Http\Resources\BreweryResource;
 use App\Http\Resources\BeerStyleResource;
 use App\Http\Resources\LocationResource;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\SearchResource;
 use App\Models\Beer;
 use App\Models\Brewery;
 use App\Models\BeerStyle;
@@ -106,8 +107,8 @@ class SearchController extends Controller
         $order = $validated['order'] ?? 'asc';
         $searchTerm = $validated['q'] ?? '';
 
-        // Preparar respuesta
-        $response = [];
+        // Preparar resultados
+        $results = [];
 
         // Buscar según el tipo especificado o en todos si no se especifica
         $types = $validated['type'] ? [$validated['type']] : ['beers', 'breweries', 'styles', 'locations', 'users'];
@@ -151,8 +152,8 @@ class SearchController extends Controller
             }
 
             $beers = $beersQuery->paginate($perPage);
-            $response['beers'] = [
-                'data' => BeerResource::collection($beers),
+            $results['beers'] = [
+                'data' => $beers->items(),
                 'total' => $beers->total()
             ];
         }
@@ -185,13 +186,13 @@ class SearchController extends Controller
             }
 
             $breweries = $breweriesQuery->paginate($perPage);
-            $response['breweries'] = [
-                'data' => BreweryResource::collection($breweries),
+            $results['breweries'] = [
+                'data' => $breweries->items(),
                 'total' => $breweries->total()
             ];
         }
 
-        // Buscar en estilos de cerveza
+        // Buscar en estilos
         if (in_array('styles', $types)) {
             $stylesQuery = BeerStyle::query();
 
@@ -210,8 +211,8 @@ class SearchController extends Controller
             }
 
             $styles = $stylesQuery->paginate($perPage);
-            $response['styles'] = [
-                'data' => BeerStyleResource::collection($styles),
+            $results['styles'] = [
+                'data' => $styles->items(),
                 'total' => $styles->total()
             ];
         }
@@ -266,8 +267,8 @@ class SearchController extends Controller
             }
 
             $locations = $locationsQuery->paginate($perPage);
-            $response['locations'] = [
-                'data' => LocationResource::collection($locations),
+            $results['locations'] = [
+                'data' => $locations->items(),
                 'total' => $locations->total()
             ];
         }
@@ -292,12 +293,12 @@ class SearchController extends Controller
             }
 
             $users = $usersQuery->paginate($perPage);
-            $response['users'] = [
-                'data' => UserResource::collection($users),
+            $results['users'] = [
+                'data' => $users->items(),
                 'total' => $users->total()
             ];
         }
 
-        return response()->json($response);
+        return response()->json(new SearchResource($results));
     }
 }
