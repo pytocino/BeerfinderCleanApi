@@ -23,67 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 class BeerController extends Controller
 {
-    /**
-     * Listar cervezas
-     *
-     * Obtiene una lista paginada de cervezas con opciones de filtrado y ordenamiento.
-     *
-     * @queryParam name string Filtrar por nombre. Example: IPA
-     * @queryParam brewery_id int Filtrar por ID de cervecería. Example: 1
-     * @queryParam style_id int Filtrar por ID de estilo. Example: 3
-     * @queryParam min_abv float Filtrar por ABV mínimo. Example: 5.0
-     * @queryParam max_abv float Filtrar por ABV máximo. Example: 8.0
-     * @queryParam min_ibu int Filtrar por IBU mínimo. Example: 20
-     * @queryParam max_ibu int Filtrar por IBU máximo. Example: 80
-     * @queryParam min_rating float Filtrar por calificación mínima (1-5). Example: 4.0
-     * @queryParam sort string Ordenar por: name, abv, ibu, rating. Example: rating
-     * @queryParam order string Dirección: asc, desc. Example: desc
-     * @queryParam per_page int Elementos por página (5-50). Example: 15
-     *
-     * @response {
-     *  "data": [
-     *    {
-     *      "id": 1,
-     *      "name": "Mahou Clásica",
-     *      "brewery": {
-     *        "id": 1,
-     *        "name": "Cervecería Mahou",
-     *        "country": "España",
-     *        "logo_url": "https://example.com/logos/mahou.png"
-     *      },
-     *      "style": {
-     *        "id": 2,
-     *        "name": "Lager"
-     *      },
-     *      "abv": 4.8,
-     *      "ibu": 20,
-     *      "description": "Cerveza rubia tipo Lager",
-     *      "image_url": "https://example.com/beers/mahou.png",
-     *      "rating_avg": 3.75,
-     *      "check_ins_count": 42,
-     *      "is_favorite": false,
-     *      "created_at": "2023-04-18T00:00:00.000000Z",
-     *      "updated_at": "2023-04-18T00:00:00.000000Z"
-     *    }
-     *  ],
-     *  "links": {
-     *    "first": "http://127.0.0.1:8000/api/v1/beers?page=1",
-     *    "last": "http://127.0.0.1:8000/api/v1/beers?page=5",
-     *    "prev": null,
-     *    "next": "http://127.0.0.1:8000/api/v1/beers?page=2"
-     *  },
-     *  "meta": {
-     *    "current_page": 1,
-     *    "from": 1,
-     *    "last_page": 5,
-     *    "path": "http://127.0.0.1:8000/api/v1/beers",
-     *    "per_page": 10,
-     *    "to": 10,
-     *    "total": 50
-     *  }
-     * }
-     */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request)
     {
         $validated = $request->validate([
             'name' => 'nullable|string|max:100',
@@ -213,9 +153,7 @@ class BeerController extends Controller
         try {
             $beer = Beer::findOrFail($id);
 
-            $beer->load(['brewery', 'style'])
-                ->loadCount('checkIns')
-                ->loadAvg('checkIns', 'rating');
+            $beer->load(['brewery', 'style']);
 
             // Si está autenticado, agregar info si es favorita
             if ($request->user()) {

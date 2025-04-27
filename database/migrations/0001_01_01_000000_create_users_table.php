@@ -6,13 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-
-        // ...existing code...
+        // Tabla principal de usuarios
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -20,6 +16,17 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('profile_picture')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->boolean('is_admin')->default(false);
+            $table->rememberToken();
+            $table->timestamp('last_active_at')->nullable();
+            $table->timestamps();
+        });
+
+        // Tabla de perfil extendido
+        Schema::create('user_profiles', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->unique();
             $table->text('bio')->nullable();
             $table->string('location')->nullable();
             $table->date('birthdate')->nullable();
@@ -32,13 +39,10 @@ return new class extends Migration
             $table->string('facebook')->nullable();
 
             // Configuración y privacidad
-            $table->boolean('private_profile')->default(false);  // Si el perfil es privado
-            $table->boolean('allow_mentions')->default(true);    // Si permite menciones
+            $table->boolean('private_profile')->default(false);
+            $table->boolean('allow_mentions')->default(true);
             $table->boolean('email_notifications')->default(true);
-            $table->timestamp('last_active_at')->nullable();     // Última actividad
 
-            $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
             $table->timestamps();
         });
 
@@ -58,11 +62,9 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
+        Schema::dropIfExists('user_profiles');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

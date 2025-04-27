@@ -20,12 +20,11 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::all()->random()->id,
-            'post_id' => Post::all()->random()->id,
+            'user_id' => User::query()->inRandomOrder()->value('id') ?? 1,
+            'post_id' => Post::query()->inRandomOrder()->value('id') ?? 1,
             'content' => $this->faker->paragraph(),
             'parent_id' => null, // Por defecto, no es una respuesta a otro comentario
             'edited' => false,
-            'edited_at' => null,
             'pinned' => false,
         ];
     }
@@ -37,7 +36,7 @@ class CommentFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'parent_id' => Comment::all()->random()->id,
+                'parent_id' => Comment::query()->inRandomOrder()->value('id'),
             ];
         });
     }
@@ -50,7 +49,6 @@ class CommentFactory extends Factory
         return $this->state(function (array $attributes) {
             return [
                 'edited' => true,
-                'edited_at' => fake()->dateTimeBetween('-1 week', 'now'),
             ];
         });
     }

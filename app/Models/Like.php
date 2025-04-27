@@ -18,16 +18,6 @@ class Like extends Model
     protected $fillable = [
         'user_id',
         'post_id',
-        'liked_at',
-    ];
-
-    /**
-     * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'liked_at' => 'datetime',
     ];
 
     /**

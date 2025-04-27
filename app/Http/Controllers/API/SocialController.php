@@ -14,39 +14,43 @@ class SocialController extends Controller
 {
     public function follow(Request $request, $id): JsonResponse
     {
-        $currentUser = $request->user();
-        logger()->info('Intentando seguir usuario', ['current_user_id' => $currentUser->id, 'target_user_id' => $id]);
+        $currentUser = auth()->user();
 
-        if (
-            Follow::where('follower_id', $currentUser->id)
+        $follow = Follow::where('follower_id', $currentUser->id)
             ->where('following_id', $id)
-            ->exists()
-        ) {
-            logger()->warning('Ya sigue a este usuario', ['current_user_id' => $currentUser->id, 'target_user_id' => $id]);
+            ->exists();
+
+        if ($follow) {
             return response()->json(['message' => 'Ya sigues a este usuario.'], 409);
         }
 
         $followedUser = User::find($id);
 
         if (!$followedUser) {
-            logger()->error('Usuario a seguir no encontrado', ['target_user_id' => $id]);
             return response()->json(['message' => 'Usuario no encontrado.'], 404);
         }
 
-        $currentUser->following()->attach($id);
-        logger()->info('Usuario seguido correctamente', ['current_user_id' => $currentUser->id, 'target_user_id' => $id]);
+        // Si el perfil es privado, el seguimiento queda pendiente (accepted = false)
+        $accepted = !$followedUser->private_profile;
+
+        Follow::create([
+            'follower_id' => $currentUser->id,
+            'following_id' => $id,
+            'accepted' => $accepted,
+        ]);
 
         event(new UserFollowed($currentUser, $followedUser));
-        logger()->info('Evento UserFollowed disparado', ['current_user_id' => $currentUser->id, 'target_user_id' => $id]);
 
-        return response()->json([
-            'message' => 'Ahora sigues a este usuario.',
-        ]);
+        if ($accepted) {
+            return response()->json(['message' => 'Ahora sigues a este usuario.']);
+        } else {
+            return response()->json(['message' => 'Solicitud de seguimiento enviada.']);
+        }
     }
 
     public function unfollow(Request $request, $id): JsonResponse
     {
-        $currentUser = $request->user();
+        $currentUser = auth()->user();
 
         $follow = Follow::where('follower_id', $currentUser->id)
             ->where('following_id', $id)
@@ -65,7 +69,8 @@ class SocialController extends Controller
     public function followings(Request $request): JsonResponse
     {
         $followings = Follow::with(['following', 'follower'])
-            ->where('follower_id', $request->user()->id)
+            ->where('follower_id', auth()->user()->id)
+            ->where('accepted', true)
             ->get();
 
         return response()->json(FollowResource::collection($followings));
@@ -75,7 +80,8 @@ class SocialController extends Controller
     public function followers(Request $request): JsonResponse
     {
         $followers = Follow::with(['following', 'follower'])
-            ->where('following_id', $request->user()->id)
+            ->where('following_id', auth()->user()->id)
+            ->where('accepted', true)
             ->get();
 
         return response()->json(FollowResource::collection($followers));

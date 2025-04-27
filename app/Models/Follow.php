@@ -18,9 +18,7 @@ class Follow extends Model
     protected $fillable = [
         'follower_id',
         'following_id',
-        'accepted',
-        'followed_at',
-        'unfollowed_at'
+        'status',
     ];
 
     /**
@@ -29,9 +27,7 @@ class Follow extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'accepted' => 'boolean',
-        'followed_at' => 'datetime',
-        'unfollowed_at' => 'datetime',
+        'status' => 'string',
     ];
 
     /**
@@ -51,11 +47,11 @@ class Follow extends Model
     }
 
     /**
-     * Determina si el seguimiento está activo.
+     * Determina si el seguimiento está activo (aceptado).
      */
     public function isActive(): bool
     {
-        return $this->accepted && is_null($this->unfollowed_at);
+        return $this->status === 'accepted';
     }
 
     /**
@@ -63,6 +59,14 @@ class Follow extends Model
      */
     public function isPending(): bool
     {
-        return !$this->accepted && is_null($this->unfollowed_at);
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Determina si el seguimiento fue rechazado.
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
     }
 }

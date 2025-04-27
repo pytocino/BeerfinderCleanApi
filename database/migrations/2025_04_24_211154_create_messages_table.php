@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // database/migrations/xxxx_xx_xx_create_messages_table.php
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('conversation_id')->nullable()->constrained('conversations')->onDelete('cascade');
             $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
             $table->text('content');

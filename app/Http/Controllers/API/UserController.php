@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
  */
 class UserController extends Controller
 {
+
+
     /**
      * Muestra la información de un usuario específico
      */
@@ -25,11 +27,14 @@ class UserController extends Controller
     }
 
     /**
-     * Muestra la información del usuario autenticado
+     * Muestra los posts de un usuario específico
      */
-    public function me(): JsonResponse
+    public function getUserPosts(int $id): JsonResponse
     {
-        $user = auth()->user()?->loadCount(['followers', 'following', 'posts']);
+        $user = User::with(['posts' => function ($query) {
+            $query->withCount(['likes', 'comments']);
+        }])->findOrFail($id);
+
         return response()->json(new UserResource($user));
     }
 }

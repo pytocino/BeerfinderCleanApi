@@ -29,14 +29,6 @@ class SearchResource extends JsonResource
             ];
         }
 
-        // Agregar resultados de cervecerías si están disponibles
-        if (isset($this['breweries'])) {
-            $result['breweries'] = [
-                'data' => BreweryResource::collection($this['breweries']['data']),
-                'total' => $this['breweries']['total']
-            ];
-        }
-
         // Agregar resultados de estilos si están disponibles
         if (isset($this['styles'])) {
             $result['styles'] = [

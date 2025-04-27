@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -25,17 +26,8 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_picture',
-        'bio',
-        'location',
-        'birthdate',
-        'website',
-        'phone',
-        'instagram',
-        'twitter',
-        'facebook',
-        'private_profile',
-        'allow_mentions',
-        'email_notifications',
+        'last_active_at',
+        'is_admin',
     ];
 
     /**
@@ -54,14 +46,19 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
+        'is_admin' => 'boolean',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'birthdate' => 'date',
         'last_active_at' => 'datetime',
-        'private_profile' => 'boolean',
-        'allow_mentions' => 'boolean',
-        'email_notifications' => 'boolean',
     ];
+
+    /**
+     * Relación con el perfil extendido.
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
 
     /**
      * Usuarios a los que este usuario sigue.
@@ -101,5 +98,9 @@ class User extends Authenticatable
     public function checkIns(): HasMany
     {
         return $this->hasMany(CheckIn::class);
+    }
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user');
     }
 }

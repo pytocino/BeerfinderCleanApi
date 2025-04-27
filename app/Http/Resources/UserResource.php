@@ -11,25 +11,16 @@ class UserResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $profile = $this->whenLoaded('profile');
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
             'profile_picture' => $this->profile_picture,
-            'bio' => $this->bio,
-            'location' => $this->location,
-            'birthdate' => $this->birthdate,
-            'website' => $this->website,
-            'phone' => $this->phone,
-            'instagram' => $this->instagram,
-            'twitter' => $this->twitter,
-            'facebook' => $this->facebook,
-            'private_profile' => (bool) $this->private_profile,
-            'allow_mentions' => (bool) $this->allow_mentions,
-            'email_notifications' => (bool) $this->email_notifications,
-            'last_active_at' => $this->last_active_at,
             'email_verified_at' => $this->when(Auth::id() === $this->id, $this->email_verified_at),
-            'email' => $this->when(Auth::id() === $this->id, $this->email),
+            'last_active_at' => $this->last_active_at,
+            'is_admin' => $this->is_admin,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
@@ -45,8 +36,7 @@ class UserResource extends JsonResource
             'is_following' => $this->when(Auth::check(), function () {
                 return Follow::where('follower_id', Auth::id())
                     ->where('following_id', $this->id)
-                    ->where('accepted', true)
-                    ->whereNull('unfollowed_at')
+                    ->where('status', 'accepted')
                     ->exists();
             }),
         ];

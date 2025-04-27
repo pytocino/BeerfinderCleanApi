@@ -12,7 +12,6 @@ class LocationResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'type' => $this->type,
             'country' => $this->country,
             'city' => $this->city,
             'address' => $this->address,
@@ -24,11 +23,8 @@ class LocationResource extends JsonResource
             'website' => $this->website,
             'email' => $this->email,
             'phone' => $this->phone,
-            'instagram' => $this->instagram,
-            'facebook' => $this->facebook,
-            'twitter' => $this->twitter,
-            'verified' => $this->verified,
-            'check_ins_count' => $this->check_ins_count,
+            'verified' => (bool) $this->verified,
+            'check_ins_count' => $this->check_ins_count ?? 0,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

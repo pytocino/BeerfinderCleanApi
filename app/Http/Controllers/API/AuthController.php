@@ -90,60 +90,47 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
 
-        try {
-            $request->validate([
-                'email' => 'required|string|email',
-                'password' => 'required|string',
+        // Verificar si el usuario existe antes de intentar autenticación
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['No existe una cuenta con este email.'],
             ]);
-
-
-            // Verificar si el usuario existe antes de intentar autenticación
-            $userExists = User::where('email', $request->email)->exists();
-
-            if (!$userExists) {
-                throw ValidationException::withMessages([
-                    'email' => ['No existe una cuenta con este email.'],
-                ]);
-            }
-
-            // Obtener usuario para verificar estado
-            $user = User::where('email', $request->email)->first();
-
-            // Verificar si la contraseña coincide
-            $passwordValid = Hash::check($request->password, $user->password);
-
-            if (!Auth::attempt($request->only('email', 'password'))) {
-
-                throw ValidationException::withMessages([
-                    'email' => ['Las credenciales proporcionadas son incorrectas.'],
-                ]);
-            }
-
-
-            try {
-                $token = $user->createToken('auth_token')->plainTextToken;
-            } catch (\Exception $e) {
-                throw $e;
-            }
-
-
-            return response()->json([
-                'user' => new UserResource($user),
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ]);
-        } catch (ValidationException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-
-            throw $e;
         }
+
+        // Verificar si la contraseña coincide
+        if (!Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Las credenciales proporcionadas son incorrectas.'],
+            ]);
+        }
+
+        // Intentar autenticar al usuario
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages([
+                'email' => ['Las credenciales proporcionadas son incorrectas.'],
+            ]);
+        }
+
+        // Generar token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'user' => new UserResource($user),
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ]);
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        auth()->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
@@ -163,81 +150,13 @@ class AuthController extends Controller
             'email' => [__($status)],
         ]);
     }
-    public function resetPassword(Request $request): JsonResponse
-    {
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => [
-                'required',
-                'confirmed',
-                PasswordRule::min(8)
-                    ->mixedCase()
-                    ->numbers()
-            ],
-        ]);
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password)
-                ])->setRememberToken(Str::random(60));
-
-                $user->save();
-
-                event(new PasswordReset($user));
-            }
-        );
-
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => __($status)]);
-        }
-
-        throw ValidationException::withMessages([
-            'email' => [__($status)],
-        ]);
-    }
-
-    public function changePassword(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'current_password' => 'required|string',
-            'password' => [
-                'required',
-                'string',
-                'confirmed',
-                PasswordRule::min(8)
-                    ->mixedCase()
-                    ->numbers()
-                    ->letters()
-                    ->symbols()
-            ],
-        ]);
-
-        $user = $request->user();
-
-        if (!Hash::check($validated['current_password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => ['La contraseña actual es incorrecta.'],
-            ]);
-        }
-
-        $user->update([
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        return response()->json([
-            'message' => 'Contraseña cambiada correctamente',
-        ]);
-    }
 
     public function updateProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
-            'username' => 'nullable|string|max:50|unique:users,username,' . $request->user()->id,
-            'email' => 'nullable|string|email|max:255|unique:users,email,' . $request->user()->id,
+            'username' => 'nullable|string|max:50|unique:users,username,' . auth()->user()->id,
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . auth()->user()->id,
             'profile_picture' => 'nullable|string',
             'bio' => 'nullable|string|max:500',
             'location' => 'nullable|string|max:255',
@@ -252,7 +171,7 @@ class AuthController extends Controller
             'email_notifications' => 'nullable|boolean',
         ]);
 
-        $user = $request->user();
+        $user = auth()->user();
         $user->update($validated);
 
         return response()->json([
@@ -271,10 +190,10 @@ class AuthController extends Controller
     {
         try {
             // Obtenemos el usuario autenticado
-            $user = $request->user();
+            $user = auth()->user();
 
             // Revocamos el token actual
-            $request->user()->currentAccessToken()->delete();
+            auth()->user()->currentAccessToken()->delete();
 
             // Creamos un nuevo token
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -293,5 +212,14 @@ class AuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Muestra la información del usuario autenticado
+     */
+    public function me(): JsonResponse
+    {
+        $user = auth()->user()->loadCount(['followers', 'following', 'posts']);
+        return response()->json(new UserResource($user));
     }
 }

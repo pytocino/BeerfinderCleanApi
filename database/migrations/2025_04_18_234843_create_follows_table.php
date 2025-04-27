@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('follower_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('following_id')->constrained('users')->onDelete('cascade');
-            $table->boolean('accepted')->default(true); // Para solicitudes privadas, true si está aceptado
-            $table->timestamp('followed_at')->nullable(); // Fecha/hora en que empezó a seguir
-            $table->timestamp('unfollowed_at')->nullable(); // Fecha/hora en que dejó de seguir (si aplica)
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->timestamps();
 
             // Asegurar que un usuario no pueda seguir a otro usuario más de una vez

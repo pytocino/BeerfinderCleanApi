@@ -19,9 +19,8 @@ class LikeFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
-            'post_id' => Post::factory(),
-            'liked_at' => now(),
+            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
+            'post_id' => Post::query()->inRandomOrder()->value('id') ?? Post::factory(),
         ];
     }
 

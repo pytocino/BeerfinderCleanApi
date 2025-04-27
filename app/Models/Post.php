@@ -29,7 +29,6 @@ class Post extends Model
         'purchase_currency',
         'user_tags',
         'edited',
-        'edited_at'
     ];
 
     /**
@@ -43,7 +42,6 @@ class Post extends Model
         'purchase_price' => 'decimal:2',
         'user_tags' => 'array',
         'edited' => 'boolean',
-        'edited_at' => 'datetime'
     ];
 
     /**
@@ -77,6 +75,7 @@ class Post extends Model
     {
         return $this->belongsTo(Beer::class);
     }
+
     /**
      * Obtiene la ubicación asociada al post.
      */

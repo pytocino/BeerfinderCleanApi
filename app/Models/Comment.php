@@ -19,11 +19,10 @@ class Comment extends Model
      */
     protected $fillable = [
         'user_id',
-        'post_id',      // Añadido para asignación masiva
+        'post_id',
         'content',
         'parent_id',
         'edited',
-        'edited_at',
         'pinned',
     ];
 
@@ -34,7 +33,6 @@ class Comment extends Model
      */
     protected $casts = [
         'edited' => 'boolean',
-        'edited_at' => 'datetime',
         'pinned' => 'boolean',
     ];
 

@@ -16,7 +16,6 @@ class CommentResource extends JsonResource
             'parent_id'  => $this->parent_id,
             'content'    => $this->content,
             'edited'     => (bool) $this->edited,
-            'edited_at'  => $this->edited_at,
             'pinned'     => (bool) ($this->pinned ?? false),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

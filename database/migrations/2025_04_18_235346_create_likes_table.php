@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('post_id')->constrained()->onDelete('cascade');
-            $table->timestamp('liked_at')->nullable(); // Fecha/hora en que se dio like
             $table->timestamps();
 
             // Asegurar que un usuario no pueda dar like más de una vez al mismo comentario

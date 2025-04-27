@@ -3,29 +3,27 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Http\Resources\NotificationResource;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
     /**
      * Obtener todas las notificaciones del usuario autenticado.
      */
-    public function index(Request $request): JsonResponse
+    public function getMyNotifications()
     {
         $notifications = auth()->user()->notifications()
-            ->with(['fromUser', 'user'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return response()->json(NotificationResource::collection($notifications));
+        return NotificationResource::collection($notifications);
     }
+
     /**
      * Marcar como leída una notificación específica.
      */
-    public function markAsRead(Request $request, $id): JsonResponse
+    public function markAsRead(Request $request, $id)
     {
         $notification = auth()->user()->notifications()->find($id);
 
@@ -41,10 +39,13 @@ class NotificationController extends Controller
     /**
      * Marcar todas las notificaciones como leídas.
      */
-    public function markAllAsRead(Request $request): JsonResponse
+    public function markAllAsRead()
     {
         $notifications = auth()->user()->unreadNotifications;
-        $notifications->markAsRead();
+
+        foreach ($notifications as $notification) {
+            $notification->markAsRead();
+        }
 
         return response()->json(['message' => 'Todas las notificaciones marcadas como leídas.']);
     }

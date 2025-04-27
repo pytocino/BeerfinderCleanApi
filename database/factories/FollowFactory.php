@@ -17,49 +17,18 @@ class FollowFactory extends Factory
      */
     public function definition(): array
     {
+        // Evitar que follower_id y following_id sean iguales
+        do {
+            $follower_id = User::all()->random()->id;
+            $following_id = User::all()->random()->id;
+        } while ($follower_id === $following_id);
+
+        $statuses = ['pending', 'accepted', 'rejected'];
+
         return [
-            'follower_id' => User::factory(),
-            'following_id' => User::factory(),
-            'accepted' => true,
-            'followed_at' => now(),
-            'unfollowed_at' => null,
+            'follower_id' => $follower_id,
+            'following_id' => $following_id,
+            'status' => $this->faker->randomElement($statuses),
         ];
-    }
-
-    /**
-     * Configura el seguimiento como pendiente de aceptación.
-     */
-    public function pending(): static
-    {
-        return $this->state(function (array $attributes) {
-            return [
-                'accepted' => false,
-            ];
-        });
-    }
-
-    /**
-     * Configura el seguimiento como dejado de seguir.
-     */
-    public function unfollowed(): static
-    {
-        return $this->state(function (array $attributes) {
-            return [
-                'unfollowed_at' => now(),
-            ];
-        });
-    }
-
-    /**
-     * Configura el seguimiento para usuarios específicos.
-     */
-    public function between(User $follower, User $following): static
-    {
-        return $this->state(function (array $attributes) use ($follower, $following) {
-            return [
-                'follower_id' => $follower->id,
-                'following_id' => $following->id,
-            ];
-        });
     }
 }

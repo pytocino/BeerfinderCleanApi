@@ -34,13 +34,8 @@ return new class extends Migration
             // Social
             $table->json('user_tags')->nullable(); // Usuarios etiquetados en JSON
 
-            // Estadísticas (para consultas rápidas)
-            $table->integer('likes_count')->default(0);
-            $table->integer('comments_count')->default(0);
-
             // Edición
             $table->boolean('edited')->default(false);
-            $table->timestamp('edited_at')->nullable();
 
             $table->timestamps();
         });

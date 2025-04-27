@@ -23,9 +23,9 @@ class FollowResource extends JsonResource
                 'username' => $this->following?->username,
                 'profile_picture' => $this->following?->profile_picture,
             ],
-            'accepted' => $this->accepted,
-            'followed_at' => $this->followed_at,
-            'unfollowed_at' => $this->unfollowed_at,
+            'status' => $this->status,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

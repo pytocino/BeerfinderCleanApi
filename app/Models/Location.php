@@ -18,7 +18,6 @@ class Location extends Model
      */
     protected $fillable = [
         'name',
-        'type',
         'country',
         'city',
         'address',
@@ -30,11 +29,7 @@ class Location extends Model
         'website',
         'email',
         'phone',
-        'instagram',
-        'facebook',
-        'twitter',
         'verified',
-        'check_ins_count'
     ];
 
     /**
@@ -46,7 +41,6 @@ class Location extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'verified' => 'boolean',
-        'check_ins_count' => 'integer'
     ];
 
     /**
@@ -67,16 +61,9 @@ class Location extends Model
             ->count();
     }
 
-    public function beersTasted()
-    {
-        // Devuelve las cervezas distintas que se han tomado en esta ubicación
-        return $this->hasMany(CheckIn::class)
-            ->select('beer_id')
-            ->whereNotNull('beer_id')
-            ->groupBy('beer_id');
-    }
-
-    // Si quieres obtener los modelos Beer directamente:
+    /**
+     * Devuelve las cervezas distintas que se han tomado en esta ubicación.
+     */
     public function uniqueBeers()
     {
         return $this->belongsToMany(

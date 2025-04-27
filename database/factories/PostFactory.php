@@ -19,35 +19,25 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
-        // Tipos de servicio comunes para cervezas
         $servingTypes = ['Bottle', 'Can', 'Draft', 'Taster', 'Flight'];
-
-        // Monedas comunes
         $currencies = ['EUR', 'USD', 'GBP'];
 
         return [
-            'user_id' => User::all()->random()->id, // Usuario aleatorio
-            'beer_id' => Beer::all()->random()->id, // Usuario aleatorio
-            'location_id' => fake()->boolean(80) ? Location::all()->random()->id : null, // 80% con ubicación
+            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
+            'beer_id' => Beer::query()->inRandomOrder()->value('id') ?? Beer::factory(),
+            'location_id' => Location::query()->inRandomOrder()->value('id'),
             'review' => $this->faker->paragraph(3),
-            'rating' => fake()->randomFloat(1, 1.0, 5.0), // Valoración de 1.0 a 5.0 con un decimal
-            'photo_url' => fake()->boolean(70) ? fake()->imageUrl(800, 600, 'beer') : null,
-            'additional_photos' => fake()->boolean(40) ? json_encode([
-                fake()->imageUrl(800, 600, 'beer'),
-                fake()->imageUrl(800, 600, 'beer')
-            ]) : null,
-            'serving_type' => fake()->randomElement($servingTypes),
-            'purchase_price' => fake()->randomFloat(2, 2, 15), // Precio razonable de cerveza
-            'purchase_currency' => fake()->randomElement($currencies),
-            'user_tags' => fake()->boolean(50) ? json_encode(
-                User::inRandomOrder()->limit(2)->pluck('id')->toArray()
-            ) : null,
-            'likes_count' => fake()->numberBetween(0, 500),
-            'comments_count' => fake()->numberBetween(0, 100),
-            'edited' => fake()->boolean(20), // 20% editados
-            'edited_at' => function (array $attributes) {
-                return $attributes['edited'] ? now()->subDays(rand(1, 10)) : null;
-            },
+            'rating' => $this->faker->randomFloat(1, 1.0, 5.0),
+            'photo_url' => $this->faker->boolean(70) ? $this->faker->imageUrl(800, 600, 'beer') : null,
+            'additional_photos' => $this->faker->boolean(40) ? [
+                $this->faker->imageUrl(800, 600, 'beer'),
+                $this->faker->imageUrl(800, 600, 'beer')
+            ] : [],
+            'serving_type' => $this->faker->randomElement($servingTypes),
+            'purchase_price' => $this->faker->randomFloat(2, 2, 15),
+            'purchase_currency' => $this->faker->randomElement($currencies),
+            'user_tags' => $this->faker->boolean(50) ? User::inRandomOrder()->limit(2)->pluck('id')->toArray() : [],
+            'edited' => $this->faker->boolean(20),
         ];
     }
 
