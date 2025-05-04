@@ -55,7 +55,7 @@ class MessageController extends Controller
         return MessageResource::collection($messages);
     }
 
-    // Enviar mensaje
+    // Enviar mensaje (mejorando el control de errores)
     public function store(Request $request)
     {
         $request->validate([
@@ -67,8 +67,10 @@ class MessageController extends Controller
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
             'content' => $request->content,
+            'is_read' => false, // Asegura que el campo is_read se establezca
         ]);
 
+        // Broadcast del evento
         broadcast(new MessageSent($message))->toOthers();
 
         return new MessageResource($message);

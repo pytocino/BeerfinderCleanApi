@@ -23,8 +23,15 @@ return new class extends Migration
             $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+        });
 
-            $table->unique(['conversation_id', 'user_id']);
+        Schema::create('messages', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // autor del mensaje
+            $table->text('content');
+            $table->timestamp('read_at')->nullable(); // para saber si fue leído
+            $table->timestamps();
         });
     }
 
@@ -33,6 +40,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('messages');
         Schema::dropIfExists('conversation_user');
         Schema::dropIfExists('conversations');
     }

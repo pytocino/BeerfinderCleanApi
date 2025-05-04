@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Follow;
 
 class ConversationController extends Controller
 {
@@ -38,8 +39,15 @@ class ConversationController extends Controller
             'content' => 'required|string',
         ]);
 
+        $authUser = auth()->user();
+
+        // Verificar solo que los usuarios existan (eliminamos restricciones de privacidad)
+        foreach ($request->participant_ids as $participantId) {
+            User::findOrFail($participantId);
+        }
+
         // Incluye al usuario autenticado como participante
-        $participantIds = array_unique(array_merge($request->participant_ids, [auth()->id()]));
+        $participantIds = array_unique(array_merge($request->participant_ids, [$authUser->id]));
         sort($participantIds);
 
         // Buscar una conversación con exactamente estos participantes
@@ -59,9 +67,9 @@ class ConversationController extends Controller
         }
 
         // Crea el primer mensaje
-        $receiverId = collect($participantIds)->first(fn($id) => $id !== auth()->id());
+        $receiverId = collect($participantIds)->first(fn($id) => $id !== $authUser->id);
         $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
+            'sender_id' => $authUser->id,
             'receiver_id' => $receiverId,
             'content' => $request->content,
             'is_read' => false,
@@ -90,7 +98,7 @@ class ConversationController extends Controller
         $receiverId = $conversation->users()->where('user_id', '!=', auth()->id())->first()->id ?? null;
 
         $message = $conversation->messages()->create([
-            'sender_id' => auth()->id(),
+            'sender_id' => auth()->user()->id,
             'receiver_id' => $receiverId,
             'content' => $request->content,
             'is_read' => false,
@@ -136,30 +144,18 @@ class ConversationController extends Controller
     }
     public function show($id)
     {
-        $user = auth()->user();
-
         // Buscar la conversación
         $conversation = Conversation::with('users')->find($id);
 
-        // Si no existe, puedes crearla solo si el id es el de otro usuario (no de una conversación)
-        if (!$conversation) {
-            return response()->json(['message' => 'Conversación no encontrada.'], 404);
-        }
-
-        // Verifica que el usuario sea participante
-        if (!$conversation->users->contains($user->id)) {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-
         // Obtener los mensajes de la conversación, ordenados por fecha
-        $messages = \App\Models\Message::with(['sender', 'receiver'])
+        $messages = Message::with(['sender', 'receiver'])
             ->where('conversation_id', '=', $conversation->id)
             ->orderBy('created_at')
             ->get();
 
         return response()->json([
             'conversation' => new ConversationResource($conversation),
-            'messages' => \App\Http\Resources\MessageResource::collection($messages),
+            'messages' => MessageResource::collection($messages),
         ]);
     }
 }
