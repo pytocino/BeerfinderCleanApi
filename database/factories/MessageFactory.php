@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Models\Conversation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,6 +25,7 @@ class MessageFactory extends Factory
         } while ($sender_id === $receiver_id);
 
         return [
+            'conversation_id' => Conversation::query()->inRandomOrder()->value('id') ?? Conversation::factory(),
             'sender_id' => $sender_id,
             'receiver_id' => $receiver_id,
             'content' => $this->faker->sentence(12),

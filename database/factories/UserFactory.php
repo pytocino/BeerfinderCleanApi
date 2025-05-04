@@ -23,6 +23,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'profile_picture' => fake()->imageUrl(),
             'last_active_at' => now(),
+            'is_admin' => false,
         ];
     }
 

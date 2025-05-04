@@ -8,82 +8,133 @@ use App\Models\User;
 use App\Models\Follow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Http\Resources\FollowResource;
 
 class SocialController extends Controller
 {
     public function follow(Request $request, $id): JsonResponse
     {
-        $currentUser = auth()->user();
-
-        $follow = Follow::where('follower_id', $currentUser->id)
-            ->where('following_id', $id)
-            ->exists();
-
-        if ($follow) {
-            return response()->json(['message' => 'Ya sigues a este usuario.'], 409);
+        // Evitar seguirse a uno mismo
+        if (auth()->id() == $id) {
+            return $this->createResponse('No puedes seguirte a ti mismo', false, null, 400);
         }
 
-        $followedUser = User::find($id);
-
+        // Cargar usuario con su perfil
+        $followedUser = User::with('profile')->find($id);
         if (!$followedUser) {
-            return response()->json(['message' => 'Usuario no encontrado.'], 404);
+            return $this->createResponse('Usuario no encontrado', false, null, 404);
         }
 
-        // Si el perfil es privado, el seguimiento queda pendiente (accepted = false)
-        $accepted = !$followedUser->private_profile;
+        $follow = Follow::where('follower_id', '=', auth()->id())
+            ->where('following_id', '=', $id)
+            ->first();
+
+        // Usuario ya está siendo seguido o hay una solicitud pendiente
+        if ($follow) {
+            switch ($follow->status) {
+                case 'accepted':
+                    return $this->createResponse('Ya sigues a este usuario', true, 'accepted', 200);
+
+                case 'pending':
+                    return $this->createResponse('Ya has enviado una solicitud de seguimiento', false, 'pending', 200);
+
+                case 'rejected':
+                    // Reenviar solicitud si fue rechazada
+                    $follow->status = 'pending';
+                    $follow->save();
+                    event(new UserFollowed(auth()->user(), $followedUser));
+                    return $this->createResponse('Solicitud de seguimiento reenviada', false, 'pending', 200);
+            }
+        }
+
+        // Determinar el estado basado en si el perfil es privado
+        $isPrivateProfile = $followedUser->profile && $followedUser->profile->private_profile;
+        $status = $isPrivateProfile ? 'pending' : 'accepted';
 
         Follow::create([
-            'follower_id' => $currentUser->id,
+            'follower_id' => auth()->id(),
             'following_id' => $id,
-            'accepted' => $accepted,
+            'status' => $status,
         ]);
 
-        event(new UserFollowed($currentUser, $followedUser));
+        event(new UserFollowed(auth()->user(), $followedUser));
 
-        if ($accepted) {
-            return response()->json(['message' => 'Ahora sigues a este usuario.']);
-        } else {
-            return response()->json(['message' => 'Solicitud de seguimiento enviada.']);
-        }
+        $message = $status === 'accepted' ?
+            'Ahora sigues a este usuario' :
+            'Solicitud de seguimiento enviada';
+
+        return $this->createResponse($message, $status === 'accepted', $status, 200);
     }
 
     public function unfollow(Request $request, $id): JsonResponse
     {
-        $currentUser = auth()->user();
-
-        $follow = Follow::where('follower_id', $currentUser->id)
-            ->where('following_id', $id)
+        $follow = Follow::where('follower_id', '=', auth()->id())
+            ->where('following_id', '=',     $id)
             ->first();
 
         if (!$follow) {
-            return response()->json(['message' => 'No estás siguiendo a este usuario.'], 404);
+            return $this->createResponse('No estás siguiendo a este usuario', false, null, 404);
         }
 
         $follow->delete();
-
-        return response()->json(['message' => 'Has dejado de seguir a este usuario.']);
+        return $this->createResponse('Has dejado de seguir a este usuario', false, null, 200);
     }
 
-    // Obtener los usuarios a los que sigue el usuario autenticado
-    public function followings(Request $request): JsonResponse
+    /**
+     * Acepta una solicitud de seguimiento pendiente
+     */
+    public function acceptFollow(Request $request, $id): JsonResponse
     {
-        $followings = Follow::with(['following', 'follower'])
-            ->where('follower_id', auth()->user()->id)
-            ->where('accepted', true)
-            ->get();
+        // Buscamos la solicitud donde el usuario actual es el que recibe la solicitud
+        $follow = Follow::where('follower_id', '=', $id)
+            ->where('following_id', '=', auth()->id())
+            ->where('status', '=', 'pending')
+            ->first();
 
-        return response()->json(FollowResource::collection($followings));
+        if (!$follow) {
+            return $this->createResponse('No hay solicitud de seguimiento pendiente de este usuario', false, null, 404);
+        }
+
+        // Actualizamos el estado a aceptado
+        $follow->status = 'accepted';
+        $follow->save();
+
+        // Puedes disparar un evento aquí si necesitas notificar al seguidor
+        // event(new FollowRequestAccepted($follow->follower, auth()->user()));
+
+        return $this->createResponse('Has aceptado la solicitud de seguimiento', true, 'accepted', 200);
     }
 
-    // Obtener los seguidores del usuario autenticado
-    public function followers(Request $request): JsonResponse
+    /**
+     * Rechaza una solicitud de seguimiento pendiente
+     */
+    public function rejectFollow(Request $request, $id): JsonResponse
     {
-        $followers = Follow::with(['following', 'follower'])
-            ->where('following_id', auth()->user()->id)
-            ->where('accepted', true)
-            ->get();
+        // Buscamos la solicitud donde el usuario actual es el que recibe la solicitud
+        $follow = Follow::where('follower_id', '=', $id)
+            ->where('following_id', '=', auth()->id())
+            ->where('status', '=', 'pending')
+            ->first();
 
-        return response()->json(FollowResource::collection($followers));
+        if (!$follow) {
+            return $this->createResponse('No hay solicitud de seguimiento pendiente de este usuario', false, null, 404);
+        }
+
+        // Eliminamos la solicitud en lugar de marcarla como rechazada
+        $follow->delete();
+
+        return $this->createResponse('Has rechazado la solicitud de seguimiento', false, null, 200);
+    }
+
+    /**
+     * Crea una respuesta JSON estandarizada
+     */
+    private function createResponse(string $message, bool $isFollowing, ?string $status, int $code): JsonResponse
+    {
+        return response()->json([
+            'success' => $code >= 200 && $code < 300,
+            'message' => $message,
+            'is_following' => $isFollowing,
+            'status' => $status
+        ], $code);
     }
 }

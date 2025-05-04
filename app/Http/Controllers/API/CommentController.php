@@ -24,7 +24,7 @@ class CommentController extends Controller
         }
 
         // Consulta correcta: comentarios raíz del post, con usuario y replies con usuario
-        $comments = Comment::where('post_id', $post->id)
+        $comments = Comment::where('post_id', '=', $post->id)
             ->whereNull('parent_id')
             ->with(['user', 'replies.user'])
             ->orderBy('created_at', 'desc')
@@ -74,10 +74,6 @@ class CommentController extends Controller
 
         event(new PostCommented($request->user(), $post, $comment));
 
-
-        // Incrementar el contador de comentarios del post
-        $post->increment('comments_count');
-
         return response()->json(new CommentResource($comment), 201);
     }
 
@@ -121,8 +117,8 @@ class CommentController extends Controller
 
         // Verificar si el usuario es el dueño del comentario o el dueño del post
         $isOwner = $comment->user_id === $request->user()->id;
-        $isPostOwner = Post::where('id', $comment->post_id)
-            ->where('user_id', $request->user()->id)
+        $isPostOwner = Post::where('id', '=', $comment->post_id)
+            ->where('user_id', '=', $request->user()->id)
             ->exists();
 
         if (!$isOwner && !$isPostOwner && !$request->user()->isAdmin()) {
@@ -130,7 +126,7 @@ class CommentController extends Controller
         }
 
         // Decrementar el contador de comentarios del post
-        Post::where('id', $comment->post_id)->decrement('comments_count');
+        Post::where('id', '=', $comment->post_id)->decrement('comments_count');
 
         $comment->delete();
 

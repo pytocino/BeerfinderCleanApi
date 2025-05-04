@@ -57,7 +57,7 @@ class Location extends Model
     public function getCheckInsCountAttribute(): int
     {
         return DB::table('check_ins')
-            ->where('location_id', $this->id)
+            ->where('location_id', '=', $this->id)
             ->count();
     }
 

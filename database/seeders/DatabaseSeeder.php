@@ -34,6 +34,9 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'profile_picture' => null,
+            'last_active_at' => now(),
+            'is_admin' => true,
+
         ]);
 
         // Resto de usuarios (con perfil automático)
@@ -111,17 +114,20 @@ class DatabaseSeeder extends Seeder
                 ]),
             ]);
         }
-
         foreach (Comment::all() as $comment) {
-            Notification::factory()->create([
-                'notifiable_id' => $comment->user_id,
-                'notifiable_type' => User::class,
-                'type' => 'App\\Notifications\\CommentNotification',
-                'data' => json_encode([
-                    'message' => "Tu comentario #{$comment->id} ha sido recibido.",
-                    'comment_id' => $comment->id,
-                ]),
-            ]);
+            $post = $comment->post;
+            if ($post && $post->user_id !== $comment->user_id) {
+                Notification::factory()->create([
+                    'notifiable_id' => $post->user_id,
+                    'notifiable_type' => User::class,
+                    'type' => 'App\\Notifications\\CommentNotification',
+                    'data' => json_encode([
+                        'message' => "{$comment->user->name} ha comentado tu post #{$post->id}.",
+                        'comment_id' => $comment->id,
+                        'post_id' => $post->id,
+                    ]),
+                ]);
+            }
         }
     }
 }

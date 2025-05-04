@@ -82,13 +82,13 @@ class StatsController extends Controller
             $user = User::findOrFail($id);
 
             // Estadísticas básicas
-            $checkIns = CheckIn::where('user_id', $user->id)->get();
+            $checkIns = CheckIn::where('user_id', '=', $user->id)->get();
             $totalCheckIns = $checkIns->count();
             $uniqueBeers = $checkIns->pluck('beer_id')->unique()->count();
             $avgRating = $checkIns->avg('rating');
 
             // Estilos favoritos
-            $favoriteStyles = CheckIn::where('user_id', $user->id)
+            $favoriteStyles = CheckIn::where('user_id', '=', $user->id)
                 ->join('beers', 'check_ins.beer_id', '=', 'beers.id')
                 ->join('beer_styles', 'beers.style_id', '=', 'beer_styles.id')
                 ->select('beer_styles.name')
@@ -99,7 +99,7 @@ class StatsController extends Controller
                 ->get();
 
             // Cervecerías favoritas
-            $favoriteBreweries = CheckIn::where('user_id', $user->id)
+            $favoriteBreweries = CheckIn::where('user_id', '=', $user->id)
                 ->join('beers', 'check_ins.beer_id', '=', 'beers.id')
                 ->join('breweries', 'beers.brewery_id', '=', 'breweries.id')
                 ->select('breweries.id', 'breweries.name')
@@ -110,7 +110,7 @@ class StatsController extends Controller
                 ->get();
 
             // Cervezas mejor valoradas
-            $topRatedBeers = CheckIn::where('user_id', $user->id)
+            $topRatedBeers = CheckIn::where('user_id', '=', $user->id)
                 ->join('beers', 'check_ins.beer_id', '=', 'beers.id')
                 ->join('breweries', 'beers.brewery_id', '=', 'breweries.id')
                 ->select('beers.id', 'beers.name', 'breweries.name as brewery')
@@ -122,7 +122,7 @@ class StatsController extends Controller
 
             // Check-ins por mes (últimos 6 meses)
             $startDate = Carbon::now()->subMonths(6);
-            $checkInsByMonth = CheckIn::where('user_id', $user->id)
+            $checkInsByMonth = CheckIn::where('user_id', '=', $user->id)
                 ->where('created_at', '>=', $startDate)
                 ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
                 ->groupBy('month')
@@ -199,7 +199,7 @@ class StatsController extends Controller
         // 4. Combinar los resultados en una lista única y diversa
 
         // 1. Encontrar los estilos favoritos del usuario
-        $favoriteStyles = CheckIn::where('user_id', $user->id)
+        $favoriteStyles = CheckIn::where('user_id', '=', $user->id)
             ->join('beers', 'check_ins.beer_id', '=', 'beers.id')
             ->where('rating', '>=', 3.5) // Solo cervezas bien valoradas
             ->pluck('beers.style_id')
@@ -210,12 +210,12 @@ class StatsController extends Controller
             ->toArray();
 
         // 2. Cervezas probadas por el usuario
-        $triedBeers = CheckIn::where('user_id', $user->id)
+        $triedBeers = CheckIn::where('user_id', '=', $user->id)
             ->pluck('beer_id')
             ->toArray();
 
         // 3. Usuarios seguidos
-        $followedUsers = Follow::where('follower_id', $user->id)
+        $followedUsers = Follow::where('follower_id', '=', $user->id)
             ->pluck('followed_id')
             ->toArray();
 
@@ -245,7 +245,7 @@ class StatsController extends Controller
 
         // B. Recomendaciones basadas en usuarios seguidos (30% del límite)
         if (!empty($followedUsers)) {
-            $followBasedRecommendations = CheckIn::whereIn('user_id', $followedUsers)
+            $followBasedRecommendations = CheckIn::whereIn('user_id', '=', $followedUsers)
                 ->where('rating', '>=', 4.0)
                 ->join('beers', 'check_ins.beer_id', '=', 'beers.id')
                 ->whereNotIn('beers.id', $triedBeers)
@@ -269,7 +269,7 @@ class StatsController extends Controller
         // C. Recomendaciones populares globales (20% del límite)
         $remainingNeeded = $limit - $recommendations->count();
         if ($remainingNeeded > 0) {
-            $popularRecommendations = Beer::whereNotIn('id', $triedBeers)
+            $popularRecommendations = Beer::whereNotIn('id', '=', $triedBeers)
                 ->whereNotIn('id', $recommendations->pluck('id')->toArray())
                 ->with(['brewery', 'style'])
                 ->withAvg('checkIns', 'rating')

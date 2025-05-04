@@ -13,31 +13,56 @@ class UserResource extends JsonResource
     {
         $profile = $this->whenLoaded('profile');
 
+        // Obtener información de seguimiento si hay usuario autenticado
+        $followStatus = null;
+        $isFollowing = false;
+
+        if (Auth::check()) {
+            $follow = Follow::where('follower_id', '=', Auth::id())
+                ->where('following_id', '=', $this->id)
+                ->first();
+
+            if ($follow) {
+                $followStatus = $follow->status;
+                $isFollowing = $follow->status === 'accepted';
+            }
+        }
+
+        // Contar solo seguidores/seguidos aceptados
+        $followersCount = isset($this->followers_count)
+            ? (int) $this->followers_count  // Si viene pre-contado por withCount
+            : ($this->whenLoaded('followers')
+                ? $this->followers->where('follows.status', '=', 'accepted')->count()
+                : null);
+
+        $followingCount = isset($this->following_count)
+            ? (int) $this->following_count  // Si viene pre-contado por withCount
+            : ($this->whenLoaded('following')
+                ? $this->following->where('follows.status', '=', 'accepted')->count()
+                : null);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
             'profile_picture' => $this->profile_picture,
-            'email_verified_at' => $this->when(Auth::id() === $this->id, $this->email_verified_at),
-            'last_active_at' => $this->last_active_at,
-            'is_admin' => $this->is_admin,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'bio' => $profile?->bio ?? null,
+            'location' => $profile?->location ?? null,
+            'birthdate' => $profile?->birthdate ?? null,
+            'private_profile' => $profile?->private_profile ?? null,
 
-            'followers_count' => isset($this->followers_count)
-                ? (int) $this->followers_count
-                : ($this->whenLoaded('followers') ? $this->followers->count() : null),
-            'following_count' => isset($this->following_count)
-                ? (int) $this->following_count
-                : ($this->whenLoaded('following') ? $this->following->count() : null),
+            'followers_count' => $followersCount,
+            'following_count' => $followingCount,
             'posts_count' => isset($this->posts_count)
                 ? (int) $this->posts_count
                 : ($this->whenLoaded('posts') ? $this->posts->count() : null),
-            'is_following' => $this->when(Auth::check(), function () {
-                return Follow::where('follower_id', Auth::id())
-                    ->where('following_id', $this->id)
-                    ->where('status', 'accepted')
-                    ->exists();
+
+            // Información de seguimiento
+            'is_following' => $this->when(Auth::check(), function () use ($isFollowing) {
+                return $isFollowing;
+            }),
+            'follow_status' => $this->when(Auth::check(), function () use ($followStatus) {
+                return $followStatus;
             }),
         ];
     }

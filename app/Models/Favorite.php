@@ -45,8 +45,8 @@ class Favorite extends Model
      */
     public static function isFavorite(int $userId, int $beerId): bool
     {
-        return self::where('user_id', $userId)
-            ->where('beer_id', $beerId)
+        return self::where('user_id', '=', $userId)
+            ->where('beer_id', '=', $beerId)
             ->exists();
     }
 }

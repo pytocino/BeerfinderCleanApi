@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PostResource;
+use App\Http\Resources\UserProfileResource;
 use App\Models\User;
 use App\Http\Resources\UserResource;
-use Illuminate\Auth\Events\PasswordReset;
+use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
@@ -34,50 +34,25 @@ class AuthController extends Controller
                     ->numbers()
             ],
             'profile_picture' => 'nullable|string',
-            'bio' => 'nullable|string|max:500',
-            'location' => 'nullable|string|max:255',
-            'birthdate' => 'nullable|date',
-            'website' => 'nullable|string|max:255|url',
-            'phone' => 'nullable|string|max:20',
-            'instagram' => 'nullable|string|max:255',
-            'twitter' => 'nullable|string|max:255',
-            'facebook' => 'nullable|string|max:255',
-            'private_profile' => 'nullable|boolean',
-            'allow_mentions' => 'nullable|boolean',
-            'email_notifications' => 'nullable|boolean',
         ]);
 
-        // Preparamos los datos para la creación del usuario
-        $userData = [
+        // Crear el usuario con campos básicos
+        $user = User::create([
             'name' => $validated['name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-        ];
+            'profile_picture' => $validated['profile_picture'] ?? null,
+            'private_profile' => false,
+        ]);
 
-        // Añadimos los campos opcionales si están presentes
-        $optionalFields = [
-            'username',
-            'profile_picture',
-            'bio',
-            'location',
-            'birthdate',
-            'website',
-            'phone',
-            'instagram',
-            'twitter',
-            'facebook',
-            'private_profile',
-            'allow_mentions',
-            'email_notifications'
-        ];
-
-        foreach ($optionalFields as $field) {
-            if (isset($validated[$field])) {
-                $userData[$field] = $validated[$field];
-            }
-        }
-
-        $user = User::create($userData);
+        // Crear perfil vacío para el usuario
+        $user->profile()->create([
+            'user_id' => $user->id,
+            'private_profile' => false,
+            'allow_mentions' => true,
+            'email_notifications' => true,
+        ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -96,7 +71,7 @@ class AuthController extends Controller
         ]);
 
         // Verificar si el usuario existe antes de intentar autenticación
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', '=', $request->email)->first();
 
         if (!$user) {
             throw ValidationException::withMessages([
@@ -151,13 +126,9 @@ class AuthController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request): JsonResponse
+    public function updateUserProfile(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'nullable|string|max:255',
-            'username' => 'nullable|string|max:50|unique:users,username,' . auth()->user()->id,
-            'email' => 'nullable|string|email|max:255|unique:users,email,' . auth()->user()->id,
-            'profile_picture' => 'nullable|string',
             'bio' => 'nullable|string|max:500',
             'location' => 'nullable|string|max:255',
             'birthdate' => 'nullable|date',
@@ -171,12 +142,26 @@ class AuthController extends Controller
             'email_notifications' => 'nullable|boolean',
         ]);
 
+        // Obtenemos el usuario autenticado
         $user = auth()->user();
-        $user->update($validated);
+        // Actualizamos el perfil del usuario
+        $user->profile()->update([
+            'bio' => $validated['bio'],
+            'location' => $validated['location'],
+            'birthdate' => $validated['birthdate'],
+            'website' => $validated['website'],
+            'phone' => $validated['phone'],
+            'instagram' => $validated['instagram'],
+            'twitter' => $validated['twitter'],
+            'facebook' => $validated['facebook'],
+            'private_profile' => $validated['private_profile'] ?? false,
+            'allow_mentions' => $validated['allow_mentions'] ?? true,
+            'email_notifications' => $validated['email_notifications'] ?? true,
+        ]);
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
-            'user' => new UserResource($user),
+            'userProfile' => new UserProfileResource($user),
         ]);
     }
 
@@ -219,7 +204,72 @@ class AuthController extends Controller
      */
     public function me(): JsonResponse
     {
-        $user = auth()->user()->loadCount(['followers', 'following', 'posts']);
+        $user = auth()->user()->load('profile')->loadCount([
+            'followers' => function ($query) {
+                $query->where('follows.status', '=', 'accepted');
+            },
+            'following' => function ($query) {
+                $query->where('follows.status', '=', 'accepted');
+            },
+            'posts'
+        ]);
+
         return response()->json(new UserResource($user));
+    }
+
+    public function getMyStats(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+
+        // Número de cervezas distintas tomadas (por posts)
+        $distinctBeers = $user->posts()->distinct('beer_id')->count('beer_id');
+
+        // Número de lugares distintos visitados (por posts)
+        $distinctLocations = $user->posts()->whereNotNull('location_id')->distinct('location_id')->count('location_id');
+
+        // Número de estilos de cerveza distintos probados
+        $distinctStyles = $user->posts()
+            ->join('beers', 'posts.beer_id', '=', 'beers.id')
+            ->distinct('beers.style_id')
+            ->count('beers.style_id');
+
+        return response()->json([
+            'distinct_beers'     => $distinctBeers,
+            'distinct_locations' => $distinctLocations,
+            'distinct_styles'    => $distinctStyles,
+        ]);
+    }
+
+    public function getMyPosts(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        $posts = $user->posts()
+            ->with(['user', 'beer', 'location'])
+            ->latest()
+            ->paginate(15);
+
+        return response()->json(PostResource::collection($posts));
+    }
+
+    /**
+     * Obtiene los posts de los amigos (usuarios seguidos) del usuario autenticado
+     */
+    public function getMyFriendsPosts(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+
+        // Obtener los IDs de usuarios que sigue (amigos) con estado 'accepted'
+        $followingIds = $user->following()
+            ->wherePivot('status', '=', 'accepted')
+            ->pluck('users.id');
+
+        // Obtener los posts de esos usuarios
+        $friendsPosts = Post::whereIn('user_id', $followingIds)
+            ->with(['user', 'beer', 'location', 'comments', 'likes'])
+            ->latest()
+            ->paginate(15);
+
+        logger($friendsPosts);
+        return response()->json(PostResource::collection($friendsPosts));
     }
 }

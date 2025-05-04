@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\BeerResource;
-use App\Http\Resources\BreweryResource;
-use App\Http\Resources\BeerStyleResource;
-use App\Http\Resources\LocationResource;
-use App\Http\Resources\UserResource;
 use App\Http\Resources\SearchResource;
 use App\Models\Beer;
-use App\Models\Brewery;
 use App\Models\BeerStyle;
 use App\Models\Location;
 use App\Models\User;
@@ -130,12 +124,12 @@ class SearchController extends Controller
             // Filtros específicos para cervezas
             if (!empty($validated['country'])) {
                 $beersQuery->whereHas('brewery', function ($query) use ($validated) {
-                    $query->where('country', $validated['country']);
+                    $query->where('country', '=', $validated['country']);
                 });
             }
 
             if (!empty($validated['style_id'])) {
-                $beersQuery->where('style_id', $validated['style_id']);
+                $beersQuery->where('style_id', '=', $validated['style_id']);
             }
 
             if (!empty($validated['min_rating'])) {
@@ -155,40 +149,6 @@ class SearchController extends Controller
             $results['beers'] = [
                 'data' => $beers->items(),
                 'total' => $beers->total()
-            ];
-        }
-
-        // Buscar en cervecerías
-        if (in_array('breweries', $types)) {
-            $breweriesQuery = Brewery::query();
-
-            if (!empty($searchTerm)) {
-                $breweriesQuery->where(function ($query) use ($searchTerm) {
-                    $query->where('name', 'like', "%{$searchTerm}%")
-                        ->orWhere('description', 'like', "%{$searchTerm}%");
-                });
-            }
-
-            // Filtros específicos para cervecerías
-            if (!empty($validated['country'])) {
-                $breweriesQuery->where('country', $validated['country']);
-            }
-
-            if (!empty($validated['city'])) {
-                $breweriesQuery->where('city', $validated['city']);
-            }
-
-            // Ordenamiento
-            if ($sort === 'created_at') {
-                $breweriesQuery->orderBy('created_at', $order);
-            } else {
-                $breweriesQuery->orderBy('name', $order);
-            }
-
-            $breweries = $breweriesQuery->paginate($perPage);
-            $results['breweries'] = [
-                'data' => $breweries->items(),
-                'total' => $breweries->total()
             ];
         }
 
@@ -231,11 +191,11 @@ class SearchController extends Controller
 
             // Filtros específicos para ubicaciones
             if (!empty($validated['country'])) {
-                $locationsQuery->where('country', $validated['country']);
+                $locationsQuery->where('country', '=', $validated['country']);
             }
 
             if (!empty($validated['city'])) {
-                $locationsQuery->where('city', $validated['city']);
+                $locationsQuery->where('city', '=', $validated['city']);
             }
 
             // Búsqueda por proximidad si se proporcionan coordenadas
@@ -279,9 +239,7 @@ class SearchController extends Controller
 
             if (!empty($searchTerm)) {
                 $usersQuery->where(function ($query) use ($searchTerm) {
-                    $query->where('name', 'like', "%{$searchTerm}%")
-                        ->orWhere('bio', 'like', "%{$searchTerm}%")
-                        ->orWhere('location', 'like', "%{$searchTerm}%");
+                    $query->where('name', 'like', "%{$searchTerm}%");
                 });
             }
 

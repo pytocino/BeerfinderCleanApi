@@ -10,10 +10,8 @@ class Message extends Model
 {
     use HasFactory;
 
-    /**
-     * Nombre de la tabla en la base de datos.
-     */
     protected $fillable = [
+        'conversation_id',
         'sender_id',
         'receiver_id',
         'content',
@@ -23,6 +21,14 @@ class Message extends Model
     protected $casts = [
         'is_read' => 'boolean',
     ];
+
+    /**
+     * Conversación a la que pertenece el mensaje.
+     */
+    public function conversation(): BelongsTo
+    {
+        return $this->belongsTo(Conversation::class);
+    }
 
     /**
      * Usuario que envía el mensaje.
@@ -39,10 +45,11 @@ class Message extends Model
     {
         return $this->belongsTo(User::class, 'receiver_id');
     }
+
     /**
      * Marca el mensaje como leído.
      */
-    public function markAsRead()
+    public function markAsRead(): void
     {
         $this->update(['is_read' => true]);
     }

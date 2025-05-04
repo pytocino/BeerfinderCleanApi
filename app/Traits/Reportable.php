@@ -28,7 +28,7 @@ trait Reportable
      */
     public function pendingReportsCount(): int
     {
-        return $this->reports()->where('status', 'pending')->count();
+        return $this->reports()->where('status', '=', 'pending')->count();
     }
 
     /**
@@ -37,7 +37,7 @@ trait Reportable
     public function markReportsAsReviewed(int $adminId, ?string $notes = null): void
     {
         $this->reports()
-            ->where('status', 'pending')
+            ->where('status', '=', 'pending')
             ->update([
                 'status' => 'reviewed',
                 'reviewed_by' => $adminId,

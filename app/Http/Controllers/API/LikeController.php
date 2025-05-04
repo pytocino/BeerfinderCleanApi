@@ -28,7 +28,7 @@ class LikeController extends Controller
         }
 
         $likes = Like::with('user')
-            ->where('post_id', $id)
+            ->where('post_id', '=', $id)
             ->get();
 
         return response()->json(LikeResource::collection($likes));
@@ -85,8 +85,8 @@ class LikeController extends Controller
             return response()->json(['message' => 'Post no encontrado.'], 404);
         }
 
-        $like = Like::where('user_id', $user->id)
-            ->where('post_id', $id)
+        $like = Like::where('user_id', '=', $user->id)
+            ->where('post_id', '=', $id)
             ->first();
 
         if (!$like) {

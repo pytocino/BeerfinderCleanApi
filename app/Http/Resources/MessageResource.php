@@ -10,6 +10,7 @@ class MessageResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'conversation_id' => $this->conversation_id,
             'sender_id' => $this->sender_id,
             'receiver_id' => $this->receiver_id,
             'content' => $this->content,
@@ -19,16 +20,12 @@ class MessageResource extends JsonResource
             'sender' => $this->whenLoaded('sender', function () {
                 return [
                     'id' => $this->sender->id,
-                    'name' => $this->sender->name,
-                    'username' => $this->sender->username,
                     'profile_picture' => $this->sender->profile_picture,
                 ];
             }),
             'receiver' => $this->whenLoaded('receiver', function () {
                 return [
                     'id' => $this->receiver->id,
-                    'name' => $this->receiver->name,
-                    'username' => $this->receiver->username,
                     'profile_picture' => $this->receiver->profile_picture,
                 ];
             }),

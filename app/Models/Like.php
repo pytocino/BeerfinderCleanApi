@@ -45,8 +45,8 @@ class Like extends Model
      */
     public static function isLiked(int $userId, int $postId): bool
     {
-        return self::where('user_id', $userId)
-            ->where('post_id', $postId)
+        return self::where('user_id', '=', $userId)
+            ->where('post_id', '=', $postId)
             ->exists();
     }
 }

@@ -103,8 +103,8 @@ class BeerController extends Controller
             $userId = $request->user()->id;
             $query->addSelect([
                 'is_favorite' => Favorite::selectRaw('COUNT(*)')
-                    ->whereColumn('beer_id', 'beers.id')
-                    ->where('user_id', $userId)
+                    ->whereColumn('beer_id', '=', 'beers.id')
+                    ->where('user_id', '=', $userId)
             ]);
         }
 
@@ -157,8 +157,8 @@ class BeerController extends Controller
 
             // Si está autenticado, agregar info si es favorita
             if ($request->user()) {
-                $beer->is_favorite = Favorite::where('beer_id', $beer->id)
-                    ->where('user_id', $request->user()->id)
+                $beer->is_favorite = Favorite::where('beer_id', '=', $beer->id)
+                    ->where('user_id', '=', $request->user()->id)
                     ->exists();
             }
 
@@ -418,8 +418,8 @@ class BeerController extends Controller
         try {
             Beer::findOrFail($id);
 
-            Favorite::where('user_id', $request->user()->id)
-                ->where('beer_id', $id)
+            Favorite::where('user_id', '=', $request->user()->id)
+                ->where('beer_id', '=', $id)
                 ->delete();
 
             return response()->json(['message' => 'Cerveza eliminada de favoritos']);
@@ -474,7 +474,7 @@ class BeerController extends Controller
         $perPage = $validated['per_page'] ?? 10;
 
         $favorites = Beer::whereHas('favorites', function ($query) use ($request) {
-            $query->where('user_id', $request->user()->id);
+            $query->where('user_id', '=', $request->user()->id);
         })
             ->with(['brewery', 'style'])
             ->withAvg('checkIns', 'rating')
@@ -543,7 +543,7 @@ class BeerController extends Controller
                 ->withCount('checkIns')
                 ->when($beer->style_id, function (Builder $query) use ($beer) {
                     // Mayor peso si es del mismo estilo
-                    return $query->where('style_id', $beer->style_id);
+                    return $query->where('style_id', '=', $beer->style_id);
                 })
                 ->when($beer->abv, function (Builder $query) use ($beer) {
                     // ABV similar (±1.5%)
@@ -586,7 +586,7 @@ class BeerController extends Controller
             // Si está autenticado, agregar info de favoritos
             if ($request->user()) {
                 $userId = $request->user()->id;
-                $userFavs = Favorite::where('user_id', $userId)
+                $userFavs = Favorite::where('user_id', '=', $userId)
                     ->whereIn('beer_id', $similarBeers->pluck('id'))
                     ->pluck('beer_id')
                     ->toArray();

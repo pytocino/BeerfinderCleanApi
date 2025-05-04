@@ -64,11 +64,11 @@ class ReportController extends Controller
 
         // Aplicar filtros
         if (isset($validated['status'])) {
-            $query->where('status', $validated['status']);
+            $query->where('status', '=', $validated['status']);
         }
 
         if (isset($validated['type'])) {
-            $query->where('reportable_type', $validated['type']);
+            $query->where('reportable_type', '=', $validated['type']);
         }
 
         // Ordenar por fecha de creación (más recientes primero)

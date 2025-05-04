@@ -16,7 +16,7 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
         $favorites = Favorite::with('beer')
-            ->where('user_id', $user->id)
+            ->where('user_id', '=', $user->id)
             ->get();
 
         return response()->json($favorites);
@@ -49,8 +49,8 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
         $favorite = Favorite::with('beer')
-            ->where('user_id', $user->id)
-            ->where('id', $id)
+            ->where('user_id', '=', $user->id)
+            ->where('id', '=', $id)
             ->first();
 
         if (!$favorite) {
@@ -66,7 +66,7 @@ class FavoriteController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $user = $request->user();
-        $favorite = Favorite::where('user_id', $user->id)
+        $favorite = Favorite::where('user_id', '=', $user->id)
             ->where('id', $id)
             ->first();
 
@@ -91,8 +91,8 @@ class FavoriteController extends Controller
     public function destroy(Request $request, $id): JsonResponse
     {
         $user = $request->user();
-        $favorite = Favorite::where('user_id', $user->id)
-            ->where('id', $id)
+        $favorite = Favorite::where('user_id', '=', $user->id)
+            ->where('id', '=', $id)
             ->first();
 
         if (!$favorite) {

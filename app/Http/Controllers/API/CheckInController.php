@@ -103,23 +103,23 @@ class CheckInController extends Controller
 
         // Aplicar filtros
         if (!empty($validated['beer_id'])) {
-            $query->where('beer_id', $validated['beer_id']);
+            $query->where('beer_id', '=', $validated['beer_id']);
         }
 
         if (!empty($validated['brewery_id'])) {
             $query->whereHas('beer', function (Builder $q) use ($validated) {
-                $q->where('brewery_id', $validated['brewery_id']);
+                $q->where('brewery_id', '=', $validated['brewery_id']);
             });
         }
 
         if (!empty($validated['style_id'])) {
             $query->whereHas('beer', function (Builder $q) use ($validated) {
-                $q->where('style_id', $validated['style_id']);
+                $q->where('style_id', '=', $validated['style_id']);
             });
         }
 
         if (!empty($validated['location_id'])) {
-            $query->where('location_id', $validated['location_id']);
+            $query->where('location_id', '=', $validated['location_id']);
         }
 
         if (!empty($validated['min_rating'])) {
@@ -127,7 +127,7 @@ class CheckInController extends Controller
         }
 
         if (!empty($validated['user_id'])) {
-            $query->where('user_id', $validated['user_id']);
+            $query->where('user_id', '=', $validated['user_id']);
         }
 
         // Ordenar resultados
@@ -153,7 +153,7 @@ class CheckInController extends Controller
             $query->addSelect([
                 'is_liked' => \App\Models\Like::selectRaw('COUNT(*)')
                     ->whereColumn('check_in_id', 'check_ins.id')
-                    ->where('user_id', $userId)
+                    ->where('user_id', '=', $userId)
             ]);
         }
 
@@ -234,8 +234,8 @@ class CheckInController extends Controller
 
             // Si el usuario está autenticado, determinar si le ha dado like
             if ($request->user()) {
-                $checkIn->is_liked = \App\Models\Like::where('check_in_id', $id)
-                    ->where('user_id', $request->user()->id)
+                $checkIn->is_liked = \App\Models\Like::where('check_in_id', '=', $id)
+                    ->where('user_id', '=', $request->user()->id)
                     ->exists();
             }
 
@@ -611,7 +611,7 @@ class CheckInController extends Controller
             $perPage = $validated['per_page'] ?? 10;
             $sort = $validated['sort'] ?? 'recent';
 
-            $query = CheckIn::where('user_id', $id)
+            $query = CheckIn::where('user_id', '=', $id)
                 ->with([
                     'beer.brewery',
                     'beer.style',
@@ -633,14 +633,14 @@ class CheckInController extends Controller
                 $query->addSelect([
                     'is_liked' => \App\Models\Like::selectRaw('COUNT(*)')
                         ->whereColumn('check_in_id', 'check_ins.id')
-                        ->where('user_id', $userId)
+                        ->where('user_id', '=', $userId)
                 ]);
             }
 
             $checkIns = $query->paginate($perPage);
 
             // Obtener conteo total de check-ins del usuario
-            $totalCheckIns = CheckIn::where('user_id', $id)->count();
+            $totalCheckIns = CheckIn::where('user_id', '=', $id)->count();
 
             return response()->json([
                 'data' => CheckInResource::collection($checkIns),
@@ -726,7 +726,7 @@ class CheckInController extends Controller
             $perPage = $validated['per_page'] ?? 10;
             $sort = $validated['sort'] ?? 'recent';
 
-            $query = CheckIn::where('beer_id', $id)
+            $query = CheckIn::where('beer_id', '=', $id)
                 ->with([
                     'user:id,name,profile_picture',
                     'location:id,name'
@@ -754,14 +754,14 @@ class CheckInController extends Controller
                 $query->addSelect([
                     'is_liked' => \App\Models\Like::selectRaw('COUNT(*)')
                         ->whereColumn('check_in_id', 'check_ins.id')
-                        ->where('user_id', $userId)
+                        ->where('user_id', '=', $userId)
                 ]);
             }
 
             $checkIns = $query->paginate($perPage);
 
             // Estadísticas de la cerveza
-            $stats = CheckIn::where('beer_id', $id)
+            $stats = CheckIn::where('beer_id', '=', $id)
                 ->selectRaw('COUNT(*) as check_ins_count, AVG(rating) as avg_rating')
                 ->first();
 
@@ -795,7 +795,7 @@ class CheckInController extends Controller
     private function notifyFollowers(CheckIn $checkIn): void
     {
         // Obtener todos los seguidores del usuario
-        $followers = Follow::where('following_id', $checkIn->user_id)
+        $followers = Follow::where('following_id', '=', $checkIn->user_id)
             ->pluck('follower_id')
             ->toArray();
 
@@ -829,7 +829,7 @@ class CheckInController extends Controller
         if (!$beer) return;
 
         // Actualizar rating promedio
-        $stats = CheckIn::where('beer_id', $beerId)
+        $stats = CheckIn::where('beer_id', '=', $beerId)
             ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as count')
             ->first();
 

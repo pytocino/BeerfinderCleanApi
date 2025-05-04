@@ -5,39 +5,77 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Http\Resources\PostResource;
+use App\Models\Follow;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
     public function index(Request $request)
     {
         $query = Post::with([
-            'user',
+            'user.profile',
             'beer',
             'likes',
             'comments',
             'location'
-        ])->latest();
+        ]);
 
-        // Cambia esto:
-        // if ($request->has('id')) {
-        //     $query->where('id', $request->input('id'));
-        // }
+        $authUser = auth()->user();
 
-        // Por esto:
-        if ($request->has('userId')) {
-            $query->where('user_id', $request->input('userId'));
+        if ($authUser) {
+            // Si hay usuario autenticado, mostrar:
+            // 1. Posts de perfiles públicos
+            // 2. Posts propios
+            // 3. Posts de perfiles privados donde el usuario es un seguidor aceptado
+            $query->where(function ($q) use ($authUser) {
+                $q->whereHas('user.profile', function ($q) {
+                    $q->where('private_profile', '=', false);
+                })
+                    ->orWhere('user_id', $authUser->id)
+                    ->orWhereHas('user.followers', function ($q) use ($authUser) {
+                        $q->where('users.id', '=', $authUser->id)
+                            ->where('follows.status', '=', 'accepted');
+                    });
+            });
+        } else {
+            // Si no hay usuario autenticado, mostrar solo posts de perfiles públicos
+            $query->whereHas('user.profile', function ($q) {
+                $q->where('private_profile', '=', false);
+            });
         }
-        $posts = $query->orderBy('created_at', 'desc')->paginate(15);
 
+        $posts = $query->latest()->paginate(15);
         return PostResource::collection($posts);
     }
 
     public function show($id)
     {
-        // Eager loading de relaciones para un solo post
-        $post = Post::with(['user', 'beer', 'likes', 'comments', 'location'])->findOrFail($id);
+        $post = Post::with(['user.profile', 'beer', 'likes', 'comments', 'location'])->findOrFail($id);
+        $authUser = auth()->user();
+
+        // Si el usuario del post tiene perfil privado
+        if ($post->user && $post->user->profile && $post->user->profile->private_profile) {
+            // Permitir acceso si:
+            // 1. El usuario autenticado es el dueño del post
+            // 2. El usuario autenticado es un seguidor aceptado
+            $isOwner = $authUser && $post->user_id === $authUser->id;
+            $isAcceptedFollower = false;
+
+            if ($authUser) {
+                $isAcceptedFollower = Follow::where('follower_id', '=', $authUser->id)
+                    ->where('following_id', '=', $post->user_id)
+                    ->where('status', '=', 'accepted')
+                    ->exists();
+            }
+
+            if (!$isOwner && !$isAcceptedFollower) {
+                return response()->json([
+                    'message' => 'Este post pertenece a un perfil privado.'
+                ], 403);
+            }
+        }
+
         return new PostResource($post);
     }
 
@@ -87,7 +125,7 @@ class PostController extends Controller
 
             return new PostResource($post);
         } catch (\Exception $e) {
-            \Log::error('Error al crear post: ' . $e->getMessage());
+            Log::error('Error al crear post: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Error al crear el post',
                 'errors' => [$e->getMessage()]

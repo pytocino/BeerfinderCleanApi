@@ -1,23 +1,20 @@
 <?php
 
 use App\Http\Controllers\API\ConversationController;
-use App\Http\Controllers\API\MessageController;
+use App\Http\Controllers\API\UserProfileController;
+use App\Http\Controllers\API\UserStatsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BeerController;
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\BreweryController;
 use App\Http\Controllers\API\BeerStyleController;
 use App\Http\Controllers\API\LocationController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\LikeController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\SearchController;
-use App\Http\Controllers\API\FeedController;
-use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\SocialController;
 use App\Http\Controllers\API\PostController;
-use App\Http\Controllers\API\FavoriteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,8 +43,6 @@ Route::prefix('v1')->group(function () {
 
     // Rutas que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
-        // Búsqueda general
-        Route::get('/search', [SearchController::class, 'search']);
 
         // Rutas de autenticación protegidas
         Route::prefix('auth')->group(function () {
@@ -55,13 +50,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
             Route::post('/logout', [AuthController::class, 'logout']);
             Route::get('/me', [AuthController::class, 'me']);
-            Route::get('/profile', [AuthController::class, 'getMyProfile']);
+            Route::get('/my-stats', [AuthController::class, 'getMyStats']);
+            Route::get('/my-posts', [AuthController::class, 'getMyPosts']);
 
-            Route::prefix('posts')->group(function () {
-                Route::get('/', [PostController::class, 'getMyPosts']);
-                Route::get('/friends', [PostController::class, 'getMyFriends']);
-            });
+            Route::get('/posts/friends', [AuthController::class, 'getMyFriendsPosts']);
 
+            Route::put('/profile', [UserProfileController::class, 'updateMyProfile']);
 
             Route::prefix('conversations')->group(function () {
                 Route::get('/', [ConversationController::class, 'index']);
@@ -73,23 +67,26 @@ Route::prefix('v1')->group(function () {
             });
 
             Route::prefix('notifications')->group(function () {
-                Route::get('/notifications', [NotificationController::class, 'getMyNotifications']);
+                Route::get('/', [NotificationController::class, 'getMyNotifications']);
                 Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
                 Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
             });
-            Route::get('/stats', [StatController::class, 'getStats']);
         });
 
         // Usuarios
         Route::prefix('users')->group(function () {
             Route::get('/{id}', [UserController::class, 'show']);
             Route::get('/{id}/posts', [UserController::class, 'getUserPosts']);
-            Route::get('/{id}/followers', [SocialController::class, 'followers']);
-            Route::get('/{id}/following', [SocialController::class, 'followings']);
+            Route::get('/{id}/followers', [UserController::class, 'getFollowers']);
+            Route::get('/{id}/following', [UserController::class, 'getFollowing']);
 
             // Relaciones sociales
             Route::post('/{id}/follow', [SocialController::class, 'follow']);
             Route::delete('/{id}/unfollow', [SocialController::class, 'unfollow']);
+            Route::post('/{id}/accept-follow', [SocialController::class, 'acceptFollow']);  // Nueva ruta
+            Route::delete('/{id}/reject-follow', [SocialController::class, 'rejectFollow']);  // Nueva ruta
+
+            Route::get('/{id}/stats', [UserStatsController::class, 'show']);
         });
 
         // Posts
@@ -105,6 +102,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/likes', [LikeController::class, 'likePost']);
             Route::delete('/{id}/likes', [LikeController::class, 'unlikePost']);
         });
+        // Búsqueda general
+        Route::get('/search', [SearchController::class, 'search']);
 
         // Estilos de cerveza
         Route::prefix('beer-styles')->group(function () {
@@ -121,14 +120,6 @@ Route::prefix('v1')->group(function () {
         // Ubicaciones
         Route::prefix('locations')->group(function () {
             Route::get('/locationlist', [LocationController::class, 'getLocations']);
-        });
-
-        // Comentarios
-        Route::prefix('comments')->group(function () {
-            Route::get('/{id}', [CommentController::class, 'show']);
-            Route::put('/{id}', [CommentController::class, 'update']);
-            Route::patch('/{id}', [CommentController::class, 'update']);
-            Route::delete('/{id}', [CommentController::class, 'destroy']);
         });
     });
 });
