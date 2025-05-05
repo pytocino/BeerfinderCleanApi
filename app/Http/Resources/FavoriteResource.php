@@ -7,21 +7,22 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class FavoriteResource extends JsonResource
 {
-    public function toArray(Request $request): array
+    /**
+     * Transformar el recurso en un array.
+     *
+     * @param  Request  $request
+     * @return array<string, mixed>
+     */
+    public function toArray($request)
     {
         return [
-            'id'      => $this->id,
-            'user_id' => $this->user_id,
-            'beer_id' => $this->beer_id,
+            'id' => $this->id,
+            'user' => new UserResource($this->whenLoaded('user')),
+            'favorable_id' => $this->favorable_id,
+            'favorable_type' => $this->favorable_type,
+            'favorable' => $this->whenLoaded('favorable'),
             'created_at' => $this->created_at,
-            'beer' => $this->whenLoaded('beer', function () {
-                return [
-                    'id' => $this->beer->id,
-                    'name' => $this->beer->name,
-                    'brewery' => $this->beer->brewery,
-                    'image_url' => $this->beer->image_url,
-                ];
-            }),
+            'updated_at' => $this->updated_at,
         ];
     }
 }

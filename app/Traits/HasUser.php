@@ -32,4 +32,9 @@ trait HasUser
         $user = $this->authenticatedUser();
         return $user && $this->user_id === $user->id;
     }
+
+    public function getUserId()
+    {
+        return $this->authenticatedUser()?->id;
+    }
 }

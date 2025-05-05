@@ -7,24 +7,42 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class LocationResource extends JsonResource
 {
-    public function toArray(Request $request): array
+    /**
+     * Transformar el recurso en un array.
+     *
+     * @param  Request  $request
+     * @return array<string, mixed>
+     */
+    public function toArray($request)
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'country' => $this->country,
-            'city' => $this->city,
+            'type' => $this->type,
+            'description' => $this->description,
+            'status' => $this->status,
+            'opening_hours' => $this->opening_hours,
             'address' => $this->address,
+            'city' => $this->city,
+            'country' => $this->country,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'description' => $this->description,
-            'image_url' => $this->image_url,
-            'cover_photo' => $this->cover_photo,
+            'image_url' => $this->getImageUrl(),
+            'cover_photo_url' => $this->getCoverPhotoUrl(),
             'website' => $this->website,
             'email' => $this->email,
             'phone' => $this->phone,
-            'verified' => (bool) $this->verified,
-            'check_ins_count' => $this->check_ins_count ?? 0,
+            'verified' => $this->verified,
+            'is_active' => $this->isActive(),
+            'is_open_now' => $this->isOpenNow(),
+            'today_hours' => $this->getTodayHours(),
+            'full_address' => $this->getFullAddress(),
+            'featured_beers' => BeerResource::collection($this->whenLoaded('beers', function () {
+                return $this->getFeaturedBeers();
+            })),
+            'beers_count' => $this->whenCounted('beers'),
+            'beer_reviews_count' => $this->whenCounted('beerReviews'),
+            'posts_count' => $this->whenCounted('posts'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

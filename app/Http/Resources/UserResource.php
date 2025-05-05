@@ -2,68 +2,41 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Follow;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
+use App\Traits\HasUser;
 
 class UserResource extends JsonResource
 {
-    public function toArray(Request $request): array
+    use HasUser;
+
+    /**
+     * Transformar el recurso en un array.
+     *
+     * @param  Request  $request
+     * @return array<string, mixed>
+     */
+    public function toArray($request)
     {
-        $profile = $this->whenLoaded('profile');
-
-        // Obtener información de seguimiento si hay usuario autenticado
-        $followStatus = null;
-        $isFollowing = false;
-
-        if (Auth::check()) {
-            $follow = Follow::where('follower_id', '=', Auth::id())
-                ->where('following_id', '=', $this->id)
-                ->first();
-
-            if ($follow) {
-                $followStatus = $follow->status;
-                $isFollowing = $follow->status === 'accepted';
-            }
-        }
-
-        // Contar solo seguidores/seguidos aceptados
-        $followersCount = isset($this->followers_count)
-            ? (int) $this->followers_count  // Si viene pre-contado por withCount
-            : ($this->whenLoaded('followers')
-                ? $this->followers->where('follows.status', '=', 'accepted')->count()
-                : null);
-
-        $followingCount = isset($this->following_count)
-            ? (int) $this->following_count  // Si viene pre-contado por withCount
-            : ($this->whenLoaded('following')
-                ? $this->following->where('follows.status', '=', 'accepted')->count()
-                : null);
-
         return [
             'id' => $this->id,
             'name' => $this->name,
             'username' => $this->username,
+            'email' => $this->when($this->belongsToAuthenticatedUser(), $this->email),
             'profile_picture' => $this->profile_picture,
-            'bio' => $profile?->bio ?? null,
-            'location' => $profile?->location ?? null,
-            'birthdate' => $profile?->birthdate ?? null,
-            'private_profile' => $profile?->private_profile ?? null,
-
-            'followers_count' => $followersCount,
-            'following_count' => $followingCount,
-            'posts_count' => isset($this->posts_count)
-                ? (int) $this->posts_count
-                : ($this->whenLoaded('posts') ? $this->posts->count() : null),
-
-            // Información de seguimiento
-            'is_following' => $this->when(Auth::check(), function () use ($isFollowing) {
-                return $isFollowing;
-            }),
-            'follow_status' => $this->when(Auth::check(), function () use ($followStatus) {
-                return $followStatus;
-            }),
+            'is_admin' => $this->is_admin,
+            'private_profile' => $this->private_profile,
+            'status' => $this->status,
+            'last_active_at' => $this->last_active_at,
+            'profile' => new UserProfileResource($this->whenLoaded('profile')),
+            'followers_count' => $this->whenCounted('followers'),
+            'following_count' => $this->whenCounted('following'),
+            'posts_count' => $this->whenCounted('posts'),
+            'beer_reviews_count' => $this->whenCounted('beerReviews'),
+            'comments_count' => $this->whenCounted('comments'),
+            'is_me' => $this->belongsToAuthenticatedUser(),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }
