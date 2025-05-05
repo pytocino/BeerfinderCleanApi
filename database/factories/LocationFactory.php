@@ -2,44 +2,48 @@
 
 namespace Database\Factories;
 
+use App\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Location>
- */
 class LocationFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Location::class;
+
     public function definition(): array
     {
-        return [
-            'name' => fake()->company() . ' ' . fake()->randomElement(['Bar', 'Pub', 'Brewery', 'Taproom']),
-            'country' => fake()->country(),
-            'city' => fake()->city(),
-            'address' => fake()->streetAddress(),
-            'latitude' => fake()->latitude(),
-            'longitude' => fake()->longitude(),
-            'description' => $this->faker->paragraph(3),
-            'image_url' => fake()->imageUrl(640, 480, 'beer'),
-            'cover_photo' => fake()->imageUrl(1280, 720, 'bar'),
-            'website' => fake()->url(),
-            'email' => fake()->companyEmail(),
-            'phone' => fake()->phoneNumber(),
-            'verified' => fake()->boolean(20), // 20% de probabilidad de estar verificado
-        ];
-    }
+        $types = ['bar', 'brewery', 'store', 'restaurant', 'festival'];
+        $status = $this->faker->randomElement(['active', 'inactive', 'pending', 'closed']);
+        $country = $this->faker->country();
+        $city = $this->faker->city();
 
-    /**
-     * Configurar la ubicación como verificada.
-     */
-    public function verified(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'verified' => true
-        ]);
+        // Horarios de apertura simulados para cada día
+        $opening_hours = [];
+        foreach (['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as $day) {
+            $opening_hours[$day] = [
+                [
+                    'open' => '12:00',
+                    'close' => '23:00'
+                ]
+            ];
+        }
+
+        return [
+            'name' => $this->faker->company . ' ' . ucfirst($this->faker->word),
+            'type' => $this->faker->randomElement($types),
+            'description' => $this->faker->optional()->sentence(),
+            'status' => $status,
+            'opening_hours' => $opening_hours,
+            'address' => $this->faker->streetAddress,
+            'city' => $city,
+            'country' => $country,
+            'latitude' => $this->faker->latitude(-90, 90),
+            'longitude' => $this->faker->longitude(-180, 180),
+            'image_url' => $this->faker->optional()->imageUrl(640, 480, 'bars'),
+            'cover_photo' => $this->faker->optional()->imageUrl(1200, 400, 'nightlife'),
+            'website' => $this->faker->optional()->url(),
+            'email' => $this->faker->optional()->companyEmail(),
+            'phone' => $this->faker->optional()->phoneNumber(),
+            'verified' => $this->faker->boolean(30),
+        ];
     }
 }

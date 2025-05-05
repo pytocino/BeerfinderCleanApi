@@ -2,26 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Models\BeerStyle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BeerStyle>
- */
 class BeerStyleFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = BeerStyle::class;
+
     public function definition(): array
     {
-        $origins = ['Alemania', 'Bélgica', 'Reino Unido', 'Estados Unidos', 'República Checa', 'Irlanda'];
-
         return [
-            'name' => $this->faker->unique()->words(2, true),
-            'description' => $this->faker->paragraph(2),
-            'origin_country' => $this->faker->randomElement($origins),
+            'name' => $this->faker->unique()->word() . ' Style',
+            'description' => $this->faker->optional()->paragraph(),
+            'origin_country' => $this->faker->country(),
         ];
     }
 }

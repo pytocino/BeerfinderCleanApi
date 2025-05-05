@@ -2,82 +2,35 @@
 
 namespace Database\Factories;
 
+use App\Models\Post;
 use App\Models\User;
-use App\Models\Beer;
-use App\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Post>
- */
 class PostFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Post::class;
+
     public function definition(): array
     {
-        $servingTypes = ['Bottle', 'Can', 'Draft', 'Taster', 'Flight'];
-        $currencies = ['EUR', 'USD', 'GBP'];
+        $hasPhoto = $this->faker->boolean(70);
+        $additionalPhotos = $this->faker->boolean(40)
+            ? $this->faker->images(3, 640, 480, false)
+            : [];
+
+        $userTags = $this->faker->boolean(40)
+            ? $this->faker->randomElements(
+                User::pluck('id')->toArray() ?: [User::factory()],
+                $this->faker->numberBetween(1, 3)
+            )
+            : [];
 
         return [
-            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
-            'beer_id' => Beer::query()->inRandomOrder()->value('id') ?? Beer::factory(),
-            'location_id' => Location::query()->inRandomOrder()->value('id'),
-            'review' => $this->faker->paragraph(3),
-            'rating' => $this->faker->randomFloat(1, 1.0, 5.0),
-            'photo_url' => $this->faker->boolean(70) ? $this->faker->imageUrl(800, 600, 'beer') : null,
-            'additional_photos' => $this->faker->boolean(40) ? [
-                $this->faker->imageUrl(800, 600, 'beer'),
-                $this->faker->imageUrl(800, 600, 'beer')
-            ] : [],
-            'serving_type' => $this->faker->randomElement($servingTypes),
-            'purchase_price' => $this->faker->randomFloat(2, 2, 15),
-            'purchase_currency' => $this->faker->randomElement($currencies),
-            'user_tags' => $this->faker->boolean(50) ? User::inRandomOrder()->limit(2)->pluck('id')->toArray() : [],
-            'edited' => $this->faker->boolean(20),
+            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'content' => $this->faker->paragraph(),
+            'photo_url' => $hasPhoto ? $this->faker->imageUrl(640, 480, 'beer') : null,
+            'additional_photos' => $additionalPhotos,
+            'user_tags' => $userTags,
+            'edited' => $this->faker->boolean(10),
         ];
-    }
-
-    /**
-     * Configura el post sin valoración (solo comentario).
-     */
-    public function withoutRating(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'rating' => null,
-        ]);
-    }
-
-    /**
-     * Configura el post sin ubicación.
-     */
-    public function withoutLocation(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'location_id' => null,
-        ]);
-    }
-
-    /**
-     * Configura el post para un usuario específico.
-     */
-    public function forUser(User $user): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'user_id' => $user->id,
-        ]);
-    }
-
-    /**
-     * Configura el post para una cerveza específica.
-     */
-    public function forBeer(Beer $beer): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'beer_id' => $beer->id,
-        ]);
     }
 }

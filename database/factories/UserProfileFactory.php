@@ -11,24 +11,18 @@ class UserProfileFactory extends Factory
 
     public function definition(): array
     {
-        $socials = [
-            'instagram' => fake()->userName(),
-            'twitter' => fake()->userName(),
-            'facebook' => fake()->userName(),
-        ];
-
         return [
-            'bio' => fake()->paragraph(),
-            'location' => fake()->city(),
-            'birthdate' => fake()->dateTimeBetween('-60 years', '-18 years'),
-            'website' => fake()->url(),
-            'phone' => fake()->phoneNumber(),
-            'instagram' => $socials['instagram'],
-            'twitter' => $socials['twitter'],
-            'facebook' => $socials['facebook'],
-            'private_profile' => fake()->boolean(20),
-            'allow_mentions' => fake()->boolean(90),
-            'email_notifications' => fake()->boolean(80),
+            'bio' => $this->faker->optional()->text(200),
+            'location' => $this->faker->optional()->city(),
+            'birthdate' => $this->faker->optional()->date('Y-m-d', '2005-12-31'),
+            'website' => $this->faker->optional()->url(),
+            'phone' => $this->faker->optional()->phoneNumber(),
+            'instagram' => $this->faker->optional()->userName(),
+            'twitter' => $this->faker->optional()->userName(),
+            'facebook' => $this->faker->optional()->userName(),
+            'allow_mentions' => $this->faker->boolean(90),
+            'email_notifications' => $this->faker->boolean(80),
+            'timezone' => $this->faker->optional()->timezone(),
         ];
     }
 }

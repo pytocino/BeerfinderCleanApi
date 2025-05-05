@@ -2,6 +2,8 @@
 // filepath: /home/pedro/Projects/BeerfinderCleanApi/routes/api.php
 
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\User\MyUserController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\User\UserStatsController;
 use App\Http\Controllers\API\User\UserNotificationController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\API\Beer\BeerStyleController;
 use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\Report\ReportController;
 use App\Http\Controllers\API\Search\SearchController;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Estado de la API
@@ -32,111 +35,88 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     });
 
-    // Rutas públicas para recursos
-    Route::prefix('beer-styles')->group(function () {
-        Route::get('/', [BeerStyleController::class, 'index']);
-        Route::get('/{id}', [BeerStyleController::class, 'show']);
-    });
-
-    Route::prefix('beers')->group(function () {
-        Route::get('/', [BeerController::class, 'index']);
-        Route::get('/{id}', [BeerController::class, 'show']);
-    });
-
     // Rutas que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
         // Perfil y cuenta del usuario
-        Route::prefix('account')->group(function () {
-            Route::get('/', [AuthController::class, 'me']);
-            Route::put('/', [UserController::class, 'updateMyProfile']);
-            Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
-            Route::post('/logout', [AuthController::class, 'logout']);
+        Route::prefix('profile')->group(function () {
+            // Profile personal
+            Route::get('/', [MyUserController::class, 'getMyProfile']);
 
-            // Estadísticas personales
-            Route::get('/stats', [UserStatsController::class, 'getMyStats']);
+            // Followers y seguidos
+            Route::get('/followers', [MyUserController::class, 'getMyFollowers']);
+            Route::get('/following', [MyUserController::class, 'getMyFollowing']);
 
             // Posts personales
-            Route::get('/posts', [UserController::class, 'getMyPosts']);
-            Route::get('/feed', [FeedController::class, 'getMyFriendsPosts']);
+            Route::get('/posts', [MyUserController::class, 'getMyPosts']);
 
-            // Notificaciones
-            Route::prefix('notifications')->group(function () {
-                Route::get('/', [UserNotificationController::class, 'getMyNotifications']);
-                Route::put('/{id}/read', [UserNotificationController::class, 'markAsRead']);
-                Route::put('/read-all', [UserNotificationController::class, 'markAllAsRead']);
-            });
-
-            // Conversaciones
-            Route::prefix('conversations')->group(function () {
-                Route::get('/', [ConversationController::class, 'index']);
-                Route::post('/', [ConversationController::class, 'store']);
-                Route::get('/{id}', [ConversationController::class, 'show']);
-                Route::post('/{id}/messages', [ConversationController::class, 'sendMessage']);
-                Route::post('/{id}/participants', [ConversationController::class, 'addParticipants']);
-                Route::put('/{id}/read', [ConversationController::class, 'markAllAsRead']);
-            });
+            // Stats personales
+            Route::get('/stats', [MyUserController::class, 'getMyStats']);
         });
 
-        // Usuarios
+        Route::prefix('notifications')->group(function () {
+            // Notificaciones
+            Route::get('/', [NotificationController::class, 'getMyNotifications']);
+        });
+
+        Route::prefix('conversations')->group(function () {
+            // Conversaciones
+            Route::get('/', [ConversationController::class, 'getMyConversations']);
+            // Conversaciones por ID
+            Route::get('/{id}', [ConversationController::class, 'getConversationById']);
+        });
+
         Route::prefix('users')->group(function () {
-            Route::get('/{id}', [UserController::class, 'show']);
+            // Usuario
+            Route::get('/{id}', [UserController::class, 'getUserProfile']);
+
+            // Posts de usuario
             Route::get('/{id}/posts', [UserController::class, 'getUserPosts']);
-            Route::get('/{id}/stats', [UserStatsController::class, 'show']);
 
-            // Seguidores y seguidos
-            Route::get('/{id}/followers', [UserController::class, 'getFollowers']);
-            Route::get('/{id}/following', [UserController::class, 'getFollowing']);
+            // Seguidores y seguidos de un usuario
+            Route::get('/{id}/followers', [UserController::class, 'getUserFollowers']);
+            Route::get('/{id}/following', [UserController::class, 'getUserFollowing']);
 
-            // Relaciones sociales
-            Route::post('/{id}/follow', [SocialController::class, 'follow']);
-            Route::delete('/{id}/follow', [SocialController::class, 'unfollow']);
-            Route::put('/{id}/follow/accept', [SocialController::class, 'acceptFollow']);
-            Route::delete('/{id}/follow/reject', [SocialController::class, 'rejectFollow']);
+            // Stats de usuario
+            Route::get('/{id}/stats', [UserController::class, 'getUserStats']);
         });
 
         // Posts
         Route::prefix('posts')->group(function () {
-            Route::get('/', [PostController::class, 'index']);
-            Route::post('/', [PostController::class, 'store']);
-            Route::get('/{id}', [PostController::class, 'show']);
-            Route::put('/{id}', [PostController::class, 'update']);
-            Route::delete('/{id}', [PostController::class, 'destroy']);
+            // Todos los posts
+            Route::get('/', [PostController::class, 'getPosts']);
+
+            // Posts por ID
+            Route::get('/{id}', [PostController::class, 'getPostById']);
 
             // Comentarios
-            Route::get('/{id}/comments', [CommentController::class, 'index']);
-            Route::post('/{id}/comments', [CommentController::class, 'store']);
-
-            // Likes
-            Route::post('/{id}/like', [LikeController::class, 'likePost']);
-            Route::delete('/{id}/like', [LikeController::class, 'unlikePost']);
-        });
-
-        // Reportes
-        Route::prefix('reports')->group(function () {
-            Route::post('/', [ReportController::class, 'store']);
-            Route::get('/my', [ReportController::class, 'getMyReports']);
+            Route::get('/{id}/comments', [CommentController::class, 'getPostComments']);
         });
 
         // Búsqueda global
         Route::get('/search', [SearchController::class, 'search']);
 
-        // Estilos de cerveza - endpoints adicionales
         Route::prefix('beer-styles')->group(function () {
-            Route::get('/{id}/beers', [BeerStyleController::class, 'getBeers']);
+            // Estilos de cerveza
+            Route::get('/', [BeerStyleController::class, 'getBeerStyles']);
+
+            // Estilos de cerveza por ID
+            Route::get('/{id}', [BeerStyleController::class, 'getBeerStyleById']);
         });
 
-        // Cervezas - endpoints adicionales
         Route::prefix('beers')->group(function () {
-            Route::post('/', [BeerController::class, 'store']);
-            Route::put('/{id}', [BeerController::class, 'update']);
-            Route::post('/{id}/rate', [BeerController::class, 'rate']);
-            Route::get('/{id}/reviews', [BeerController::class, 'getReviews']);
+            // Cervezas
+            Route::get('/', [BeerController::class, 'getAllBeers']);
+
+            // Cervezas por ID
+            Route::get('/{id}', [BeerController::class, 'getBeerById']);
         });
 
-        // Ubicaciones
         Route::prefix('locations')->group(function () {
-            Route::get('/', [LocationController::class, 'index']);
-            Route::get('/{id}', [LocationController::class, 'show']);
+            // Ubicaciones
+
+            Route::get('/', [LocationController::class, 'getLocations']);
+            // Ubicaciones por ID
+            Route::get('/{id}', [LocationController::class, 'getLocationById']);
         });
     });
 });

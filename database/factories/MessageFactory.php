@@ -2,34 +2,35 @@
 
 namespace Database\Factories;
 
+use App\Models\Message;
 use App\Models\User;
-use App\Models\Conversation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Message>
- */
 class MessageFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Message::class;
+
     public function definition(): array
     {
-        // Evitar que el remitente y el receptor sean el mismo usuario
-        do {
-            $sender_id = User::query()->inRandomOrder()->value('id') ?? User::factory();
-            $receiver_id = User::query()->inRandomOrder()->value('id') ?? User::factory();
-        } while ($sender_id === $receiver_id);
+        $hasAttachments = $this->faker->boolean(30);
+        $attachments = [];
+        if ($hasAttachments) {
+            $types = ['jpg', 'png', 'pdf', 'mp4', 'mp3', 'docx'];
+            $count = $this->faker->numberBetween(1, 3);
+            for ($i = 0; $i < $count; $i++) {
+                $ext = $this->faker->randomElement($types);
+                $attachments[] = $this->faker->imageUrl(640, 480, 'abstract') . '.' . $ext;
+            }
+        }
 
         return [
-            'conversation_id' => Conversation::query()->inRandomOrder()->value('id') ?? Conversation::factory(),
-            'sender_id' => $sender_id,
-            'receiver_id' => $receiver_id,
-            'content' => $this->faker->sentence(12),
-            'is_read' => $this->faker->boolean(30), // 30% probabilidad de estar leído
+            'conversation_id' => null, // Asignar en el seeder o test
+            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'content' => $this->faker->sentence(),
+            'attachments' => $attachments,
+            'reply_to' => null,
+            'is_edited' => $this->faker->boolean(10),
+            'read_at' => $this->faker->boolean(80) ? $this->faker->dateTimeThisYear() : null,
         ];
     }
 }

@@ -2,49 +2,27 @@
 
 namespace Database\Factories;
 
+use App\Models\Like;
 use App\Models\User;
-use App\Models\Post;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Like>
- */
 class LikeFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Like::class;
+
     public function definition(): array
     {
-        return [
-            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
-            'post_id' => Post::query()->inRandomOrder()->value('id') ?? Post::factory(),
+        // Puedes ajustar los modelos polimórficos según tus necesidades
+        $likeableTypes = [
+            'App\\Models\\Post',
+            'App\\Models\\Comment',
+            'App\\Models\\Beer',
         ];
-    }
 
-    /**
-     * Configura el like para un usuario específico.
-     */
-    public function forUser(User $user): static
-    {
-        return $this->state(function (array $attributes) use ($user) {
-            return [
-                'user_id' => $user->id,
-            ];
-        });
-    }
-
-    /**
-     * Configura el like para un post específico.
-     */
-    public function forPost(Post $post): static
-    {
-        return $this->state(function (array $attributes) use ($post) {
-            return [
-                'post_id' => $post->id,
-            ];
-        });
+        return [
+            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'likeable_id' => $this->faker->numberBetween(1, 100),
+            'likeable_type' => $this->faker->randomElement($likeableTypes),
+        ];
     }
 }

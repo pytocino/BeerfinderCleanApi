@@ -12,15 +12,27 @@ class ConversationFactory extends Factory
 
     public function definition(): array
     {
-        return [];
-    }
+        $types = [Conversation::TYPE_DIRECT, Conversation::TYPE_GROUP];
+        $type = $this->faker->randomElement($types);
 
-    public function configure()
-    {
-        return $this->afterCreating(function (Conversation $conversation) {
-            // Añade 2 participantes aleatorios (no repetidos)
-            $users = User::inRandomOrder()->limit(2)->pluck('id');
-            $conversation->users()->attach($users);
-        });
+        // Simula settings de grupo solo si es grupo
+        $groupSettings = $type === Conversation::TYPE_GROUP
+            ? [
+                'allow_invite' => $this->faker->boolean(80),
+                'max_members' => $this->faker->numberBetween(5, 100),
+                'description' => $this->faker->optional()->sentence(),
+            ]
+            : null;
+
+        return [
+            'title' => $type === Conversation::TYPE_GROUP ? $this->faker->words(3, true) : null,
+            'type' => $type,
+            'last_message_at' => $this->faker->optional(0.7)->dateTimeThisYear(),
+            'created_by' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'image_url' => $type === Conversation::TYPE_GROUP ? $this->faker->optional()->imageUrl(400, 400, 'group') : null,
+            'description' => $type === Conversation::TYPE_GROUP ? $this->faker->optional()->sentence() : null,
+            'is_public' => $type === Conversation::TYPE_GROUP ? $this->faker->boolean(30) : false,
+            'group_settings' => $groupSettings,
+        ];
     }
 }

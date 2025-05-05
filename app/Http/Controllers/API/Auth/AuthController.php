@@ -47,12 +47,22 @@ class AuthController extends Controller
             'private_profile' => false,
         ]);
 
-        $user->profile()->create([
+        // Crear perfil extendido usando UserProfile y fillable definidos
+        $profileData = [
             'user_id' => $user->id,
-            'private_profile' => false,
+            'bio' => null,
+            'location' => null,
+            'birthdate' => null,
+            'website' => null,
+            'phone' => null,
+            'instagram' => null,
+            'twitter' => null,
+            'facebook' => null,
             'allow_mentions' => true,
             'email_notifications' => true,
-        ]);
+            'timezone' => null,
+        ];
+        $user->profile()->create($profileData);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -134,25 +144,16 @@ class AuthController extends Controller
             'instagram' => 'nullable|string|max:255',
             'twitter' => 'nullable|string|max:255',
             'facebook' => 'nullable|string|max:255',
-            'private_profile' => 'nullable|boolean',
             'allow_mentions' => 'nullable|boolean',
             'email_notifications' => 'nullable|boolean',
+            'timezone' => 'nullable|string|max:255',
         ]);
 
         $user = $this->authenticatedUser();
-        $user->profile()->update([
-            'bio' => $validated['bio'],
-            'location' => $validated['location'],
-            'birthdate' => $validated['birthdate'],
-            'website' => $validated['website'],
-            'phone' => $validated['phone'],
-            'instagram' => $validated['instagram'],
-            'twitter' => $validated['twitter'],
-            'facebook' => $validated['facebook'],
-            'private_profile' => $validated['private_profile'] ?? false,
-            'allow_mentions' => $validated['allow_mentions'] ?? true,
-            'email_notifications' => $validated['email_notifications'] ?? true,
-        ]);
+        $profile = $user->profile;
+
+        // Solo actualiza los campos definidos en fillable de UserProfile
+        $profile->update($validated);
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',

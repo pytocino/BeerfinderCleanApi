@@ -2,29 +2,25 @@
 
 namespace Database\Factories;
 
+use App\Models\Beer;
+use App\Models\Brewery;
 use App\Models\BeerStyle;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Beer>
- */
 class BeerFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Beer::class;
+
     public function definition(): array
     {
         return [
-            'name' => $this->faker->words(3, true),
-            'description' => $this->faker->paragraph(3),
-            'brewery' => $this->faker->company(),
-            'style_id' => BeerStyle::query()->inRandomOrder()->value('id') ?? 1,
-            'abv' => $this->faker->randomFloat(2, 3.0, 12.0),
+            'name' => $this->faker->unique()->word() . ' Beer',
+            'description' => $this->faker->optional()->paragraph(),
+            'brewery_id' => fn() => Brewery::inRandomOrder()->first()?->id ?? Brewery::factory(),
+            'style_id' => fn() => BeerStyle::inRandomOrder()->first()?->id ?? BeerStyle::factory(),
+            'abv' => $this->faker->randomFloat(1, 3.0, 12.0),
             'ibu' => $this->faker->numberBetween(5, 120),
-            'image_url' => $this->faker->imageUrl(640, 480, 'beer'),
+            'image_url' => $this->faker->optional()->imageUrl(400, 600, 'beer'),
         ];
     }
 }
