@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('favorites', function (Blueprint $table) {
+        Schema::create('user_likes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('beer_id')->constrained()->onDelete('cascade');
+            $table->morphs('likeable');  // Crea likeable_type y likeable_id
             $table->timestamps();
 
-            // Asegurar que un usuario no pueda marcar la misma cerveza como favorita más de una vez
-            $table->unique(['user_id', 'beer_id']);
+            $table->unique(['user_id', 'likeable_id', 'likeable_type']);
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('favorites');
+        Schema::dropIfExists('user_likes');
     }
 };

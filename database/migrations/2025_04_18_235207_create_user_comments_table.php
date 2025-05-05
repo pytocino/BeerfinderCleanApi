@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('comments', function (Blueprint $table) {
+        Schema::create('user_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('post_id')->constrained()->onDelete('cascade'); // Relación con el post
             $table->text('content');
-            $table->foreignId('parent_id')->nullable()->constrained('comments')->onDelete('cascade'); // Para respuestas/hilos
+            $table->foreignId('parent_id')->nullable()->constrained('user_comments')->onDelete('cascade'); // Para respuestas/hilos
             $table->boolean('edited')->default(false); // Si el comentario fue editado
             $table->boolean('pinned')->default(false); // Si el comentario está fijado
+            $table->timestamp('edited_at')->nullable();
+            $table->integer('likes_count')->default(0);
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('comments');
+        Schema::dropIfExists('user_comments');
     }
 };

@@ -14,7 +14,10 @@ return new class extends Migration
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->enum('type', ['bar', 'restaurant', 'store', 'brewery', 'other'])->default('other');
             $table->text('description')->nullable();
+            $table->enum('status', ['active', 'temporarily_closed', 'permanently_closed'])->default('active');
+            $table->json('opening_hours')->nullable();
             $table->string('address')->nullable();
             $table->string('city');
             $table->string('country');
@@ -26,6 +29,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->boolean('verified')->default(false);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -34,7 +34,7 @@ trait Reportable
     /**
      * Marca todos los reportes como revisados.
      */
-    public function markReportsAsReviewed(int $adminId, ?string $notes = null): void
+    public function markReportsAsReviewed(int $adminId, string $notes): void
     {
         $this->reports()
             ->where('status', '=', 'pending')

@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('likes', function (Blueprint $table) {
+        Schema::create('breweries', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('post_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('country')->nullable();
+            $table->string('city')->nullable();
+            $table->string('website')->nullable();
+            $table->string('image_url')->nullable();
             $table->timestamps();
-
-            // Asegurar que un usuario no pueda dar like más de una vez al mismo comentario
-            $table->unique(['user_id', 'post_id']);
         });
     }
 
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('likes');
+        Schema::dropIfExists('breweries');
     }
 };

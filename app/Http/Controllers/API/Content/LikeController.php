@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Content;
 
 use App\Events\PostLiked;
 use App\Http\Controllers\Controller;

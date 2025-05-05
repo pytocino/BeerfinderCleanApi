@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
@@ -165,12 +165,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Refresca el token de acceso del usuario actual.
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
     public function refreshToken(Request $request): JsonResponse
     {
         try {
@@ -199,9 +193,6 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Muestra la información del usuario autenticado
-     */
     public function me(): JsonResponse
     {
         $user = auth()->user()->load('profile')->loadCount([
@@ -251,9 +242,6 @@ class AuthController extends Controller
         return response()->json(PostResource::collection($posts));
     }
 
-    /**
-     * Obtiene los posts de los amigos (usuarios seguidos) del usuario autenticado
-     */
     public function getMyFriendsPosts(Request $request): JsonResponse
     {
         $user = auth()->user();

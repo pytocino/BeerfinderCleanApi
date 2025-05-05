@@ -1,38 +1,29 @@
 <?php
+// filepath: /home/pedro/Projects/BeerfinderCleanApi/routes/api.php
 
-use App\Http\Controllers\API\ConversationController;
-use App\Http\Controllers\API\UserProfileController;
-use App\Http\Controllers\API\UserStatsController;
+use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\User\UserController;
+use App\Http\Controllers\API\User\UserStatsController;
+use App\Http\Controllers\API\User\UserNotificationController;
+use App\Http\Controllers\API\Social\SocialController;
+use App\Http\Controllers\API\Social\ConversationController;
+use App\Http\Controllers\API\Social\FeedController;
+use App\Http\Controllers\API\Content\PostController;
+use App\Http\Controllers\API\Content\CommentController;
+use App\Http\Controllers\API\Content\LikeController;
+use App\Http\Controllers\API\Beer\BeerController;
+use App\Http\Controllers\API\Beer\BeerStyleController;
+use App\Http\Controllers\API\Location\LocationController;
+use App\Http\Controllers\API\Report\ReportController;
+use App\Http\Controllers\API\Search\SearchController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\BeerController;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\BeerStyleController;
-use App\Http\Controllers\API\LocationController;
-use App\Http\Controllers\API\CommentController;
-use App\Http\Controllers\API\LikeController;
-use App\Http\Controllers\API\NotificationController;
-use App\Http\Controllers\API\SearchController;
-use App\Http\Controllers\API\SocialController;
-use App\Http\Controllers\API\PostController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-// Ruta para probar que la API está funcionando
+// Estado de la API
 Route::get('/v1/status', function () {
     return response()->json(['status' => 'online', 'version' => '1.0.0'], 200);
 });
 
-// Rutas públicas y protegidas en versión 1 de la API
+// Rutas v1
 Route::prefix('v1')->group(function () {
     // Rutas de autenticación públicas
     Route::prefix('auth')->group(function () {
@@ -41,35 +32,48 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     });
 
+    // Rutas públicas para recursos
+    Route::prefix('beer-styles')->group(function () {
+        Route::get('/', [BeerStyleController::class, 'index']);
+        Route::get('/{id}', [BeerStyleController::class, 'show']);
+    });
+
+    Route::prefix('beers')->group(function () {
+        Route::get('/', [BeerController::class, 'index']);
+        Route::get('/{id}', [BeerController::class, 'show']);
+    });
+
     // Rutas que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
-
-        // Rutas de autenticación protegidas
-        Route::prefix('auth')->group(function () {
-            Route::put('/update-profile', [AuthController::class, 'updateProfile']);
+        // Perfil y cuenta del usuario
+        Route::prefix('account')->group(function () {
+            Route::get('/', [AuthController::class, 'me']);
+            Route::put('/', [UserController::class, 'updateMyProfile']);
             Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
             Route::post('/logout', [AuthController::class, 'logout']);
-            Route::get('/me', [AuthController::class, 'me']);
-            Route::get('/my-stats', [AuthController::class, 'getMyStats']);
-            Route::get('/my-posts', [AuthController::class, 'getMyPosts']);
 
-            Route::get('/posts/friends', [AuthController::class, 'getMyFriendsPosts']);
+            // Estadísticas personales
+            Route::get('/stats', [UserStatsController::class, 'getMyStats']);
 
-            Route::put('/profile', [UserProfileController::class, 'updateMyProfile']);
+            // Posts personales
+            Route::get('/posts', [UserController::class, 'getMyPosts']);
+            Route::get('/feed', [FeedController::class, 'getMyFriendsPosts']);
 
+            // Notificaciones
+            Route::prefix('notifications')->group(function () {
+                Route::get('/', [UserNotificationController::class, 'getMyNotifications']);
+                Route::put('/{id}/read', [UserNotificationController::class, 'markAsRead']);
+                Route::put('/read-all', [UserNotificationController::class, 'markAllAsRead']);
+            });
+
+            // Conversaciones
             Route::prefix('conversations')->group(function () {
                 Route::get('/', [ConversationController::class, 'index']);
-                Route::get('/{id}', [ConversationController::class, 'show']);
                 Route::post('/', [ConversationController::class, 'store']);
+                Route::get('/{id}', [ConversationController::class, 'show']);
                 Route::post('/{id}/messages', [ConversationController::class, 'sendMessage']);
                 Route::post('/{id}/participants', [ConversationController::class, 'addParticipants']);
                 Route::put('/{id}/read', [ConversationController::class, 'markAllAsRead']);
-            });
-
-            Route::prefix('notifications')->group(function () {
-                Route::get('/', [NotificationController::class, 'getMyNotifications']);
-                Route::put('/{id}/read', [NotificationController::class, 'markAsRead']);
-                Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
             });
         });
 
@@ -77,16 +81,17 @@ Route::prefix('v1')->group(function () {
         Route::prefix('users')->group(function () {
             Route::get('/{id}', [UserController::class, 'show']);
             Route::get('/{id}/posts', [UserController::class, 'getUserPosts']);
+            Route::get('/{id}/stats', [UserStatsController::class, 'show']);
+
+            // Seguidores y seguidos
             Route::get('/{id}/followers', [UserController::class, 'getFollowers']);
             Route::get('/{id}/following', [UserController::class, 'getFollowing']);
 
             // Relaciones sociales
             Route::post('/{id}/follow', [SocialController::class, 'follow']);
-            Route::delete('/{id}/unfollow', [SocialController::class, 'unfollow']);
-            Route::post('/{id}/accept-follow', [SocialController::class, 'acceptFollow']);  // Nueva ruta
-            Route::delete('/{id}/reject-follow', [SocialController::class, 'rejectFollow']);  // Nueva ruta
-
-            Route::get('/{id}/stats', [UserStatsController::class, 'show']);
+            Route::delete('/{id}/follow', [SocialController::class, 'unfollow']);
+            Route::put('/{id}/follow/accept', [SocialController::class, 'acceptFollow']);
+            Route::delete('/{id}/follow/reject', [SocialController::class, 'rejectFollow']);
         });
 
         // Posts
@@ -95,31 +100,43 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [PostController::class, 'store']);
             Route::get('/{id}', [PostController::class, 'show']);
             Route::put('/{id}', [PostController::class, 'update']);
-            Route::patch('/{id}', [PostController::class, 'update']);
             Route::delete('/{id}', [PostController::class, 'destroy']);
+
+            // Comentarios
             Route::get('/{id}/comments', [CommentController::class, 'index']);
             Route::post('/{id}/comments', [CommentController::class, 'store']);
-            Route::post('/{id}/likes', [LikeController::class, 'likePost']);
-            Route::delete('/{id}/likes', [LikeController::class, 'unlikePost']);
+
+            // Likes
+            Route::post('/{id}/like', [LikeController::class, 'likePost']);
+            Route::delete('/{id}/like', [LikeController::class, 'unlikePost']);
         });
-        // Búsqueda general
+
+        // Reportes
+        Route::prefix('reports')->group(function () {
+            Route::post('/', [ReportController::class, 'store']);
+            Route::get('/my', [ReportController::class, 'getMyReports']);
+        });
+
+        // Búsqueda global
         Route::get('/search', [SearchController::class, 'search']);
 
-        // Estilos de cerveza
+        // Estilos de cerveza - endpoints adicionales
         Route::prefix('beer-styles')->group(function () {
-            Route::get('/{id}', [BeerStyleController::class, 'show']);
-            Route::get('/stylelist', [BeerStyleController::class, 'getStyles']);
+            Route::get('/{id}/beers', [BeerStyleController::class, 'getBeers']);
         });
 
-        // Beers
+        // Cervezas - endpoints adicionales
         Route::prefix('beers')->group(function () {
-            Route::get('/{id}', [BeerController::class, 'show']);
-            Route::get('/beerlist', [BeerController::class, 'getBeers']);
+            Route::post('/', [BeerController::class, 'store']);
+            Route::put('/{id}', [BeerController::class, 'update']);
+            Route::post('/{id}/rate', [BeerController::class, 'rate']);
+            Route::get('/{id}/reviews', [BeerController::class, 'getReviews']);
         });
 
         // Ubicaciones
         Route::prefix('locations')->group(function () {
-            Route::get('/locationlist', [LocationController::class, 'getLocations']);
+            Route::get('/', [LocationController::class, 'index']);
+            Route::get('/{id}', [LocationController::class, 'show']);
         });
     });
 });

@@ -11,7 +11,7 @@ trait ApiResponser
     /**
      * Respuesta exitosa.
      */
-    protected function successResponse($data, string $message = null, int $code = Response::HTTP_OK): JsonResponse
+    protected function successResponse($data, string $message, int $code = Response::HTTP_OK): JsonResponse
     {
         return response()->json([
             'status' => 'success',
@@ -41,7 +41,7 @@ trait ApiResponser
             $collection = $collection->getCollection();
         }
 
-        return $this->successResponse($collection, null, $code);
+        return $this->successResponse($collection, '', $code);
     }
 
     /**
@@ -49,6 +49,6 @@ trait ApiResponser
      */
     protected function showOne($instance, int $code = Response::HTTP_OK): JsonResponse
     {
-        return $this->successResponse($instance, null, $code);
+        return $this->successResponse($instance, '', $code);
     }
 }

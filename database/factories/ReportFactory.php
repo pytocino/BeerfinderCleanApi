@@ -24,7 +24,6 @@ class ReportFactory extends Factory
             'App\\Models\\Comment',
             'App\\Models\\User',
             'App\\Models\\Beer',
-            'App\\Models\\Brewery'
         ];
 
         // Razones válidas para reportar (según el enum en la migración)
@@ -42,13 +41,14 @@ class ReportFactory extends Factory
         $statuses = ['pending', 'reviewed', 'rejected', 'actioned'];
 
         return [
-            'user_id' => User::factory(), // Usuario que reporta
+            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(), // Usuario que reporta
             'reportable_type' => $this->faker->randomElement($reportableTypes),
             'reportable_id' => $this->faker->numberBetween(1, 100),
             'reason' => $this->faker->randomElement($reasons),
             'details' => $this->faker->paragraph(),
             'status' => $this->faker->randomElement($statuses),
-            'reviewed_by' => fake()->boolean(30) ? User::factory() : null,
+            'reviewed_by' => fake()->boolean(30) ?
+                (User::inRandomOrder()->first()?->id ?? null) : null,
             'admin_notes' => fake()->boolean(40) ? $this->faker->paragraph() : null,
             'resolved_at' => fake()->boolean(40) ? now()->subDays(rand(1, 30)) : null,
             'public' => fake()->boolean(10), // 10% son públicos
@@ -74,10 +74,10 @@ class ReportFactory extends Factory
     /**
      * Configurar como reporte revisado.
      */
-    public function reviewed(?User $reviewer = null): static
+    public function reviewed(?User $reviewer): static
     {
         if (!$reviewer) {
-            $reviewer = User::factory()->create();
+            $reviewer = User::inRandomOrder()->first() ?? User::factory()->create();
         }
 
         return $this->state(fn(array $attributes) => [
@@ -91,10 +91,10 @@ class ReportFactory extends Factory
     /**
      * Configurar como reporte rechazado.
      */
-    public function rejected(?User $reviewer = null): static
+    public function rejected(?User $reviewer): static
     {
         if (!$reviewer) {
-            $reviewer = User::factory()->create();
+            $reviewer = User::inRandomOrder()->first() ?? User::factory()->create();
         }
 
         return $this->state(fn(array $attributes) => [
@@ -108,10 +108,10 @@ class ReportFactory extends Factory
     /**
      * Configurar como reporte con acción tomada.
      */
-    public function actioned(?User $reviewer = null): static
+    public function actioned(?User $reviewer): static
     {
         if (!$reviewer) {
-            $reviewer = User::factory()->create();
+            $reviewer = User::inRandomOrder()->first() ?? User::factory()->create();
         }
 
         return $this->state(fn(array $attributes) => [

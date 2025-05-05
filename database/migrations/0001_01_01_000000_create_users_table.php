@@ -20,29 +20,9 @@ return new class extends Migration
             $table->boolean('is_admin')->default(false);
             $table->rememberToken();
             $table->timestamp('last_active_at')->nullable();
-            $table->timestamps();
-        });
-
-        // Tabla de perfil extendido
-        Schema::create('user_profiles', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->unique();
-            $table->text('bio')->nullable();
-            $table->string('location')->nullable();
-            $table->date('birthdate')->nullable();
-            $table->string('website')->nullable();
-            $table->string('phone')->nullable();
-
-            // Redes sociales
-            $table->string('instagram')->nullable();
-            $table->string('twitter')->nullable();
-            $table->string('facebook')->nullable();
-
-            // Configuración y privacidad
             $table->boolean('private_profile')->default(false);
-            $table->boolean('allow_mentions')->default(true);
-            $table->boolean('email_notifications')->default(true);
-
+            $table->enum('status', ['active', 'suspended', 'blocked'])->default('active');
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -64,7 +44,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('user_profiles');
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');

@@ -1,0 +1,24 @@
+App\Http\Controllers\API\
+├── Auth\
+│   └── AuthController.php (login, register, me, refreshToken, logout, forgotPassword)
+├── User\
+│   ├── UserController.php (show, getUserPosts, updateMyProfile, getMyPosts)
+│   ├── UserStatsController.php (show, getMyStats)
+│   └── UserNotificationController.php (getMyNotifications, markAsRead, markAllAsRead)
+├── Social\
+│   ├── SocialController.php (follow, unfollow, acceptFollow, rejectFollow)
+│   ├── ConversationController.php (todos los métodos de conversación)
+│   └── FeedController.php (getMyFriendsPosts)
+├── Content\
+│   ├── PostController.php (CRUD de posts)
+│   ├── CommentController.php (métodos de comentarios)
+│   └── LikeController.php (likePost, unlikePost)
+├── Beer\
+│   ├── BeerController.php (CRUD + reviews + rate)
+│   └── BeerStyleController.php (index, show, getBeers)
+├── Location\
+│   └── LocationController.php (index, show)
+├── Report\
+│   └── ReportController.php (store, getMyReports)
+└── Search\
+    └── SearchController.php (search)

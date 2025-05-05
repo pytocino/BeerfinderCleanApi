@@ -26,7 +26,7 @@ return new class extends Migration
             ]);
             $table->text('details')->nullable();
             $table->enum('status', ['pending', 'reviewed', 'rejected', 'actioned'])->default('pending');
-            $table->foreignId('reviewed_by')->nullable()->constrained('users');
+            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->text('admin_notes')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->boolean('public')->default(false); // Si el reporte es visible para el usuario reportado

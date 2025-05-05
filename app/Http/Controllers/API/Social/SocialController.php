@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\API\Social;
 
 use App\Events\UserFollowed;
 use App\Http\Controllers\Controller;
