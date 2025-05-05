@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Beer extends Model
 {
@@ -19,7 +20,7 @@ class Beer extends Model
     protected $fillable = [
         'name',
         'description',
-        'brewery',
+        'brewery_id',
         'style_id',
         'abv',
         'ibu',
@@ -27,28 +28,261 @@ class Beer extends Model
     ];
 
     /**
-     * Los atributos que deben ser convertidos.
+     * Los atributos que deben ser convertidos a tipos nativos.
      *
      * @var array<string, string>
      */
     protected $casts = [
-        'abv' => 'decimal:2',
+        'abv' => 'float',
         'ibu' => 'integer',
     ];
 
     /**
-     * Obtiene el estilo asociado a esta cerveza.
+     * Obtiene la cervecería a la que pertenece esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function style(): BelongsTo
+    public function brewery(): BelongsTo
     {
-        return $this->belongsTo(BeerStyle::class);
+        return $this->belongsTo(Brewery::class);
     }
 
     /**
-     * Obtiene los check-ins que tiene esta cerveza.
+     * Obtiene el estilo de esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function checkIns(): HasMany
+    public function style(): BelongsTo
     {
-        return $this->hasMany(CheckIn::class);
+        return $this->belongsTo(BeerStyle::class, 'style_id');
+    }
+
+    /**
+     * Obtiene las reseñas de esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(BeerReview::class);
+    }
+
+    /**
+     * Obtiene los usuarios que han marcado esta cerveza como favorita.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    /**
+     * Obtiene las ubicaciones donde se puede encontrar esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function locations(): BelongsToMany
+    {
+        return $this->belongsToMany(Location::class, 'beer_location')
+            ->withPivot('price', 'is_featured', 'is_available')
+            ->withTimestamps();
+    }
+
+    /**
+     * Obtiene los posts relacionados con esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Retorna la URL de la imagen, o una imagen por defecto si no existe.
+     *
+     * @return string
+     */
+    public function getImageUrl(): string
+    {
+        if ($this->image_url) {
+            return $this->image_url;
+        }
+
+        return asset('images/default-beer.png');
+    }
+
+    /**
+     * Calcula y actualiza la valoración media de esta cerveza.
+     *
+     * @return float|null
+     */
+    public function updateAverageRating(): ?float
+    {
+        $avgRating = $this->reviews()->avg('rating');
+        $count = $this->reviews()->count();
+
+        $this->update([
+            'avg_rating' => $avgRating,
+            'ratings_count' => $count
+        ]);
+
+        return $avgRating;
+    }
+
+    /**
+     * Devuelve la intensidad del amargor en formato texto.
+     *
+     * @return string
+     */
+    public function getBitternessLevel(): string
+    {
+        if (!$this->ibu) {
+            return 'No disponible';
+        }
+
+        if ($this->ibu < 20) {
+            return 'Suave';
+        } elseif ($this->ibu < 40) {
+            return 'Moderado';
+        } elseif ($this->ibu < 60) {
+            return 'Pronunciado';
+        } else {
+            return 'Muy amargo';
+        }
+    }
+
+    /**
+     * Devuelve la intensidad del alcohol en formato texto.
+     *
+     * @return string
+     */
+    public function getAlcoholLevel(): string
+    {
+        if (!$this->abv) {
+            return 'No disponible';
+        }
+
+        if ($this->abv < 4.0) {
+            return 'Bajo';
+        } elseif ($this->abv < 6.0) {
+            return 'Medio';
+        } elseif ($this->abv < 8.0) {
+            return 'Alto';
+        } else {
+            return 'Muy alto';
+        }
+    }
+
+    /**
+     * Verifica si un usuario ha reseñado esta cerveza.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function isReviewedBy(int $userId): bool
+    {
+        return $this->reviews()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Verifica si un usuario ha marcado esta cerveza como favorita.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function isFavoritedBy(int $userId): bool
+    {
+        return $this->favoritedBy()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Scope para filtrar cervezas por estilo.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $styleId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOfStyle($query, int $styleId)
+    {
+        return $query->where('style_id', $styleId);
+    }
+
+    /**
+     * Scope para filtrar cervezas por cervecería.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $breweryId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeByBrewery($query, int $breweryId)
+    {
+        return $query->where('brewery_id', $breweryId);
+    }
+
+    /**
+     * Scope para filtrar cervezas por contenido de alcohol.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param float $min
+     * @param float|null $max
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithAlcoholContent($query, float $min, ?float $max = null)
+    {
+        $query = $query->where('abv', '>=', $min);
+
+        if ($max !== null) {
+            $query = $query->where('abv', '<=', $max);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope para filtrar cervezas por nivel de amargor.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $min
+     * @param int|null $max
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithBitterness($query, int $min, ?int $max = null)
+    {
+        $query = $query->where('ibu', '>=', $min);
+
+        if ($max !== null) {
+            $query = $query->where('ibu', '<=', $max);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope para ordenar por valoración.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $direction
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOrderByRating($query, string $direction = 'desc')
+    {
+        return $query->orderBy('avg_rating', $direction);
+    }
+
+    /**
+     * Obtiene cervezas similares basadas en el mismo estilo.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getSimilarBeers(int $limit = 5)
+    {
+        return self::where('id', '!=', $this->id)
+            ->where('style_id', $this->style_id)
+            ->limit($limit)
+            ->get();
     }
 }

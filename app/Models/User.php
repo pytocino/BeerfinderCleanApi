@@ -2,24 +2,24 @@
 
 namespace App\Models;
 
+use App\Traits\HasUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasUser;
 
     /**
-     * The attributes that are mass assignable.
+     * Los atributos que son asignables masivamente.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -27,14 +27,16 @@ class User extends Authenticatable
         'email',
         'password',
         'profile_picture',
-        'last_active_at',
         'is_admin',
+        'last_active_at',
+        'private_profile',
+        'status',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * Los atributos que deben ocultarse en arrays/JSON.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -42,65 +44,20 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be cast.
+     * Los atributos que deben ser convertidos a tipos nativos.
      *
      * @var array<string, string>
      */
     protected $casts = [
-        'is_admin' => 'boolean',
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'last_active_at' => 'datetime',
+        'is_admin' => 'boolean',
+        'private_profile' => 'boolean',
     ];
 
     /**
-     * Get the correct count of followers (only accepted status)
-     */
-    public function followersCount(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                // Si ya tenemos el conteo, lo usamos
-                if (array_key_exists('followers_count', $this->attributes)) {
-                    return $this->attributes['followers_count'];
-                }
-
-                // Si tenemos la relación cargada, contamos solo los aceptados
-                if ($this->relationLoaded('followers')) {
-                    return $this->followers->where('pivot.status', '=', 'accepted')->count();
-                }
-
-                // Por último, hacemos la consulta directa
-                return $this->acceptedFollowers()->count();
-            },
-        );
-    }
-
-    /**
-     * Get the correct count of following (only accepted status)
-     */
-    public function followingCount(): Attribute
-    {
-        return Attribute::make(
-            get: function () {
-                // Si ya tenemos el conteo, lo usamos
-                if (array_key_exists('following_count', $this->attributes)) {
-                    return $this->attributes['following_count'];
-                }
-
-                // Si tenemos la relación cargada, contamos solo los aceptados
-                if ($this->relationLoaded('following')) {
-                    return $this->following->where('pivot.status', '=', 'accepted')->count();
-                }
-
-                // Por último, hacemos la consulta directa
-                return $this->acceptedFollowing()->count();
-            },
-        );
-    }
-
-    /**
-     * Relación con el perfil extendido.
+     * Relación con el perfil extendido del usuario.
      */
     public function profile(): HasOne
     {
@@ -108,25 +65,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Usuarios a los que este usuario sigue (con status).
+     * Relación con los posts creados por el usuario.
      */
-    public function following(): BelongsToMany
+    public function posts(): HasMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
-            ->withPivot('status')
-            ->withTimestamps();
+        return $this->hasMany(Post::class);
     }
 
     /**
-     * Usuarios a los que este usuario sigue con estado aceptado.
+     * Relación con las reseñas de cervezas del usuario.
      */
-    public function acceptedFollowing(): BelongsToMany
+    public function beerReviews(): HasMany
     {
-        return $this->following()->wherePivot('status', '=', 'accepted');
+        return $this->hasMany(BeerReview::class);
     }
 
     /**
-     * Usuarios que siguen a este usuario (con status).
+     * Usuarios que siguen a este usuario.
      */
     public function followers(): BelongsToMany
     {
@@ -136,42 +91,119 @@ class User extends Authenticatable
     }
 
     /**
-     * Usuarios que siguen a este usuario con estado aceptado.
+     * Usuarios a los que sigue este usuario.
      */
-    public function acceptedFollowers(): BelongsToMany
+    public function following(): BelongsToMany
     {
-        return $this->followers()->wherePivot('status', '=', 'accepted');
+        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+            ->withPivot('status')
+            ->withTimestamps();
     }
 
     /**
-     * Posts del usuario.
+     * Relación con los comentarios realizados por el usuario.
      */
-    public function posts(): HasMany
+    public function comments(): HasMany
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Comment::class);
     }
 
     /**
-     * Notificaciones del usuario.
+     * Relación con los likes dados por el usuario.
      */
-    public function notifications()
+    public function likes(): HasMany
     {
-        return $this->morphMany(DatabaseNotification::class, 'notifiable');
+        return $this->hasMany(Like::class);
     }
 
     /**
-     * Check-ins realizados por el usuario.
+     * Relación con las conversaciones en las que participa el usuario.
      */
-    public function checkIns(): HasMany
+    public function conversations(): BelongsToMany
     {
-        return $this->hasMany(CheckIn::class);
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+            ->withPivot('last_read_at', 'is_muted', 'role')
+            ->withTimestamps();
     }
 
     /**
-     * Conversaciones del usuario.
+     * Mensajes enviados por el usuario.
      */
-    public function conversations()
+    public function messages(): HasMany
     {
-        return $this->belongsToMany(Conversation::class, 'conversation_user');
+        return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Cervezas favoritas del usuario.
+     */
+    public function favoritedBeers(): BelongsToMany
+    {
+        return $this->belongsToMany(Beer::class, 'favorites')
+            ->withTimestamps();
+    }
+
+    /**
+     * Reportes enviados por el usuario.
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    /**
+     * Reportes revisados por el usuario (para admins).
+     */
+    public function reviewedReports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'reviewed_by');
+    }
+
+    /**
+     * Transacciones realizadas por el usuario.
+     */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    /**
+     * Obtener solo seguidores aceptados.
+     */
+    public function acceptedFollowers()
+    {
+        return $this->followers()->wherePivot('status', 'accepted');
+    }
+
+    /**
+     * Obtener solo seguidos aceptados.
+     */
+    public function acceptedFollowing()
+    {
+        return $this->following()->wherePivot('status', 'accepted');
+    }
+
+    /**
+     * Verificar si el usuario es administrador.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin;
+    }
+
+    /**
+     * Verificar si el usuario tiene perfil privado.
+     */
+    public function hasPrivateProfile(): bool
+    {
+        return $this->private_profile;
+    }
+
+    /**
+     * Actualizar timestamp de última actividad.
+     */
+    public function updateLastActive(): void
+    {
+        $this->update(['last_active_at' => now()]);
     }
 }

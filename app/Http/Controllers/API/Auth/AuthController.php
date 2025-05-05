@@ -8,6 +8,7 @@ use App\Http\Resources\UserProfileResource;
 use App\Models\User;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
+use App\Traits\HasUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use HasUser;
 
     public function register(Request $request): JsonResponse
     {
@@ -36,7 +38,6 @@ class AuthController extends Controller
             'profile_picture' => 'nullable|string',
         ]);
 
-        // Crear el usuario con campos básicos
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
@@ -46,7 +47,6 @@ class AuthController extends Controller
             'private_profile' => false,
         ]);
 
-        // Crear perfil vacío para el usuario
         $user->profile()->create([
             'user_id' => $user->id,
             'private_profile' => false,
@@ -70,7 +70,6 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // Verificar si el usuario existe antes de intentar autenticación
         $user = User::where('email', '=', $request->email)->first();
 
         if (!$user) {
@@ -79,21 +78,18 @@ class AuthController extends Controller
             ]);
         }
 
-        // Verificar si la contraseña coincide
         if (!Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
-        // Intentar autenticar al usuario
         if (!Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
-        // Generar token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -105,7 +101,8 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        auth()->user()->currentAccessToken()->delete();
+        $user = $this->authenticatedUser();
+        $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
         return response()->json(['message' => 'Sesión cerrada correctamente']);
     }
 
@@ -142,9 +139,7 @@ class AuthController extends Controller
             'email_notifications' => 'nullable|boolean',
         ]);
 
-        // Obtenemos el usuario autenticado
-        $user = auth()->user();
-        // Actualizamos el perfil del usuario
+        $user = $this->authenticatedUser();
         $user->profile()->update([
             'bio' => $validated['bio'],
             'location' => $validated['location'],
@@ -168,15 +163,9 @@ class AuthController extends Controller
     public function refreshToken(Request $request): JsonResponse
     {
         try {
-            // Obtenemos el usuario autenticado
-            $user = auth()->user();
-
-            // Revocamos el token actual
-            auth()->user()->currentAccessToken()->delete();
-
-            // Creamos un nuevo token
+            $user = $this->authenticatedUser();
+            $user->tokens()->where('id', $user->currentAccessToken()->id)->delete();
             $token = $user->createToken('auth_token')->plainTextToken;
-
 
             return response()->json([
                 'user' => new UserResource($user),
@@ -184,8 +173,6 @@ class AuthController extends Controller
                 'token_type' => 'Bearer',
             ]);
         } catch (\Exception $e) {
-
-
             return response()->json([
                 'message' => 'No se pudo refrescar el token',
                 'error' => $e->getMessage()
@@ -195,7 +182,7 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        $user = auth()->user()->load('profile')->loadCount([
+        $user = $this->authenticatedUser()->load('profile')->loadCount([
             'followers' => function ($query) {
                 $query->where('follows.status', '=', 'accepted');
             },
@@ -210,15 +197,10 @@ class AuthController extends Controller
 
     public function getMyStats(Request $request): JsonResponse
     {
-        $user = auth()->user();
+        $user = $this->authenticatedUser();
 
-        // Número de cervezas distintas tomadas (por posts)
         $distinctBeers = $user->posts()->distinct('beer_id')->count('beer_id');
-
-        // Número de lugares distintos visitados (por posts)
         $distinctLocations = $user->posts()->whereNotNull('location_id')->distinct('location_id')->count('location_id');
-
-        // Número de estilos de cerveza distintos probados
         $distinctStyles = $user->posts()
             ->join('beers', 'posts.beer_id', '=', 'beers.id')
             ->distinct('beers.style_id')
@@ -233,7 +215,7 @@ class AuthController extends Controller
 
     public function getMyPosts(Request $request): JsonResponse
     {
-        $user = auth()->user();
+        $user = $this->authenticatedUser();
         $posts = $user->posts()
             ->with(['user', 'beer', 'location'])
             ->latest()
@@ -244,14 +226,12 @@ class AuthController extends Controller
 
     public function getMyFriendsPosts(Request $request): JsonResponse
     {
-        $user = auth()->user();
+        $user = $this->authenticatedUser();
 
-        // Obtener los IDs de usuarios que sigue (amigos) con estado 'accepted'
         $followingIds = $user->following()
             ->wherePivot('status', '=', 'accepted')
             ->pluck('users.id');
 
-        // Obtener los posts de esos usuarios
         $friendsPosts = Post::whereIn('user_id', $followingIds)
             ->with(['user', 'beer', 'location', 'comments', 'likes'])
             ->latest()
