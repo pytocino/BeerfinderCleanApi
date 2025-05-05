@@ -17,12 +17,18 @@ return new class extends Migration
             $table->foreignId('beer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('location_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('post_id')->nullable()->constrained()->nullOnDelete();
-            $table->decimal('rating', 2, 1)->nullable();
+            $table->decimal('rating', 3, 1); // Cambiado: mayor precisión y NOT NULL
             $table->text('review_text')->nullable();
             $table->string('serving_type')->nullable();
             $table->decimal('purchase_price', 8, 2)->nullable();
             $table->string('purchase_currency', 3)->nullable();
+            $table->boolean('is_public')->default(true); // Añadido: controlar visibilidad
+            $table->decimal('avg_rating', 3, 2)->nullable();
+            $table->integer('ratings_count')->default(0);
             $table->timestamps();
+
+            // Restricción para evitar reviews duplicados del mismo usuario a la misma cerveza
+            $table->unique(['user_id', 'beer_id']);
         });
     }
 

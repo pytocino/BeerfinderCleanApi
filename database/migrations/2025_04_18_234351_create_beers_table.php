@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('brewery')->nullable();
+            $table->foreignId('brewery_id')->constrained('breweries')->onCascadeDelete();
             $table->foreignId('style_id')->constrained('beer_styles');
             $table->decimal('abv', 4, 2)->nullable();
             $table->integer('ibu')->nullable();
