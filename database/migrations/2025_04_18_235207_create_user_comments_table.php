@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('user_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('post_id')->constrained()->onDelete('cascade'); // Relación con el post
+            $table->foreignId('post_id')->constrained('user_posts')->onDelete('cascade'); // Relación con el post
             $table->text('content');
             $table->foreignId('parent_id')->nullable()->constrained('user_comments')->onDelete('cascade'); // Para respuestas/hilos
             $table->boolean('edited')->default(false); // Si el comentario fue editado

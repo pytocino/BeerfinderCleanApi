@@ -11,8 +11,8 @@ class LocationFactory extends Factory
 
     public function definition(): array
     {
-        $types = ['bar', 'brewery', 'store', 'restaurant', 'festival'];
-        $status = $this->faker->randomElement(['active', 'inactive', 'pending', 'closed']);
+        $types = ['bar', 'restaurant', 'store', 'brewery', 'other'];
+        $statuses = ['active', 'temporarily_closed', 'permanently_closed'];
         $country = $this->faker->country();
         $city = $this->faker->city();
 
@@ -31,7 +31,7 @@ class LocationFactory extends Factory
             'name' => $this->faker->company . ' ' . ucfirst($this->faker->word),
             'type' => $this->faker->randomElement($types),
             'description' => $this->faker->optional()->sentence(),
-            'status' => $status,
+            'status' => $this->faker->randomElement($statuses),
             'opening_hours' => $opening_hours,
             'address' => $this->faker->streetAddress,
             'city' => $city,

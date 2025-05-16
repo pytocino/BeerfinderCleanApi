@@ -16,9 +16,9 @@ class BeerFactory extends Factory
         return [
             'name' => $this->faker->unique()->word() . ' Beer',
             'description' => $this->faker->optional()->paragraph(),
-            'brewery_id' => fn() => Brewery::inRandomOrder()->first()?->id ?? Brewery::factory(),
-            'style_id' => fn() => BeerStyle::inRandomOrder()->first()?->id ?? BeerStyle::factory(),
-            'abv' => $this->faker->randomFloat(1, 3.0, 12.0),
+            'brewery_id' => Brewery::inRandomOrder()->first()?->id,
+            'style_id' => BeerStyle::inRandomOrder()->first()?->id,
+            'abv' => $this->faker->randomFloat(2, 3.0, 12.0),
             'ibu' => $this->faker->numberBetween(5, 120),
             'image_url' => $this->faker->optional()->imageUrl(400, 600, 'beer'),
         ];

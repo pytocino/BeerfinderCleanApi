@@ -14,8 +14,8 @@ class BeerLocationFactory extends Factory
     public function definition(): array
     {
         return [
-            'beer_id' => fn() => Beer::inRandomOrder()->first()?->id ?? Beer::factory(),
-            'location_id' => fn() => Location::inRandomOrder()->first()?->id ?? Location::factory(),
+            'beer_id' => Beer::inRandomOrder()->first()?->id,
+            'location_id' => Location::inRandomOrder()->first()?->id,
             'price' => $this->faker->optional(0.9)->randomFloat(2, 1, 15),
             'is_featured' => $this->faker->boolean(20),
         ];

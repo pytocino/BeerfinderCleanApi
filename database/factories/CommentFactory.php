@@ -14,10 +14,10 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'post_id' => fn() => Post::inRandomOrder()->first()?->id ?? Post::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id,
+            'post_id' => Post::inRandomOrder()->first()?->id,
             'content' => $this->faker->sentence(),
-            'parent_id' => null, // Puedes asignar en tests para replies
+            'parent_id' => null, // Para comentarios raíz, puedes asignar replies en tests/seeder
             'edited' => $this->faker->boolean(10),
             'pinned' => $this->faker->boolean(5),
             'edited_at' => null,

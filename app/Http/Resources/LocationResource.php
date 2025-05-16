@@ -15,13 +15,23 @@ class LocationResource extends JsonResource
      */
     public function toArray($request)
     {
+        // Ordenar los horarios de apertura por día de la semana
+        $orderedDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $openingHours = $this->opening_hours ?? [];
+        $sortedOpeningHours = [];
+        foreach ($orderedDays as $day) {
+            if (isset($openingHours[$day])) {
+                $sortedOpeningHours[$day] = $openingHours[$day];
+            }
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'type' => $this->type,
             'description' => $this->description,
             'status' => $this->status,
-            'opening_hours' => $this->opening_hours,
+            'opening_hours' => $sortedOpeningHours,
             'address' => $this->address,
             'city' => $this->city,
             'country' => $this->country,

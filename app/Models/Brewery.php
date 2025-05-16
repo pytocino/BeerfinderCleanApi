@@ -99,35 +99,6 @@ class Brewery extends Model
     }
 
     /**
-     * Obtiene las cervezas mejor valoradas de esta cervecería.
-     *
-     * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getTopRatedBeers(int $limit = 5)
-    {
-        return $this->beers()
-            ->whereNotNull('avg_rating')
-            ->orderByDesc('avg_rating')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Calcula y actualiza la valoración media de todas las cervezas de esta cervecería.
-     *
-     * @return float|null
-     */
-    public function calculateAverageRating(): ?float
-    {
-        $avgRating = $this->beers()
-            ->whereNotNull('avg_rating')
-            ->avg('avg_rating');
-
-        return $avgRating;
-    }
-
-    /**
      * Scope para filtrar cervecerías por país.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query

@@ -50,7 +50,6 @@ class LocationController extends Controller
      *      "name": "Cervecería La Cebada"
      *    }
      *  ]
-     * }
      */
     public function getLocations()
     {
@@ -60,5 +59,16 @@ class LocationController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al obtener las ubicaciones'], 500);
         }
+    }
+
+    /**
+     * Obtener ubicación por ID
+     */
+    public function getLocationById($id)
+    {
+        $location = Location::with(['beers', 'beerReviews'])
+            ->withCount(['beers', 'beerReviews'])
+            ->findOrFail($id);
+        return response()->json(new LocationResource($location));
     }
 }

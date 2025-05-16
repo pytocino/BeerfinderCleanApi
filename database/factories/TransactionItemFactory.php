@@ -21,17 +21,25 @@ class TransactionItemFactory extends Factory
         $taxAmount = $subtotalAfterDiscount * ($taxRate / 100);
         $total = $subtotalAfterDiscount + $taxAmount;
 
+        $itemableTypes = [
+            'App\\Models\\Beer',
+            'App\\Models\\Location',
+        ];
+        $itemableType = $this->faker->randomElement($itemableTypes);
+        $itemableModel = new $itemableType;
+        $itemableId = $itemableModel->inRandomOrder()->first()?->id;
+
         return [
-            'transaction_id' => null, // Asignar en el seeder o test
-            'itemable_id' => null,
-            'itemable_type' => null,
+            'transaction_id' => \App\Models\Transaction::inRandomOrder()->first()?->id,
+            'itemable_id' => $itemableId,
+            'itemable_type' => $itemableType,
             'description' => $this->faker->sentence(3),
             'unit_price' => $unitPrice,
             'quantity' => $quantity,
             'discount' => $discount,
             'tax_rate' => $taxRate,
             'total' => $total,
-            'additional_data' => [],
+            'additional_data' => json_encode([]),
         ];
     }
 }

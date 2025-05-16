@@ -14,7 +14,7 @@ return new class extends Migration
         // Tabla pivot mejorada para participantes
         Schema::create('conversation_users', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
+            $table->foreignId('conversation_id')->constrained('user_conversations')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('last_read_at')->nullable(); // Cuándo el usuario leyó la conversación
             $table->boolean('is_muted')->default(false); // Silenciar notificaciones

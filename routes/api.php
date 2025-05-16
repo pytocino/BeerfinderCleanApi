@@ -2,6 +2,7 @@
 // filepath: /home/pedro/Projects/BeerfinderCleanApi/routes/api.php
 
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\GoogleLoginController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\User\MyUserController;
 use App\Http\Controllers\API\User\UserController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\API\Beer\BeerStyleController;
 use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\Report\ReportController;
 use App\Http\Controllers\API\Search\SearchController;
+use App\Http\Controllers\API\Brewery\BreweryController;
 use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +50,12 @@ Route::prefix('v1')->group(function () {
 
             // Posts personales
             Route::get('/posts', [MyUserController::class, 'getMyPosts']);
+
+            // Reseñas de cervezas personales
+            Route::get('/beer-reviews', [MyUserController::class, 'getMyBeerReviews']);
+
+            // Cervezas favoritas
+            Route::get('/favorite-beers', [MyUserController::class, 'getMyFavoriteBeers']);
 
             // Stats personales
             Route::get('/stats', [MyUserController::class, 'getMyStats']);
@@ -113,10 +121,14 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('locations')->group(function () {
             // Ubicaciones
-
             Route::get('/', [LocationController::class, 'getLocations']);
             // Ubicaciones por ID
             Route::get('/{id}', [LocationController::class, 'getLocationById']);
+        });
+
+        Route::prefix('breweries')->group(function () {
+            // Cervecerías por ID
+            Route::get('/{id}', [BreweryController::class, 'getBreweryById']);
         });
     });
 });

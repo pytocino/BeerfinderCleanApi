@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -68,11 +69,11 @@ class Post extends Model
     /**
      * Obtiene los likes del post.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
-    public function likes(): HasMany
+    public function likes(): MorphMany
     {
-        return $this->hasMany(Like::class);
+        return $this->morphMany(Like::class, 'likeable');
     }
 
     /**
@@ -83,6 +84,26 @@ class Post extends Model
     public function beerReview(): HasOne
     {
         return $this->hasOne(BeerReview::class);
+    }
+
+    /**
+     * Obtiene la cerveza asociada al post (si existe).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function beer()
+    {
+        return $this->belongsTo(Beer::class);
+    }
+
+    /**
+     * Obtiene la localización asociada al post (si existe).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 
     /**
@@ -113,14 +134,17 @@ class Post extends Model
     public function getTotalPhotosCount(): int
     {
         $count = $this->hasPhoto() ? 1 : 0;
-        return $count + count($this->additional_photos ?: []);
+        $additional = $this->additional_photos;
+
+        if (is_string($additional)) {
+            $additional = json_decode($additional, true) ?: [];
+        } elseif (!is_array($additional)) {
+            $additional = [];
+        }
+
+        return $count + count($additional);
     }
 
-    /**
-     * Obtiene todas las imágenes incluyendo la principal y las adicionales.
-     *
-     * @return array
-     */
     public function getAllPhotos(): array
     {
         $photos = [];
@@ -130,7 +154,10 @@ class Post extends Model
         }
 
         if ($this->hasAdditionalPhotos()) {
-            $photos = array_merge($photos, $this->additional_photos);
+            $additional = is_array($this->additional_photos)
+                ? $this->additional_photos
+                : (is_string($this->additional_photos) ? json_decode($this->additional_photos, true) : []);
+            $photos = array_merge($photos, $additional ?: []);
         }
 
         return $photos;

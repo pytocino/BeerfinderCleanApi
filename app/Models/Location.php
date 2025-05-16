@@ -49,14 +49,12 @@ class Location extends Model
     ];
 
     /**
-     * Las cervezas disponibles en esta ubicación.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * Relación muchos a muchos: cervezas disponibles en esta ubicación.
      */
     public function beers(): BelongsToMany
     {
-        return $this->belongsToMany(Beer::class, 'beer_location')
-            ->withPivot('price', 'is_featured', 'is_available')
+        return $this->belongsToMany(Beer::class, 'beer_locations', 'location_id', 'beer_id')
+            ->withPivot(['price', 'is_featured'])
             ->withTimestamps();
     }
 
@@ -217,7 +215,6 @@ class Location extends Model
     {
         return $this->beers()
             ->wherePivot('is_featured', true)
-            ->wherePivot('is_available', true)
             ->limit($limit)
             ->get();
     }

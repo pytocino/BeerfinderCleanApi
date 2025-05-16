@@ -23,26 +23,30 @@ class ReportFactory extends Factory
         ];
 
         $reasons = [
-            Report::REASON_SPAM,
-            Report::REASON_OFFENSIVE,
-            Report::REASON_INAPPROPRIATE,
-            Report::REASON_HARASSMENT,
-            Report::REASON_FAKE,
-            Report::REASON_COPYRIGHT,
-            Report::REASON_OTHER,
+            'spam',
+            'offensive',
+            'inappropriate',
+            'harassment',
+            'fake',
+            'copyright',
+            'other',
         ];
 
         $statuses = [
-            Report::STATUS_PENDING,
-            Report::STATUS_REVIEWED,
-            Report::STATUS_REJECTED,
-            Report::STATUS_ACTIONED,
+            'pending',
+            'reviewed',
+            'rejected',
+            'actioned',
         ];
 
+        $reportableType = $this->faker->randomElement($reportableTypes);
+        $reportableModel = new $reportableType;
+        $reportableId = $reportableModel->inRandomOrder()->first()?->id;
+        // ...existing code...
         return [
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'reportable_type' => $this->faker->randomElement($reportableTypes),
-            'reportable_id' => $this->faker->numberBetween(1, 100),
+            'user_id' => User::inRandomOrder()->first()?->id,
+            'reportable_type' => $reportableType,
+            'reportable_id' => $reportableId,
             'reason' => $this->faker->randomElement($reasons),
             'details' => $this->faker->paragraph(),
             'status' => $this->faker->randomElement($statuses),
@@ -54,5 +58,6 @@ class ReportFactory extends Factory
             'ip_address' => $this->faker->ipv4,
             'user_agent' => $this->faker->userAgent,
         ];
+        // ...existing code...
     }
 }

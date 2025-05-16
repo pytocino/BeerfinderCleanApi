@@ -13,7 +13,7 @@ class BeerStyleFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->word() . ' Style',
-            'description' => $this->faker->optional()->paragraph(),
+            'description' => $this->faker->optional()->sentence(),
             'origin_country' => $this->faker->country(),
         ];
     }

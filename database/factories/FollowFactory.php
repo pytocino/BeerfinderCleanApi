@@ -13,14 +13,11 @@ class FollowFactory extends Factory
     public function definition(): array
     {
         // Selecciona dos usuarios distintos
-        $follower = User::inRandomOrder()->first()?->id ?? User::factory();
-        $following = User::inRandomOrder()->where('id', '!=', $follower)->first()?->id ?? User::factory();
+        $userIds = User::pluck('id')->toArray();
+        $follower = $this->faker->randomElement($userIds);
+        $following = $this->faker->randomElement(array_diff($userIds, [$follower]));
 
-        $statuses = [
-            Follow::STATUS_PENDING,
-            Follow::STATUS_ACCEPTED,
-            Follow::STATUS_REJECTED,
-        ];
+        $statuses = ['pending', 'accepted', 'rejected'];
 
         return [
             'follower_id' => $follower,

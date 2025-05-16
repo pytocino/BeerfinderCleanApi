@@ -18,31 +18,32 @@ class UserProfileResource extends JsonResource
      */
     public function toArray($request)
     {
+        $isMe = $this->belongsToAuthenticatedUser();
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'user' => new UserResource($this->whenLoaded('user')),
             'bio' => $this->bio,
             'location' => $this->location,
-            'birthdate' => $this->birthdate,
-            'is_birthday' => $this->isBirthday(),
-            'age' => $this->getAge(),
             'website' => $this->website,
-            'phone' => $this->phone,
-            'formatted_phone' => $this->getFormattedPhone(),
-            'timezone' => $this->timezone,
-            'instagram' => $this->instagram,
-            'twitter' => $this->twitter,
-            'facebook' => $this->facebook,
-            'has_social_links' => $this->hasSocialLinks(),
+            'has_social_links' => (bool) $this->hasSocialLinks(),
             'social_links' => $this->getSocialLinks(),
-            'allow_mentions' => $this->allow_mentions,
-            'allows_mentions' => $this->allowsMentions(),
-            'email_notifications' => $this->email_notifications,
-            'has_email_notifications_enabled' => $this->hasEmailNotificationsEnabled(),
-            'is_me' => $this->belongsToAuthenticatedUser(),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'allow_mentions' => (bool) $this->allow_mentions,
+            'allows_mentions' => (bool) $this->allowsMentions(),
+            'is_me' => $isMe,
+            // Solo para el usuario autenticado:
+            'birthdate' => $this->when($isMe, $this->birthdate),
+            'is_birthday' => $this->when($isMe, $this->isBirthday()),
+            'age' => $this->when($isMe, $this->getAge()),
+            'phone' => $this->when($isMe, $this->phone),
+            'formatted_phone' => $this->when($isMe, $this->getFormattedPhone()),
+            'timezone' => $this->when($isMe, $this->timezone),
+            'instagram' => $this->when($isMe, $this->instagram),
+            'twitter' => $this->when($isMe, $this->twitter),
+            'facebook' => $this->when($isMe, $this->facebook),
+            'email_notifications' => $this->when($isMe, $this->email_notifications),
+            'has_email_notifications_enabled' => $this->when($isMe, $this->hasEmailNotificationsEnabled()),
+            'created_at' => $this->when($isMe, $this->created_at),
+            'updated_at' => $this->when($isMe, $this->updated_at),
         ];
     }
 }

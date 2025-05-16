@@ -12,17 +12,20 @@ class LikeFactory extends Factory
 
     public function definition(): array
     {
-        // Puedes ajustar los modelos polimórficos según tus necesidades
         $likeableTypes = [
             'App\\Models\\Post',
             'App\\Models\\Comment',
             'App\\Models\\Beer',
         ];
 
+        $likeableType = $this->faker->randomElement($likeableTypes);
+        $likeableModel = new $likeableType;
+        $likeableId = $likeableModel->inRandomOrder()->first()?->id;
+
         return [
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'likeable_id' => $this->faker->numberBetween(1, 100),
-            'likeable_type' => $this->faker->randomElement($likeableTypes),
+            'user_id' => User::inRandomOrder()->first()?->id,
+            'likeable_id' => $likeableId,
+            'likeable_type' => $likeableType,
         ];
     }
 }

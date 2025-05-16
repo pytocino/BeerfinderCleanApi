@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('beer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('location_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('post_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('post_id')->nullable()->constrained('user_posts')->nullOnDelete();
             $table->decimal('rating', 3, 1); // Cambiado: mayor precisión y NOT NULL
             $table->text('review_text')->nullable();
             $table->string('serving_type')->nullable();

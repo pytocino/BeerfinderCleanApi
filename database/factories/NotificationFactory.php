@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,12 +18,12 @@ class NotificationFactory extends Factory
         return [
             'id' => (string) Str::uuid(),
             'type' => 'App\\Notifications\\GenericNotification',
-            'notifiable_id' => 1, // Cambia esto según el modelo que vayas a notificar
+            'notifiable_id' => User::inRandomOrder()->first()?->id,
             'notifiable_type' => 'App\\Models\\User',
-            'data' => json_encode([
+            'data' => [
                 'message' => $this->faker->sentence(),
                 'extra' => $this->faker->word(),
-            ]),
+            ],
             'read_at' => $this->faker->optional(0.3)->dateTime(),
             'created_at' => now(),
             'updated_at' => now(),

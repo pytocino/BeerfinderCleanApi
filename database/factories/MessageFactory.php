@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Conversation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MessageFactory extends Factory
@@ -12,6 +13,13 @@ class MessageFactory extends Factory
 
     public function definition(): array
     {
+        $conversationId = \App\Models\Conversation::inRandomOrder()->first()?->id;
+        $userId = \App\Models\User::inRandomOrder()->first()?->id;
+
+        if (!$conversationId || !$userId) {
+            throw new \Exception('No hay conversaciones o usuarios disponibles para crear mensajes.');
+        }
+
         $hasAttachments = $this->faker->boolean(30);
         $attachments = [];
         if ($hasAttachments) {
@@ -24,8 +32,8 @@ class MessageFactory extends Factory
         }
 
         return [
-            'conversation_id' => null, // Asignar en el seeder o test
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'conversation_id' => $conversationId,
+            'user_id' => $userId,
             'content' => $this->faker->sentence(),
             'attachments' => $attachments,
             'reply_to' => null,

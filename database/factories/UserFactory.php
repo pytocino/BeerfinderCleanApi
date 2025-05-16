@@ -19,11 +19,11 @@ class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => Hash::make('password'), // Contraseña por defecto
-            'profile_picture' => $this->faker->imageUrl(200, 200, 'people'),
+            'profile_picture' => $this->faker->optional()->imageUrl(200, 200, 'people'),
             'is_admin' => false,
             'last_active_at' => now(),
-            'private_profile' => false,
-            'status' => 'active',
+            'private_profile' => $this->faker->boolean(20),
+            'status' => $this->faker->randomElement(['active', 'suspended', 'blocked']),
             'remember_token' => Str::random(10),
         ];
     }

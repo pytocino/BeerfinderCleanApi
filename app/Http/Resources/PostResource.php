@@ -20,17 +20,34 @@ class PostResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user' => [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'username' => $this->user->username,
+                'profile_picture' => $this->user->profile_picture,
+                'is_me' => $this->getUserId() ? $this->user->id === $this->getUserId() : false,
+                'is_followed' => $this->getUserId() ? $this->user->followers()->where('users.id', $this->getUserId())->wherePivot('status', 'accepted')->exists() : false,
+            ],
+            'beer_review' => $this->whenLoaded('beerReview', function () {
+                $beerReview = $this->beerReview;
+                if (!$beerReview) return null;
+                return [
+                    'id' => $beerReview->id,
+                    'beer' => $beerReview->relationLoaded('beer') && $beerReview->beer ? [
+                        'id' => $beerReview->beer->id,
+                        'name' => $beerReview->beer->name,
+                    ] : null,
+                    'location' => $beerReview->relationLoaded('location') && $beerReview->location ? [
+                        'id' => $beerReview->location->id,
+                        'name' => $beerReview->location->name,
+                    ] : null,
+                ];
+            }),
             'content' => $this->content,
             'photo_url' => $this->photo_url,
             'additional_photos' => $this->additional_photos,
             'all_photos' => $this->getAllPhotos(),
-            'has_photo' => $this->hasPhoto(),
-            'has_additional_photos' => $this->hasAdditionalPhotos(),
-            'total_photos_count' => $this->getTotalPhotosCount(),
             'user_tags' => $this->user_tags,
-            'tagged_users' => UserResource::collection($this->whenLoaded('taggedUsers')),
-            'has_user_tags' => $this->hasUserTags(),
             'comments_count' => $this->getCommentsCount(),
             'likes_count' => $this->getLikesCount(),
             'is_liked' => $this->when(
@@ -39,9 +56,6 @@ class PostResource extends JsonResource
                     return $this->isLikedBy($this->getUserId());
                 }
             ),
-            'comments' => CommentResource::collection($this->whenLoaded('comments')),
-            'likes' => LikeResource::collection($this->whenLoaded('likes')),
-            'beer_review' => new BeerReviewResource($this->whenLoaded('beerReview')),
             'edited' => $this->edited,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

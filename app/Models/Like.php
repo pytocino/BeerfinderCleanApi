@@ -191,10 +191,10 @@ class Like extends Model
      * Obtiene los usuarios que han dado like a un elemento específico.
      *
      * @param Model $likeable
-     * @param int $limit
+     * @param int|null $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function getUsersWhoLiked(Model $likeable, int $limit = null)
+    public static function getUsersWhoLiked(Model $likeable, ?int $limit = null)
     {
         $query = User::whereHas('likes', function ($query) use ($likeable) {
             $query->where('likeable_id', $likeable->id)

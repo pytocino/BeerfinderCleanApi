@@ -639,4 +639,13 @@ class BeerController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener cerveza por ID
+     */
+    public function getBeerById($id)
+    {
+        $beer = Beer::with(['brewery', 'style', 'reviews', 'favoritedBy', 'locations'])->findOrFail($id);
+        return response()->json(new BeerResource($beer));
+    }
 }

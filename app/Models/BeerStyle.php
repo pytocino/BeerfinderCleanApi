@@ -32,6 +32,21 @@ class BeerStyle extends Model
     }
 
     /**
+     * Relación: cervecerías que producen cervezas de este estilo.
+     */
+    public function breweries()
+    {
+        return $this->hasManyThrough(
+            Brewery::class,
+            Beer::class,
+            'style_id', // Foreign key en Beer
+            'id',      // Foreign key en Brewery
+            'id',      // Local key en BeerStyle
+            'brewery_id' // Local key en Beer
+        )->distinct();
+    }
+
+    /**
      * Obtiene la cantidad de cervezas asociadas a este estilo.
      *
      * @return int
@@ -39,33 +54,6 @@ class BeerStyle extends Model
     public function getBeersCount(): int
     {
         return $this->beers()->count();
-    }
-
-    /**
-     * Obtiene las cervezas mejor valoradas de este estilo.
-     *
-     * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getTopRatedBeers(int $limit = 5)
-    {
-        return $this->beers()
-            ->whereNotNull('avg_rating')
-            ->orderByDesc('avg_rating')
-            ->limit($limit)
-            ->get();
-    }
-
-    /**
-     * Calcula y devuelve la valoración media de todas las cervezas de este estilo.
-     *
-     * @return float|null
-     */
-    public function calculateAverageRating(): ?float
-    {
-        return $this->beers()
-            ->whereNotNull('avg_rating')
-            ->avg('avg_rating');
     }
 
     /**
@@ -140,5 +128,52 @@ class BeerStyle extends Model
         return strlen($this->description) > $length
             ? substr($this->description, 0, $length) . '...'
             : $this->description;
+    }
+
+    /**
+     * Devuelve las cervezas mejor valoradas de este estilo.
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getTopRatedBeers($limit = 3)
+    {
+        return $this->beers()
+            ->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_avg_rating')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Calcula los promedios de características típicas de las cervezas de este estilo.
+     * Devuelve un array con los valores promedio de cuerpo, amargor y alcohol.
+     *
+     * @return array
+     */
+    public function getTypicalCharacteristics(): array
+    {
+        $beers = $this->beers;
+        $count = $beers->count();
+        if ($count === 0) {
+            return [
+                'body' => null,
+                'bitterness' => null,
+                'alcohol' => null,
+            ];
+        }
+        // Si existe un campo "body" en la tabla beers, usarlo. Si no, dejar null.
+        $body = $beers->first()->body ?? null;
+        if ($body !== null) {
+            // TODO: AÑADIR LA COLUMNA BODY A LA TABLA BEERS
+            $body = round($beers->avg('body'), 2);
+        }
+        $bitterness = round($beers->avg('ibu'), 2); // IBU = International Bitterness Units
+        $alcohol = round($beers->avg('abv'), 2);    // ABV = Alcohol by Volume
+        return [
+            'body' => $body,
+            'bitterness' => $bitterness,
+            'alcohol' => $alcohol,
+        ];
     }
 }

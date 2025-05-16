@@ -85,7 +85,7 @@ class User extends Authenticatable
      */
     public function followers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'following_id', 'follower_id')
+        return $this->belongsToMany(User::class, 'user_follows', 'following_id', 'follower_id')
             ->withPivot('status')
             ->withTimestamps();
     }
@@ -95,7 +95,7 @@ class User extends Authenticatable
      */
     public function following(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'follows', 'follower_id', 'following_id')
+        return $this->belongsToMany(User::class, 'user_follows', 'follower_id', 'following_id')
             ->withPivot('status')
             ->withTimestamps();
     }
@@ -134,12 +134,15 @@ class User extends Authenticatable
         return $this->hasMany(Message::class);
     }
 
-    /**
-     * Cervezas favoritas del usuario.
-     */
     public function favoritedBeers(): BelongsToMany
     {
-        return $this->belongsToMany(Beer::class, 'favorites')
+        return $this->belongsToMany(
+            Beer::class,
+            'favorite_beers',
+            'user_id',
+            'favorable_id'
+        )
+            ->wherePivot('favorable_type', Beer::class)
             ->withTimestamps();
     }
 
@@ -205,5 +208,45 @@ class User extends Authenticatable
     public function updateLastActive(): void
     {
         $this->update(['last_active_at' => now()]);
+    }
+
+    /**
+     * IDs únicos de cervezas reseñadas por el usuario.
+     */
+    public function reviewedBeerIds(): array
+    {
+        return $this->beerReviews()->pluck('beer_id')->unique()->toArray();
+    }
+
+    /**
+     * IDs únicos de estilos de cerveza reseñados por el usuario.
+     */
+    public function reviewedStyleIds(): array
+    {
+        return Beer::whereIn('id', $this->reviewedBeerIds())->pluck('style_id')->unique()->toArray();
+    }
+
+    /**
+     * IDs únicos de cervecerías reseñadas por el usuario.
+     */
+    public function reviewedBreweryIds(): array
+    {
+        return Beer::whereIn('id', $this->reviewedBeerIds())->pluck('brewery_id')->unique()->toArray();
+    }
+
+    /**
+     * IDs únicos de ubicaciones donde ha hecho reviews.
+     */
+    public function reviewedLocationIds(): array
+    {
+        return $this->beerReviews()->whereNotNull('location_id')->pluck('location_id')->unique()->toArray();
+    }
+
+    /**
+     * Países de origen de los estilos de cerveza reseñados.
+     */
+    public function reviewedStyleCountries(): array
+    {
+        return BeerStyle::whereIn('id', $this->reviewedStyleIds())->pluck('origin_country')->unique()->toArray();
     }
 }

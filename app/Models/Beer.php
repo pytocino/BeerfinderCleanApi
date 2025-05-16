@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Beer extends Model
 {
@@ -74,7 +75,9 @@ class Beer extends Model
      */
     public function favoritedBy(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'favorites')
+        // Cambiado a la tabla pivote correcta: favorite_beers
+        return $this->belongsToMany(User::class, 'favorite_beers', 'favorable_id', 'user_id')
+            ->wherePivot('favorable_type', '=', self::class)
             ->withTimestamps();
     }
 
@@ -85,8 +88,8 @@ class Beer extends Model
      */
     public function locations(): BelongsToMany
     {
-        return $this->belongsToMany(Location::class, 'beer_location')
-            ->withPivot('price', 'is_featured', 'is_available')
+        return $this->belongsToMany(Location::class, 'beer_locations')
+            ->withPivot('price', 'is_featured')
             ->withTimestamps();
     }
 
@@ -112,24 +115,6 @@ class Beer extends Model
         }
 
         return asset('images/default-beer.png');
-    }
-
-    /**
-     * Calcula y actualiza la valoración media de esta cerveza.
-     *
-     * @return float|null
-     */
-    public function updateAverageRating(): ?float
-    {
-        $avgRating = $this->reviews()->avg('rating');
-        $count = $this->reviews()->count();
-
-        $this->update([
-            'avg_rating' => $avgRating,
-            'ratings_count' => $count
-        ]);
-
-        return $avgRating;
     }
 
     /**
@@ -195,7 +180,7 @@ class Beer extends Model
      */
     public function isFavoritedBy(int $userId): bool
     {
-        return $this->favoritedBy()->where('user_id', $userId)->exists();
+        return $this->favorites()->where('user_id', $userId)->exists();
     }
 
     /**
@@ -261,18 +246,6 @@ class Beer extends Model
     }
 
     /**
-     * Scope para ordenar por valoración.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $direction
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeOrderByRating($query, string $direction = 'desc')
-    {
-        return $query->orderBy('avg_rating', $direction);
-    }
-
-    /**
      * Obtiene cervezas similares basadas en el mismo estilo.
      *
      * @param int $limit
@@ -284,5 +257,15 @@ class Beer extends Model
             ->where('style_id', $this->style_id)
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * Obtiene los favoritos relacionados con esta cerveza.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function favorites(): MorphMany
+    {
+        return $this->morphMany(Favorite::class, 'favorable');
     }
 }

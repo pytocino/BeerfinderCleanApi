@@ -14,22 +14,22 @@ class PostFactory extends Factory
     {
         $hasPhoto = $this->faker->boolean(70);
         $additionalPhotos = $this->faker->boolean(40)
-            ? $this->faker->images(3, 640, 480, false)
+            ? array_map(fn() => $this->faker->imageUrl(640, 480, 'beer'), range(1, 3))
             : [];
 
         $userTags = $this->faker->boolean(40)
             ? $this->faker->randomElements(
-                User::pluck('id')->toArray() ?: [User::factory()],
+                User::pluck('id')->toArray(),
                 $this->faker->numberBetween(1, 3)
             )
             : [];
 
         return [
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id,
             'content' => $this->faker->paragraph(),
             'photo_url' => $hasPhoto ? $this->faker->imageUrl(640, 480, 'beer') : null,
-            'additional_photos' => $additionalPhotos,
-            'user_tags' => $userTags,
+            'additional_photos' => json_encode($additionalPhotos),
+            'user_tags' => json_encode($userTags),
             'edited' => $this->faker->boolean(10),
         ];
     }

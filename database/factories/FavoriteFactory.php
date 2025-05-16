@@ -12,17 +12,20 @@ class FavoriteFactory extends Factory
 
     public function definition(): array
     {
-        // Puedes ajustar los modelos polimórficos según tus necesidades
         $favorableTypes = [
             'App\\Models\\Beer',
             'App\\Models\\Location',
             'App\\Models\\Post',
         ];
 
+        $favorableType = $this->faker->randomElement($favorableTypes);
+        $favorableModel = new $favorableType;
+        $favorableId = $favorableModel->inRandomOrder()->first()?->id;
+
         return [
-            'user_id' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'favorable_id' => $this->faker->numberBetween(1, 100),
-            'favorable_type' => $this->faker->randomElement($favorableTypes),
+            'user_id' => User::inRandomOrder()->first()?->id,
+            'favorable_id' => $favorableId,
+            'favorable_type' => $favorableType,
         ];
     }
 }

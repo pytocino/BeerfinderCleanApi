@@ -27,7 +27,6 @@ class BeerResource extends JsonResource
             'abv' => $this->abv,
             'ibu' => $this->ibu,
             'image_url' => $this->getImageUrl(),
-            'avg_rating' => $this->avg_rating ?? null,
             'ratings_count' => $this->ratings_count ?? 0,
             'bitterness_level' => $this->getBitternessLevel(),
             'alcohol_level' => $this->getAlcoholLevel(),

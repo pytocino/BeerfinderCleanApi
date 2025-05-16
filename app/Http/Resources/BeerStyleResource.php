@@ -22,12 +22,12 @@ class BeerStyleResource extends JsonResource
             'short_description' => $this->getShortDescription(),
             'origin_country' => $this->origin_country,
             'beers_count' => $this->whenCounted('beers'),
-            'average_rating' => $this->calculateAverageRating(),
             'top_rated_beers' => BeerResource::collection($this->whenLoaded('beers', function () {
                 return $this->getTopRatedBeers();
             })),
             'related_styles' => BeerStyleResource::collection($this->whenLoaded('relatedStyles')),
             'breweries' => BreweryResource::collection($this->whenLoaded('breweries')),
+            'typical_characteristics' => $this->getTypicalCharacteristics(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -31,8 +31,8 @@ return new class extends Migration
             $table->timestamp('resolved_at')->nullable();
             $table->boolean('public')->default(false); // Si el reporte es visible para el usuario reportado
             $table->string('screenshot_url')->nullable(); // Evidencia opcional
-            $table->ipAddress('ip_address')->nullable(); // IP del usuario que reporta
-            $table->string('user_agent')->nullable(); // User agent del navegador
+            $table->text('ip_address')->nullable(); // Cambiado de string() a text()
+            $table->text('user_agent')->nullable(); // Cambiado de string() a text()
             $table->timestamps();
 
             // Índices para mejorar rendimiento

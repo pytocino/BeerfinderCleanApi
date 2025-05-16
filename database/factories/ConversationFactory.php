@@ -12,11 +12,11 @@ class ConversationFactory extends Factory
 
     public function definition(): array
     {
-        $types = [Conversation::TYPE_DIRECT, Conversation::TYPE_GROUP];
+        $types = ['direct', 'group'];
         $type = $this->faker->randomElement($types);
 
         // Simula settings de grupo solo si es grupo
-        $groupSettings = $type === Conversation::TYPE_GROUP
+        $groupSettings = $type === 'group'
             ? [
                 'allow_invite' => $this->faker->boolean(80),
                 'max_members' => $this->faker->numberBetween(5, 100),
@@ -25,13 +25,13 @@ class ConversationFactory extends Factory
             : null;
 
         return [
-            'title' => $type === Conversation::TYPE_GROUP ? $this->faker->words(3, true) : null,
+            'title' => $type === 'group' ? $this->faker->words(3, true) : null,
             'type' => $type,
             'last_message_at' => $this->faker->optional(0.7)->dateTimeThisYear(),
-            'created_by' => fn() => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'image_url' => $type === Conversation::TYPE_GROUP ? $this->faker->optional()->imageUrl(400, 400, 'group') : null,
-            'description' => $type === Conversation::TYPE_GROUP ? $this->faker->optional()->sentence() : null,
-            'is_public' => $type === Conversation::TYPE_GROUP ? $this->faker->boolean(30) : false,
+            'created_by' => User::inRandomOrder()->first()?->id,
+            'image_url' => $type === 'group' ? $this->faker->optional()->imageUrl(400, 400, 'group') : null,
+            'description' => $type === 'group' ? $this->faker->optional()->sentence() : null,
+            'is_public' => $type === 'group' ? $this->faker->boolean(30) : false,
             'group_settings' => $groupSettings,
         ];
     }

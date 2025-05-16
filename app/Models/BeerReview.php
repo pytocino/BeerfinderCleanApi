@@ -11,6 +11,13 @@ class BeerReview extends Model
     use HasFactory;
 
     /**
+     * La tabla asociada al modelo.
+     *
+     * @var string
+     */
+    protected $table = 'beer_reviews';
+
+    /**
      * Los atributos que son asignables masivamente.
      *
      * @var array<int, string>

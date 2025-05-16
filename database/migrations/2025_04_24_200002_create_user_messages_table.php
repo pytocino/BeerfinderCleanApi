@@ -14,7 +14,7 @@ return new class extends Migration
         // Tabla de mensajes mejorada
         Schema::create('user_messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
+            $table->foreignId('conversation_id')->constrained('conversation_users')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // autor del mensaje
             $table->text('content');
             $table->json('attachments')->nullable(); // URLs de imágenes, archivos, etc.
