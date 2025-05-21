@@ -28,7 +28,6 @@ class UserProfileResource extends JsonResource
             'has_social_links' => (bool) $this->hasSocialLinks(),
             'social_links' => $this->getSocialLinks(),
             'allow_mentions' => (bool) $this->allow_mentions,
-            'allows_mentions' => (bool) $this->allowsMentions(),
             'is_me' => $isMe,
             // Solo para el usuario autenticado:
             'birthdate' => $this->when($isMe, $this->birthdate),

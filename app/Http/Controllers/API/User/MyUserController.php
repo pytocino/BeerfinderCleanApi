@@ -20,7 +20,11 @@ class MyUserController extends Controller
     {
         $user = $this->authenticatedUser();
         $user->load(['profile']);
-        $user->loadCount(['followers', 'following', 'posts', 'beerReviews', 'comments']);
+
+        // Contar solo seguidores y seguidos aceptados
+        $followersCount = $user->followers()->wherePivot('status', 'accepted')->count();
+        $followingCount = $user->following()->wherePivot('status', 'accepted')->count();
+        $postsCount = $user->posts()->count();
 
         $distinctLocations = count($user->reviewedLocationIds());
         $distinctBeers = count($user->reviewedBeerIds());
@@ -31,7 +35,7 @@ class MyUserController extends Controller
         $totalFavorites = $user->favoritedBeers()->count();
 
         return response()->json([
-            'data' => new UserResource($user),
+            'data' => [new UserResource($user)],
             'stats' => [
                 'distinct_locations' => $distinctLocations,
                 'distinct_beers' => $distinctBeers,
@@ -39,7 +43,10 @@ class MyUserController extends Controller
                 'distinct_breweries' => $distinctBreweries,
                 'distinct_countries' => $distinctCountries,
                 'total_reviews' => $totalReviews,
-                'total_favorites' => $totalFavorites
+                'total_favorites' => $totalFavorites,
+                'followers' => $followersCount,
+                'following' => $followingCount,
+                'posts' => $postsCount,
             ]
         ]);
     }

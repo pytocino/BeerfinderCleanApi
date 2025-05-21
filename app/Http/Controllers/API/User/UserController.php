@@ -17,21 +17,11 @@ class UserController extends Controller
     use HasUser;
 
     /**
-     * Muestra la información de un usuario específico
-     */
-    public function show(int $id): JsonResponse
-    {
-        $user = User::with(['profile'])->withCount(['followers', 'following', 'posts'])->findOrFail($id);
-        return response()->json(new UserResource($user));
-    }
-
-    /**
      * Obtener perfil de usuario por ID
      */
     public function getUserProfile($id)
     {
         $user = User::with(['profile'])
-            ->withCount(['followers', 'following', 'posts', 'beerReviews', 'comments'])
             ->findOrFail($id);
 
         $authUser = $this->authenticatedUser();
@@ -59,6 +49,11 @@ class UserController extends Controller
         $totalReviews = $user->beerReviews()->count();
         $totalFavorites = $user->favoritedBeers()->count();
 
+        // Contar solo seguidores y seguidos aceptados
+        $followersCount = $user->followers()->wherePivot('status', 'accepted')->count();
+        $followingCount = $user->following()->wherePivot('status', 'accepted')->count();
+        $postsCount = $user->posts()->count();
+
         return response()->json([
             'data' => [new UserResource($user)],
             'stats' => [
@@ -68,7 +63,10 @@ class UserController extends Controller
                 'distinct_breweries' => $distinctBreweries,
                 'distinct_countries' => $distinctCountries,
                 'total_reviews' => $totalReviews,
-                'total_favorites' => $totalFavorites
+                'total_favorites' => $totalFavorites,
+                'followers' => $followersCount,
+                'following' => $followingCount,
+                'posts' => $postsCount,
             ]
         ]);
     }
@@ -119,29 +117,24 @@ class UserController extends Controller
     }
 
     /**
-     * Obtiene los seguidores de un usuario específico (followers)
+     * Devuelve una lista simple de seguidores de un usuario (solo id, name, username, profile_picture)
      */
-    public function getFollowers(Request $request): JsonResponse
+    public function getUserFollowers(Request $request, $id): JsonResponse
     {
-        $userId = $request->route('id');
-        $user = User::with('profile')->findOrFail($userId);
+        $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
 
-        // Comprobar si el perfil es privado
+        // Comprobar privacidad
         if ($user->profile && $user->profile->private_profile) {
-            // Siempre permitir al dueño del perfil ver sus seguidores
-            $isSelf = $authUser && $authUser->id === (int)$userId;
-
+            $isSelf = $authUser && $authUser->id === (int)$id;
             if (!$isSelf) {
-                // Verificar si el usuario autenticado es un seguidor aceptado
                 $isAcceptedFollower = false;
                 if ($authUser) {
-                    $isAcceptedFollower = Follow::where('follower_id', '=', $authUser->id)
-                        ->where('following_id', '=', $userId)
-                        ->where('status', '=', 'accepted')
+                    $isAcceptedFollower = $user->followers()
+                        ->where('users.id', $authUser->id)
+                        ->wherePivot('status', 'accepted')
                         ->exists();
                 }
-
                 if (!$isAcceptedFollower) {
                     return response()->json([
                         'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
@@ -150,39 +143,33 @@ class UserController extends Controller
             }
         }
 
-        // Solo mostrar seguidores con estado 'accepted'
         $followers = $user->followers()
-            ->wherePivot('status', '=', 'accepted')
+            ->wherePivot('status', 'accepted')
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
-            ->paginate(15);
+            ->get();
 
         return response()->json($followers);
     }
 
     /**
-     * Obtiene los usuarios que sigue un usuario específico (following)
+     * Devuelve una lista simple de usuarios seguidos por un usuario (solo id, name, username, profile_picture)
      */
-    public function getFollowing(Request $request): JsonResponse
+    public function getUserFollowing(Request $request, $id): JsonResponse
     {
-        $userId = $request->route('id');
-        $user = User::with('profile')->findOrFail($userId);
+        $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
 
-        // Comprobar si el perfil es privado
+        // Comprobar privacidad
         if ($user->profile && $user->profile->private_profile) {
-            // Siempre permitir al dueño del perfil ver a quién sigue
-            $isSelf = $authUser && $authUser->id === (int)$userId;
-
+            $isSelf = $authUser && $authUser->id === (int)$id;
             if (!$isSelf) {
-                // Verificar si el usuario autenticado es un seguidor aceptado
                 $isAcceptedFollower = false;
                 if ($authUser) {
-                    $isAcceptedFollower = Follow::where('follower_id', '=', $authUser->id)
-                        ->where('following_id', '=', $userId)
-                        ->where('status', '=', 'accepted')
+                    $isAcceptedFollower = $user->followers()
+                        ->where('users.id', $authUser->id)
+                        ->wherePivot('status', 'accepted')
                         ->exists();
                 }
-
                 if (!$isAcceptedFollower) {
                     return response()->json([
                         'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
@@ -191,11 +178,10 @@ class UserController extends Controller
             }
         }
 
-        // Solo mostrar seguidos con estado 'accepted'
         $following = $user->following()
-            ->wherePivot('status', '=', 'accepted')
+            ->wherePivot('status', 'accepted')
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
-            ->paginate(15);
+            ->get();
 
         return response()->json($following);
     }

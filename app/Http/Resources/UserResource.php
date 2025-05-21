@@ -18,9 +18,9 @@ class UserResource extends JsonResource
      */
     public function toArray($request)
     {
-        $isMe = $this->belongsToAuthenticatedUser();
-        $isPrivate = (bool) $this->private_profile;
         $authUser = request()?->user();
+        $isMe = $authUser && $authUser->id === $this->id;
+        $isPrivate = (bool) $this->private_profile;
         $isFollowed = false;
         if ($authUser && !$isMe && $isPrivate) {
             $isFollowed = $this->followers()
@@ -49,14 +49,9 @@ class UserResource extends JsonResource
             'profile' => $this->whenLoaded('profile', function () use ($isMe) {
                 return new UserProfileResource($this->profile);
             }),
-            'followers_count' => (int) ($this->followers_count ?? 0),
-            'following_count' => (int) ($this->following_count ?? 0),
-            'posts_count' => (int) ($this->posts_count ?? 0),
-            'beer_reviews_count' => (int) ($this->beer_reviews_count ?? 0),
             'is_me' => $isMe,
             // Solo para el usuario autenticado:
             'email' => $this->when($isMe, $this->email),
-            'is_admin' => $this->when($isMe, $this->is_admin),
             'created_at' => $this->when($isMe, $this->created_at),
             'updated_at' => $this->when($isMe, $this->updated_at),
         ];
