@@ -32,22 +32,32 @@ class GoogleLoginController extends Controller
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'username' => $username,
-                    'password' => Hash::make(Str::random(24)),
+                    'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                 ]);
             }
 
             $token = $user->createToken('google-auth-token')->plainTextToken;
 
-            // Cambia esto por tu esquema personalizado
-            $appScheme = env('APP_FRONTEND_URL_SCHEME', 'mybeerapp');
-            $successRedirectUrl = "{$appScheme}://auth/google/callback?status=success&token={$token}";
+            // Usar el redirect_uri recibido si existe, si no el esquema por defecto
+            $redirectUri = request()->input('redirect_uri');
+            if ($redirectUri) {
+                $successRedirectUrl = "{$redirectUri}?status=success&token={$token}";
+            } else {
+                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfindernative');
+                $successRedirectUrl = "{$appScheme}://auth/google/callback?status=success&token={$token}";
+            }
 
             return redirect()->away($successRedirectUrl);
         } catch (\Exception $e) {
             Log::error('Google OAuth callback error: ' . $e->getMessage(), ['exception' => $e]);
-            $appScheme = env('APP_FRONTEND_URL_SCHEME', 'mybeerapp');
-            $errorRedirectUrl = "{$appScheme}://auth/google/callback?status=error&message=" . urlencode($e->getMessage());
+            $redirectUri = request()->input('redirect_uri');
+            if ($redirectUri) {
+                $errorRedirectUrl = "{$redirectUri}?status=error&message=" . urlencode($e->getMessage());
+            } else {
+                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfindernative');
+                $errorRedirectUrl = "{$appScheme}://auth/google/callback?status=error&message=" . urlencode($e->getMessage());
+            }
             return redirect()->away($errorRedirectUrl);
         }
     }
