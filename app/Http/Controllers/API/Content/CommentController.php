@@ -132,4 +132,24 @@ class CommentController extends Controller
 
         return response()->json(['message' => 'Comentario eliminado correctamente.']);
     }
+
+    /**
+     * Devuelve todos los comentarios de un post específico como recursos CommentResource.
+     */
+    public function getPostComments(Request $request, $id): JsonResponse
+    {
+        $post = Post::find($id);
+
+        if (!$post) {
+            return response()->json(['message' => 'Post no encontrado.'], 404);
+        }
+
+        $comments = Comment::where('post_id', '=', $post->id)
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(CommentResource::collection($comments));
+    }
 }

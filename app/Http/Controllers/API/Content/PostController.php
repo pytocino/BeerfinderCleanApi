@@ -72,29 +72,24 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'content' => 'required|string|max:2000',
-            'beer_id' => 'nullable|exists:beers,id',
-            'location_id' => 'nullable|exists:locations,id',
-            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB
-            'additional_photos' => 'nullable|array|max:5', // Máximo 5 fotos adicionales
+            'content' => 'nullable|string|max:2000',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'additional_photos' => 'nullable|array|max:5',
             'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'user_tags' => 'nullable|array',
             'user_tags.*' => 'exists:users,id'
-            // Campos de BeerReview que podrían venir si el post está asociado a una review
-            // 'rating' => 'nullable|integer|min:1|max:5',
-            // 'serving_type' => 'nullable|string|in:bottle,can,draft,growler,taster,crowler',
-            // 'purchase_price' => 'nullable|numeric|min:0',
-            // 'purchase_currency' => 'nullable|string|size:3',
         ]);
 
         $data = $validated;
-        $data['user_id'] = $this->authenticatedUser()->id; // Usar el trait
+        $data['user_id'] = $this->authenticatedUser()->id;
 
+        // Procesar foto principal
         if ($request->hasFile('photo_url')) {
             $photoPath = $request->file('photo_url')->store('posts/main', 'public');
             $data['photo_url'] = Storage::url($photoPath);
         }
 
+        // Procesar fotos adicionales
         if ($request->hasFile('additional_photos')) {
             $additionalPhotosPaths = [];
             foreach ($request->file('additional_photos') as $photo) {
@@ -102,17 +97,29 @@ class PostController extends Controller
                 $additionalPhotosPaths[] = Storage::url($path);
             }
             $data['additional_photos'] = $additionalPhotosPaths;
+        } else if (isset($data['additional_photos'])) {
+            // Si viene el campo pero vacío, guardar como array vacío
+            $data['additional_photos'] = [];
+        }
+
+        // Si user_tags viene vacío, guardar como array vacío
+        if (isset($data['user_tags']) && empty($data['user_tags'])) {
+            $data['user_tags'] = [];
         }
 
         try {
             $post = Post::create($data);
-            $post->load(['user.profile', 'user', 'beer', 'likes', 'comments.user', 'location']);
+            $post->load(['user.profile', 'user', 'likes', 'comments.user']);
             $post->loadCount(['likes', 'comments']);
-            return new PostResource($post);
+            return response()->json([
+                'success' => true,
+                'message' => 'Post creado correctamente',
+            ], 201);
         } catch (\Exception $e) {
             Log::error('Error al crear post: ' . $e->getMessage(), ['exception' => $e]);
             return response()->json([
-                'message' => 'Error al crear el post.',
+                'success' => false,
+                'message' => 'No se pudo crear el post. Intenta de nuevo.',
                 'errors' => [$e->getMessage()]
             ], 500);
         }
@@ -185,5 +192,51 @@ class PostController extends Controller
                 'errors' => [$e->getMessage()]
             ], 500);
         }
+    }
+
+    /**
+     * Crear un post a partir de una review existente
+     */
+    public function createPostFromReview($id, Request $request)
+    {
+        $review = \App\Models\BeerReview::findOrFail($id);
+        $authUser = $this->authenticatedUser();
+        if ($review->user_id !== $authUser->id) {
+            return response()->json(['message' => 'No tienes permiso para crear un post de esta review.'], 403);
+        }
+        if ($review->post_id) {
+            return response()->json(['message' => 'Ya existe un post asociado a esta review.'], 409);
+        }
+        $validated = $request->validate([
+            'content' => 'required|string|max:2000',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'additional_photos' => 'nullable|array|max:5',
+            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'user_tags' => 'nullable|array',
+            'user_tags.*' => 'exists:users,id'
+        ]);
+        $data = $validated;
+        $data['user_id'] = $authUser->id;
+        $data['beer_id'] = $review->beer_id;
+        $data['location_id'] = $review->location_id;
+        if ($request->hasFile('photo_url')) {
+            $photoPath = $request->file('photo_url')->store('posts/main', 'public');
+            $data['photo_url'] = \Illuminate\Support\Facades\Storage::url($photoPath);
+        }
+        if ($request->hasFile('additional_photos')) {
+            $additionalPhotosPaths = [];
+            foreach ($request->file('additional_photos') as $photo) {
+                $path = $photo->store('posts/additional', 'public');
+                $additionalPhotosPaths[] = \Illuminate\Support\Facades\Storage::url($path);
+            }
+            $data['additional_photos'] = $additionalPhotosPaths;
+        }
+        $post = $review->createAssociatedPost($data);
+        if (!$post) {
+            return response()->json(['message' => 'No se pudo crear el post.'], 500);
+        }
+        $post->load(['user.profile', 'user', 'beer', 'likes', 'comments.user', 'location', 'beerReview']);
+        $post->loadCount(['likes', 'comments']);
+        return new \App\Http\Resources\PostResource($post);
     }
 }

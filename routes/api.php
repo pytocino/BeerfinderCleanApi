@@ -2,25 +2,17 @@
 // filepath: /home/pedro/Projects/BeerfinderCleanApi/routes/api.php
 
 use App\Http\Controllers\API\Auth\AuthController;
-use App\Http\Controllers\API\GoogleLoginController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\User\MyUserController;
 use App\Http\Controllers\API\User\UserController;
-use App\Http\Controllers\API\User\UserStatsController;
-use App\Http\Controllers\API\User\UserNotificationController;
-use App\Http\Controllers\API\Social\SocialController;
 use App\Http\Controllers\API\Social\ConversationController;
-use App\Http\Controllers\API\Social\FeedController;
 use App\Http\Controllers\API\Content\PostController;
 use App\Http\Controllers\API\Content\CommentController;
-use App\Http\Controllers\API\Content\LikeController;
 use App\Http\Controllers\API\Beer\BeerController;
 use App\Http\Controllers\API\Beer\BeerStyleController;
 use App\Http\Controllers\API\Location\LocationController;
-use App\Http\Controllers\API\Report\ReportController;
 use App\Http\Controllers\API\Search\SearchController;
 use App\Http\Controllers\API\Brewery\BreweryController;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Route;
 
 // Estado de la API
@@ -98,6 +90,19 @@ Route::prefix('v1')->group(function () {
 
             // Comentarios
             Route::get('/{id}/comments', [CommentController::class, 'getPostComments']);
+
+            // Crear un post
+            Route::post('/', [PostController::class, 'store']);
+        });
+
+        // Beer Reviews
+        Route::prefix('beer-reviews')->group(function () {
+            // Crear una review
+            Route::post('/', [\App\Http\Controllers\API\Beer\BeerReviewController::class, 'createBeerReview']);
+            // Obtener una review por ID
+            Route::get('/{id}', [\App\Http\Controllers\API\Beer\BeerReviewController::class, 'getBeerReviewById']);
+            // Crear un post a partir de una review
+            Route::post('/{id}/post', [PostController::class, 'createPostFromReview']);
         });
 
         // Búsqueda global
