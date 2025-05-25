@@ -41,6 +41,6 @@ return [
         'auth_uri' => env('GOOGLE_AUTH_URI'),
         'token_uri' => env('GOOGLE_TOKEN_URI'),
         'auth_provider_x509_cert_url' => env('GOOGLE_AUTH_PROVIDER_X509_CERT_URL'),
-        'redirect' => env('GOOGLE_REDIRECT_URL'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 ];
