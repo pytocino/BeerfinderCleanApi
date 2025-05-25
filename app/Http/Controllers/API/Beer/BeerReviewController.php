@@ -20,7 +20,7 @@ class BeerReviewController extends Controller
             'review_text' => 'nullable|string',
             'serving_type' => 'nullable|string',
             'purchase_price' => 'nullable|numeric',
-            'purchase_currency' => 'nullable|string',
+            'purchase_currency' => 'nullable|string|size:3',
             'is_public' => 'boolean',
         ]);
 

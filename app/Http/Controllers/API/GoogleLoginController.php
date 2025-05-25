@@ -44,7 +44,7 @@ class GoogleLoginController extends Controller
             if ($redirectUri) {
                 $successRedirectUrl = "{$redirectUri}?status=success&token={$token}";
             } else {
-                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfindernative');
+                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfinder');
                 $successRedirectUrl = "{$appScheme}://auth/google/callback?status=success&token={$token}";
             }
 
@@ -55,7 +55,7 @@ class GoogleLoginController extends Controller
             if ($redirectUri) {
                 $errorRedirectUrl = "{$redirectUri}?status=error&message=" . urlencode($e->getMessage());
             } else {
-                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfindernative');
+                $appScheme = env('APP_FRONTEND_URL_SCHEME', 'beerfinder');
                 $errorRedirectUrl = "{$appScheme}://auth/google/callback?status=error&message=" . urlencode($e->getMessage());
             }
             return redirect()->away($errorRedirectUrl);

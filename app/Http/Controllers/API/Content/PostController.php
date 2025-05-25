@@ -106,6 +106,20 @@ class PostController extends Controller
         if (isset($data['user_tags']) && empty($data['user_tags'])) {
             $data['user_tags'] = [];
         }
+        // Convertir user_tags de IDs a objetos con ID y username
+        elseif (isset($data['user_tags']) && !empty($data['user_tags'])) {
+            $taggedUsers = User::whereIn('id', $data['user_tags'])->get(['id', 'username']);
+            $formattedTags = $taggedUsers->map(function($user) {
+                return [
+                    'id' => (int)$user->getAttribute('id'), // Acceder a través de getAttribute
+                    'username' => (string)$user->getAttribute('username') // Acceder a través de getAttribute
+                ];
+            })->toArray();
+            // Verificar que el JSON sea válido
+            $data['user_tags'] = json_decode(json_encode($formattedTags)) ? $formattedTags : [];
+            // Log para debugging
+            Log::info('Tags formateados: ' . json_encode($data['user_tags']));
+        }
 
         try {
             $post = Post::create($data);
@@ -145,6 +159,25 @@ class PostController extends Controller
 
         $data = $validated;
         $data['edited'] = true; // Marcar como editado
+
+        // Si se están actualizando las etiquetas de usuario, formatearlas correctamente
+        if (isset($data['user_tags'])) {
+            if (empty($data['user_tags'])) {
+                $data['user_tags'] = [];
+            } else {
+                $taggedUsers = User::whereIn('id', $data['user_tags'])->get(['id', 'username']);
+                $formattedTags = $taggedUsers->map(function($user) {
+                    return [
+                        'id' => (int)$user->getAttribute('id'), // Acceder a través de getAttribute
+                        'username' => (string)$user->getAttribute('username') // Acceder a través de getAttribute
+                    ];
+                })->toArray();
+                // Verificar que el JSON sea válido
+                $data['user_tags'] = json_decode(json_encode($formattedTags)) ? $formattedTags : [];
+                // Log para debugging
+                Log::info('Tags actualizados: ' . json_encode($data['user_tags']));
+            }
+        }
 
         try {
             $post->update($data);
@@ -219,15 +252,33 @@ class PostController extends Controller
         $data['user_id'] = $authUser->id;
         $data['beer_id'] = $review->beer_id;
         $data['location_id'] = $review->location_id;
+        
+        // Procesar etiquetas de usuario
+        if (isset($data['user_tags']) && !empty($data['user_tags'])) {
+            $taggedUsers = User::whereIn('id', $data['user_tags'])->get(['id', 'username']);
+            $formattedTags = $taggedUsers->map(function($user) {
+                return [
+                    'id' => (int)$user->getAttribute('id'), // Acceder a través de getAttribute
+                    'username' => (string)$user->getAttribute('username') // Acceder a través de getAttribute
+                ];
+            })->toArray();
+            // Verificar que el JSON sea válido
+            $data['user_tags'] = json_decode(json_encode($formattedTags)) ? $formattedTags : [];
+            // Log para debugging
+            Log::info('Tags en review: ' . json_encode($data['user_tags']));
+        } elseif (isset($data['user_tags'])) {
+            $data['user_tags'] = [];
+        }
+        
         if ($request->hasFile('photo_url')) {
             $photoPath = $request->file('photo_url')->store('posts/main', 'public');
-            $data['photo_url'] = \Illuminate\Support\Facades\Storage::url($photoPath);
+            $data['photo_url'] = Storage::url($photoPath);
         }
         if ($request->hasFile('additional_photos')) {
             $additionalPhotosPaths = [];
             foreach ($request->file('additional_photos') as $photo) {
                 $path = $photo->store('posts/additional', 'public');
-                $additionalPhotosPaths[] = \Illuminate\Support\Facades\Storage::url($path);
+                $additionalPhotosPaths[] = Storage::url($path);
             }
             $data['additional_photos'] = $additionalPhotosPaths;
         }
@@ -237,6 +288,6 @@ class PostController extends Controller
         }
         $post->load(['user.profile', 'user', 'beer', 'likes', 'comments.user', 'location', 'beerReview']);
         $post->loadCount(['likes', 'comments']);
-        return new \App\Http\Resources\PostResource($post);
+        return new PostResource($post);
     }
 }
