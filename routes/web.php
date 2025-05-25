@@ -8,3 +8,11 @@ Route::prefix('api/v1')->group(function () {
     Route::get('/google/redirect', [GoogleLoginController::class, 'redirectToGoogle'])->name('google.redirect');
     Route::get('/google/callback', [GoogleLoginController::class, 'handleGoogleCallback'])->name('google.callback');
 });
+
+Route::get('/privacy', function () {
+    return response()->file(public_path('privacy.html'));
+});
+
+Route::get('/terms', function () {
+    return response()->file(public_path('terms.html'));
+});
