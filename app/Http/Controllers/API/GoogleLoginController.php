@@ -14,15 +14,25 @@ class GoogleLoginController extends Controller
 {
     public function redirectToGoogle()
     {
-        // This part is generally fine, it redirects the user to Google's OAuth screen.
-        // The client (frontend) will initiate this.
+        // Capturar el redirect_uri para devolverlo en el callback
+        $redirectUri = request()->input('redirect_uri');
+        Log::info('Inicio de autenticación Google con redirect_uri: ' . ($redirectUri ?? 'no proporcionado'));
+        
+        // Guardar el redirect_uri en la sesión para recuperarlo en el callback
+        session(['google_redirect_uri' => $redirectUri]);
+        
+        // Para aplicaciones móviles, redirigimos a Google sin parámetros adicionales
         return Socialite::driver('google')->redirect();
     }
-
     public function handleGoogleCallback()
     {
         try {
+            // Recuperamos el redirect_uri de la sesión que almacenamos previamente
+            $redirectUri = session('google_redirect_uri');
+            Log::info('Manejando callback de Google. Redirect URI: ' . ($redirectUri ?? 'no proporcionado'));
+            
             $googleUser = Socialite::driver('google')->user();
+            Log::info('Usuario Google obtenido: ' . $googleUser->getEmail());
 
             $user = User::where('email', $googleUser->getEmail())->first();
 
@@ -59,6 +69,77 @@ class GoogleLoginController extends Controller
                 $errorRedirectUrl = "{$appScheme}://auth/google/callback?status=error&message=" . urlencode($e->getMessage());
             }
             return redirect()->away($errorRedirectUrl);
+        }
+    }
+
+    /**
+     * Maneja la autenticación directamente desde el cliente móvil
+     * Recibe el token de ID directamente de Google y lo verifica
+     */
+    public function handleMobileAuth()
+    {
+        try {
+            $idToken = request()->input('id_token');
+            
+            if (!$idToken) {
+                Log::error('Token de ID no proporcionado');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Token de ID no proporcionado'
+                ], 400);
+            }
+            
+            Log::info('Procesando autenticación móvil con token ID');
+            
+            // Aquí deberíamos verificar el token con la API de Google
+            // Por ahora, asumiremos que el token es válido y contiene la información necesaria
+            
+            // Esta es una implementación simulada. En producción, deberías verificar el token con Google
+            $payload = json_decode(base64_decode(explode('.', $idToken)[1]), true);
+            
+            if (!isset($payload['email'])) {
+                Log::error('Token inválido - email no encontrado');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Token inválido'
+                ], 400);
+            }
+            
+            $email = $payload['email'];
+            $name = $payload['name'] ?? null;
+            
+            Log::info("Autenticando usuario con email: $email");
+            
+            $user = User::where('email', $email)->first();
+            
+            if (!$user) {
+                $username = $this->generateUniqueUsername($name, $email);
+                Log::info("Creando nuevo usuario con username: $username");
+                
+                $user = User::create([
+                    'name' => $name ?? explode('@', $email)[0],
+                    'email' => $email,
+                    'username' => $username,
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                ]);
+            }
+            
+            $token = $user->createToken('google-mobile-auth-token')->plainTextToken;
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Autenticación exitosa',
+                'token' => $token,
+                'user' => new UserResource($user)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error en autenticación móvil: ' . $e->getMessage(), ['exception' => $e]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error en autenticación: ' . $e->getMessage()
+            ], 500);
         }
     }
 

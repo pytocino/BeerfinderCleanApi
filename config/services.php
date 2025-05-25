@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -38,7 +37,10 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'project_id' => env('GOOGLE_PROJECT_ID'),
+        'auth_uri' => env('GOOGLE_AUTH_URI'),
+        'token_uri' => env('GOOGLE_TOKEN_URI'),
+        'auth_provider_x509_cert_url' => env('GOOGLE_AUTH_PROVIDER_X509_CERT_URL'),
         'redirect' => env('GOOGLE_REDIRECT_URL'),
-    ]
-
+    ],
 ];
