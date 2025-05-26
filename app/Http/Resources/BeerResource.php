@@ -42,6 +42,9 @@ class BeerResource extends JsonResource
             'reviews_count' => $this->whenCounted('reviews'),
             'favorited_by_count' => $this->whenCounted('favoritedBy'),
             'locations' => LocationResource::collection($this->whenLoaded('locations')),
+            // Información para búsquedas por proximidad
+            'distance_km' => $this->when(isset($this->distance_km), $this->distance_km),
+            'location_info' => $this->when(isset($this->location_info), $this->location_info),
         ];
     }
 }

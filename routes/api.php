@@ -11,6 +11,7 @@ use App\Http\Controllers\API\Content\CommentController;
 use App\Http\Controllers\API\Beer\BeerController;
 use App\Http\Controllers\API\Beer\BeerStyleController;
 use App\Http\Controllers\API\Location\LocationController;
+use App\Http\Controllers\API\Location\NearbyController;
 use App\Http\Controllers\API\Search\SearchController;
 use App\Http\Controllers\API\Brewery\BreweryController;
 use Illuminate\Support\Facades\Route;
@@ -129,6 +130,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [LocationController::class, 'getLocations']);
             // Ubicaciones por ID
             Route::get('/{id}', [LocationController::class, 'getLocationById']);
+        });
+
+        // Rutas para ubicaciones cercanas (requieren autenticación)
+        Route::prefix('nearby')->group(function () {
+            // Cervezas cercanas basadas en ubicación del usuario
+            Route::post('/beers', [NearbyController::class, 'getNearbyBeers']);
+            // Ubicaciones cercanas (bares, restaurantes, etc.)
+            Route::post('/locations', [NearbyController::class, 'getNearbyLocations']);
+            // Estadísticas de proximidad
+            Route::post('/stats', [NearbyController::class, 'getNearbyStats']);
         });
 
         Route::prefix('breweries')->group(function () {

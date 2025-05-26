@@ -53,6 +53,8 @@ class LocationResource extends JsonResource
             'beers_count' => $this->whenCounted('beers'),
             'beer_reviews_count' => $this->whenCounted('beerReviews'),
             'posts_count' => $this->whenCounted('posts'),
+            // Información de distancia cuando está disponible (para búsquedas por proximidad)
+            'distance_km' => $this->when(isset($this->distance_km), $this->distance_km),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
