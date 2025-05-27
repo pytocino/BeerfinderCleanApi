@@ -8,6 +8,7 @@ use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\Social\ConversationController;
 use App\Http\Controllers\API\Content\PostController;
 use App\Http\Controllers\API\Content\CommentController;
+use App\Http\Controllers\API\Content\LikeController;
 use App\Http\Controllers\API\Beer\BeerController;
 use App\Http\Controllers\API\Beer\BeerStyleController;
 use App\Http\Controllers\API\Location\LocationController;
@@ -91,6 +92,10 @@ Route::prefix('v1')->group(function () {
 
             // Comentarios
             Route::get('/{id}/comments', [CommentController::class, 'getPostComments']);
+
+            // Likes de posts
+            Route::get('/{id}/likes', [LikeController::class, 'getPostLikes']);
+            Route::post('/{id}/toggle-like', [LikeController::class, 'togglePostLike']);
 
             // Crear un post
             Route::post('/', [PostController::class, 'store']);
