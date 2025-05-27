@@ -37,7 +37,7 @@ class LocationResource extends JsonResource
             'country' => $this->country,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'image_url' => $this->getImageUrl(),
+            'image_url' => $this->image_url,
             'cover_photo_url' => $this->getCoverPhotoUrl(),
             'website' => $this->website,
             'email' => $this->email,

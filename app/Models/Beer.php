@@ -104,20 +104,6 @@ class Beer extends Model
     }
 
     /**
-     * Retorna la URL de la imagen, o una imagen por defecto si no existe.
-     *
-     * @return string
-     */
-    public function getImageUrl(): string
-    {
-        if ($this->image_url) {
-            return $this->image_url;
-        }
-
-        return asset('images/default-beer.png');
-    }
-
-    /**
      * Devuelve la intensidad del amargor en formato texto.
      *
      * @return string

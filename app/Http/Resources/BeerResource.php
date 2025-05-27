@@ -26,7 +26,7 @@ class BeerResource extends JsonResource
             'style' => new BeerStyleResource($this->whenLoaded('style')),
             'abv' => $this->abv,
             'ibu' => $this->ibu,
-            'image_url' => $this->getImageUrl(),
+            'image_url' => $this->image_url,
             'ratings_count' => $this->ratings_count ?? 0,
             'bitterness_level' => $this->getBitternessLevel(),
             'alcohol_level' => $this->getAlcoholLevel(),

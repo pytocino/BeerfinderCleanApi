@@ -122,20 +122,6 @@ class Location extends Model
     }
 
     /**
-     * Obtiene la URL de la imagen principal o una imagen por defecto.
-     *
-     * @return string
-     */
-    public function getImageUrl(): string
-    {
-        if ($this->image_url) {
-            return $this->image_url;
-        }
-
-        return asset('images/default-location.png');
-    }
-
-    /**
      * Obtiene la URL de la imagen de portada o una imagen por defecto.
      *
      * @return string
