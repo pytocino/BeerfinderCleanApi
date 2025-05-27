@@ -64,9 +64,15 @@ class LocationController extends Controller
     /**
      * Obtener ubicación por ID
      */
-    public function getLocationById($id)
+    public function getLocationById(Request $request, $id)
     {
         $location = Location::with(['beers'])->findOrFail($id);
+
+        if ($request->has(['latitude', 'longitude'])) {
+            $distance = $location->distanceTo($request->latitude, $request->longitude);
+            $location->distance_km = $distance !== null ? round($distance, 2) : null;
+        }
+
         return new LocationResource($location);
     }
 }

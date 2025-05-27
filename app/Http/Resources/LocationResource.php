@@ -50,8 +50,10 @@ class LocationResource extends JsonResource
             'featured_beers' => BeerResource::collection($this->whenLoaded('beers', function () {
                 return $this->getFeaturedBeers();
             })),
-            'beers_count' => $this->whenCounted('beers'),
             'beers' => BeerResource::collection($this->whenLoaded('beers')),
+            'beers_count' => $this->whenCounted('beers'),
+            // Información de distancia cuando está disponible (para búsquedas por proximidad)
+            'distance_km' => $this->when(isset($this->distance_km), $this->distance_km),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
