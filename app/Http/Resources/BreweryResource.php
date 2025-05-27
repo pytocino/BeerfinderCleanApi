@@ -23,10 +23,7 @@ class BreweryResource extends JsonResource
             'city' => $this->city,
             'image_url' => $this->image_url,
             'website' => $this->website,
-            'beers_count' => $this->whenCounted('beers'),
-            'top_rated_beers' => BeerResource::collection($this->whenLoaded('beers', function () {
-                return $this->getTopRatedBeers();
-            })),
+            'beers' => BeerResource::collection($this->whenLoaded('beers')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
