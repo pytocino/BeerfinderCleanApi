@@ -66,9 +66,7 @@ class LocationController extends Controller
      */
     public function getLocationById($id)
     {
-        $location = Location::with(['beers', 'beerReviews'])
-            ->withCount(['beers', 'beerReviews'])
-            ->findOrFail($id);
-        return response()->json(new LocationResource($location));
+        $location = Location::with(['beers'])->findOrFail($id);
+        return new LocationResource($location);
     }
 }

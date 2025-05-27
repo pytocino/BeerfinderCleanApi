@@ -122,20 +122,6 @@ class Location extends Model
     }
 
     /**
-     * Obtiene la URL de la imagen de portada o una imagen por defecto.
-     *
-     * @return string
-     */
-    public function getCoverPhotoUrl(): string
-    {
-        if ($this->cover_photo) {
-            return $this->cover_photo;
-        }
-
-        return asset('images/default-cover.png');
-    }
-
-    /**
      * Obtiene la dirección completa, incluyendo ciudad y país.
      *
      * @return string
