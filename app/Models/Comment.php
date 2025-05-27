@@ -7,23 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Comment extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * La tabla asociada con el modelo.
-     *
-     * @var string
-     */
     protected $table = 'user_comments';
 
-    /**
-     * Los atributos que son asignables masivamente.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'post_id',
@@ -35,11 +26,6 @@ class Comment extends Model
         'likes_count',
     ];
 
-    /**
-     * Los atributos que deben ser convertidos a tipos nativos.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'edited' => 'boolean',
         'pinned' => 'boolean',
@@ -163,110 +149,78 @@ class Comment extends Model
         return $this->update(['pinned' => $pinned]);
     }
 
-    /**
-     * Incrementa el contador de likes.
-     *
-     * @return bool
-     */
-    public function incrementLikes(): bool
-    {
-        return $this->increment('likes_count');
-    }
+    // =====================================================
+    // RELACIONES LIKES
+    // =====================================================
 
     /**
-     * Decrementa el contador de likes.
+     * Obtiene los "me gusta" dados a este comentario.
      *
-     * @return bool
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
-    public function decrementLikes(): bool
+    public function likes(): MorphMany
     {
-        if ($this->likes_count > 0) {
-            return $this->decrement('likes_count');
-        }
-        return false;
+        return $this->morphMany(Like::class, 'likeable');
     }
 
-    /**
-     * Scope para filtrar comentarios de nivel superior (no respuestas).
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeTopLevel($query)
-    {
-        return $query->whereNull('parent_id');
-    }
+    // =====================================================
+    // MÉTODOS DE LIKES
+    // =====================================================
 
     /**
-     * Scope para filtrar comentarios fijados.
+     * Verifica si el usuario ha dado "me gusta" a este comentario.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopePinned($query)
-    {
-        return $query->where('pinned', true);
-    }
-
-    /**
-     * Scope para filtrar por post.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $postId
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeForPost($query, int $postId)
-    {
-        return $query->where('post_id', $postId);
-    }
-
-    /**
-     * Scope para filtrar por usuario.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
      * @param int $userId
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return bool
      */
-    public function scopeByUser($query, int $userId)
+    public function isLikedByUser(int $userId): bool
     {
-        return $query->where('user_id', $userId);
+        return $this->likes()->where('user_id', $userId)->exists();
     }
 
     /**
-     * Scope para ordenar por cantidad de likes.
+     * Alterna el estado de like para este comentario (usar modelo Like).
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param int $userId
+     * @return bool Verdadero si se añadió like, falso si se eliminó
      */
-    public function scopeOrderByLikes($query)
+    public function toggleLike(int $userId): bool
     {
-        return $query->orderBy('likes_count', 'desc');
+        $wasAdded = Like::toggle($userId, $this);
+        
+        // Actualizar contador de likes
+        $this->updateLikesCount();
+        
+        return $wasAdded;
     }
 
     /**
-     * Scope para filtrar respuestas a un comentario específico.
+     * Obtiene el conteo actualizado de likes para este comentario.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $parentId
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return int
      */
-    public function scopeRepliesTo($query, int $parentId)
+    public function getLikesCount(): int
     {
-        return $query->where('parent_id', $parentId);
+        return Like::countFor($this);
     }
 
     /**
-     * Obtiene el texto truncado para vista previa.
+     * Actualiza el contador de likes en el modelo.
      *
-     * @param int $length
-     * @return string
+     * @return bool
      */
-    public function getExcerpt(int $length = 100): string
+    public function updateLikesCount(): bool
     {
-        if (strlen($this->content) <= $length) {
-            return $this->content;
-        }
+        return $this->update(['likes_count' => $this->getLikesCount()]);
+    }
 
-        return substr($this->content, 0, $length) . '...';
+    /**
+     * Obtiene los usuarios que dieron like a este comentario.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getUsersWhoLiked()
+    {
+        return Like::getUsersWhoLiked($this);
     }
 }

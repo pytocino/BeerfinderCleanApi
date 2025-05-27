@@ -28,6 +28,14 @@ class CommentResource extends JsonResource
             'is_reply' => $this->isReply(),
             'has_replies' => $this->hasReplies(),
             'replies_count' => $this->getRepliesCount(),
+            'is_edited' => $this->hasBeenEdited(),
+            'is_pinned' => $this->isPinned(),
+            'likes' => $this->whenLoaded('likes', function () {
+                return $this->likes->pluck('user_id');
+            }),
+            'is_liked_by_user' => $this->when($request->user() !== null, function () use ($request) {
+                return $this->isLikedByUser($request->user()->id);
+            }),
             'excerpt' => $this->getExcerpt(),
             'parent' => new CommentResource($this->whenLoaded('parent')),
             'replies' => CommentResource::collection($this->whenLoaded('replies')),
