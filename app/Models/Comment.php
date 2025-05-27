@@ -223,4 +223,23 @@ class Comment extends Model
     {
         return Like::getUsersWhoLiked($this);
     }
+
+    /**
+     * Obtiene un fragmento del contenido del comentario.
+     *
+     * @param int $length Longitud máxima del fragmento
+     * @return string
+     */
+    public function getExcerpt(int $length = 100): string
+    {
+        if (empty($this->content)) {
+            return '';
+        }
+
+        if (strlen($this->content) <= $length) {
+            return $this->content;
+        }
+
+        return substr($this->content, 0, $length) . '...';
+    }
 }
