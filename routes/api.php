@@ -143,6 +143,9 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('breweries')->group(function () {
+            // Cervecerías
+            Route::get('/', [BreweryController::class, 'getBreweries']);
+            
             // Cervecerías por ID
             Route::get('/{id}', [BreweryController::class, 'getBreweryById']);
         });
