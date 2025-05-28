@@ -16,6 +16,23 @@ Route::get('/test-route', function () {
     return response()->json(['message' => 'Route is working!']);
 });
 
+// Ruta de debug para storage
+Route::get('/debug-storage', function () {
+    $storagePath = storage_path('app/public');
+    $files = [];
+    
+    if (is_dir($storagePath)) {
+        $files = scandir($storagePath);
+    }
+    
+    return response()->json([
+        'storage_path' => $storagePath,
+        'exists' => is_dir($storagePath),
+        'files' => $files,
+        'posts_dir_exists' => is_dir($storagePath . '/posts'),
+    ]);
+});
+
 // Ruta para servir archivos de storage
 Route::get('/storage/{path}', function ($path) {
     Log::info('Storage route accessed with path: ' . $path);
