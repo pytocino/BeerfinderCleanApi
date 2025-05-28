@@ -104,7 +104,7 @@ class PostController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->prepareUpdateData($validated);
+            $data = $this->prepareUpdateData($validated, $request, $post);
             $post->update($data);
 
             DB::commit();
@@ -288,6 +288,9 @@ class PostController extends Controller
     {
         return $request->validate([
             'content' => 'sometimes|required|string|max:2000',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'additional_photos' => 'nullable|array|max:5',
+            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'beer_id' => 'nullable|exists:beers,id',
             'location_id' => 'nullable|exists:locations,id',
             'tags' => 'nullable|array',
@@ -316,10 +319,13 @@ class PostController extends Controller
     /**
      * Prepara los datos para actualización.
      */
-    private function prepareUpdateData(array $validated): array
+    private function prepareUpdateData(array $validated, Request $request, Post $post): array
     {
         $data = $validated;
         $data['edited'] = true;
+
+        // Procesar archivos si se enviaron
+        $data = $this->processFilesForUpdate($data, $request, $post);
 
         if (isset($data['tags'])) {
             $data['tags'] = $this->processTags($data['tags']);
@@ -362,6 +368,49 @@ class PostController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Procesa los archivos del post para actualización (elimina la imagen anterior si se sube una nueva).
+     */
+    private function processFilesForUpdate(array $data, Request $request, Post $post): array
+    {
+        if ($request->hasFile('photo_url')) {
+            // Eliminar imagen anterior si existe
+            if ($post->photo_url) {
+                $this->deleteSingleFile($post->photo_url);
+            }
+            
+            $photoPath = $request->file('photo_url')->store('posts/main', 'public');
+            $data['photo_url'] = Storage::url($photoPath);
+        }
+
+        if ($request->hasFile('additional_photos')) {
+            // Eliminar fotos adicionales anteriores si existen
+            if ($post->additional_photos && is_array($post->additional_photos)) {
+                foreach ($post->additional_photos as $photoPath) {
+                    $this->deleteSingleFile($photoPath);
+                }
+            }
+            
+            $additionalPhotosPaths = [];
+            foreach ($request->file('additional_photos') as $photo) {
+                $path = $photo->store('posts/additional', 'public');
+                $additionalPhotosPaths[] = Storage::url($path);
+            }
+            $data['additional_photos'] = $additionalPhotosPaths;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Elimina un archivo individual del storage.
+     */
+    private function deleteSingleFile(string $fileUrl): void
+    {
+        $path = str_replace(Storage::url(''), '', $fileUrl);
+        Storage::disk('public')->delete($path);
     }
 
     /**
@@ -414,14 +463,12 @@ class PostController extends Controller
     private function deletePostFiles(Post $post): void
     {
         if ($post->photo_url) {
-            $path = str_replace(Storage::url(''), '', $post->photo_url);
-            Storage::disk('public')->delete($path);
+            $this->deleteSingleFile($post->photo_url);
         }
 
         if ($post->additional_photos && is_array($post->additional_photos)) {
             foreach ($post->additional_photos as $photoPath) {
-                $path = str_replace(Storage::url(''), '', $photoPath);
-                Storage::disk('public')->delete($path);
+                $this->deleteSingleFile($photoPath);
             }
         }
     }
