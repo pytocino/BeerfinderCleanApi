@@ -409,8 +409,15 @@ class PostController extends Controller
      */
     private function deleteSingleFile(string $fileUrl): void
     {
-        $path = str_replace(Storage::url(''), '', $fileUrl);
-        Storage::disk('public')->delete($path);
+        // Si la URL empieza con /storage/, remover ese prefijo para obtener la ruta real
+        if (str_starts_with($fileUrl, '/storage/')) {
+            $path = str_replace('/storage/', '', $fileUrl);
+            Storage::disk('public')->delete($path);
+        } else {
+            // Si es una URL completa, usar el método original
+            $path = str_replace(Storage::url(''), '', $fileUrl);
+            Storage::disk('public')->delete($path);
+        }
     }
 
     /**
