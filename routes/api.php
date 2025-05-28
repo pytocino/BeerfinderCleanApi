@@ -1,6 +1,19 @@
 <?php
 // filepath: /home/pedro/Projects/BeerfinderCleanApi/routes/api.php
 
+/**
+ * API Routes para Beerfinder Clean API v1
+ * 
+ * Rutas optimizadas para el manejo eficiente de posts, comentarios y contenido social.
+ * 
+ * Estructura:
+ * - Rutas públicas: /api/v1/public/* (sin autenticación)
+ * - Rutas autenticadas: /api/v1/* (requieren token Sanctum)
+ * - Posts CRUD completo con operaciones optimizadas
+ * - Filtros avanzados para posts (con fotos, etiquetados, populares)
+ * - Gestión eficiente de recursos con paginación
+ */
+
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\User\MyUserController;
@@ -15,6 +28,7 @@ use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\Location\NearbyController;
 use App\Http\Controllers\API\Search\SearchController;
 use App\Http\Controllers\API\Brewery\BreweryController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Estado de la API
@@ -84,21 +98,28 @@ Route::prefix('v1')->group(function () {
 
         // Posts
         Route::prefix('posts')->group(function () {
-            // Todos los posts
+            // Obtener todos los posts con paginación
             Route::get('/', [PostController::class, 'getPosts']);
 
-            // Posts por ID
+            // Crear un nuevo post
+            Route::post('/', [PostController::class, 'store']);
+
+            // Obtener un post específico por ID
             Route::get('/{id}', [PostController::class, 'getPostById']);
 
-            // Comentarios
+            // Actualizar un post existente
+            Route::put('/{id}', [PostController::class, 'update']);
+            Route::patch('/{id}', [PostController::class, 'update']);
+
+            // Eliminar un post
+            Route::delete('/{id}', [PostController::class, 'destroy']);
+
+            // Comentarios de un post específico
             Route::get('/{id}/comments', [CommentController::class, 'getPostComments']);
 
             // Likes de posts
             Route::get('/{id}/likes', [LikeController::class, 'getPostLikes']);
             Route::post('/{id}/toggle-like', [LikeController::class, 'togglePostLike']);
-
-            // Crear un post
-            Route::post('/', [PostController::class, 'store']);
         });
 
         // Comentarios

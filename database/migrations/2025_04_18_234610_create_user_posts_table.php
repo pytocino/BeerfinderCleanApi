@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('content')->nullable();
             $table->string('photo_url')->nullable();
             $table->json('additional_photos')->nullable();
-            $table->json('user_tags')->nullable();
+            $table->json('tags')->nullable();
             $table->boolean('edited')->default(false);
             $table->timestamps();
             $table->softDeletes();
