@@ -105,12 +105,16 @@ class UserController extends Controller
         $posts = $user->posts()
             ->withCount(['likes', 'comments'])
             ->with([
-                'beer', 
-                'location', 
+                'beer:id,name,brewery_id,style_id', 
+                'beer.brewery:id,name',
+                'beer.style:id,name',
+                'location:id,name,address,city,latitude,longitude', 
                 'user',
-                'beerReview:id,post_id,rating,review_text',
-                'beerReview.beer:id,name',
-                'beerReview.location:id,name'
+                'beerReview:id,post_id,beer_id,location_id,rating,review_text',
+                'beerReview.beer:id,name,brewery_id,style_id',
+                'beerReview.beer.brewery:id,name',
+                'beerReview.beer.style:id,name',
+                'beerReview.location:id,name,address,city,latitude,longitude'
             ])
             ->latest()
             ->paginate(15);

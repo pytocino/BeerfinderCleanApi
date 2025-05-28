@@ -212,9 +212,15 @@ class PostController extends Controller
     {
         $query = Post::with([
             'user:id,name,username,profile_picture,private_profile',
-            'beer:id,name',
+            'beer:id,name,brewery_id,style_id',
+            'beer.brewery:id,name',
             'beer.style:id,name',
-            'location:id,name'
+            'location:id,name,address,city,latitude,longitude',
+            'beerReview:id,post_id,beer_id,location_id,rating,review_text',
+            'beerReview.beer:id,name,brewery_id,style_id',
+            'beerReview.beer.brewery:id,name',
+            'beerReview.beer.style:id,name',
+            'beerReview.location:id,name,address,city,latitude,longitude'
         ])
             ->withCount(['likes', 'comments'])
             ->whereHas('user', function ($userQuery) {
@@ -241,12 +247,15 @@ class PostController extends Controller
     {
         return Post::with([
             'user:id,name,username,profile_picture,private_profile',
-            'beer:id,name',
+            'beer:id,name,brewery_id,style_id',
             'beer.style:id,name',
-            'location:id,name',
-            'beerReview:id,post_id,rating,review_text',
-            'beerReview.beer:id,name',
-            'beerReview.location:id,name',
+            'beer.brewery:id,name',
+            'location:id,name,address,city,latitude,longitude',
+            'beerReview:id,post_id,beer_id,location_id,rating,review_text',
+            'beerReview.beer:id,name,brewery_id,style_id',
+            'beerReview.beer.brewery:id,name',
+            'beerReview.beer.style:id,name',
+            'beerReview.location:id,name,address,city,latitude,longitude',
         ])
             ->withCount(['likes', 'comments'])
             ->findOrFail($id);

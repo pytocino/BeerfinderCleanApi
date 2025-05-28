@@ -215,7 +215,7 @@ class Post extends Model
             ->pluck('id')
             ->toArray();
 
-        return Beer::whereIn('id', $beerIds)->get();
+        return Beer::with(['brewery', 'style'])->whereIn('id', $beerIds)->get();
     }
 
     /**
