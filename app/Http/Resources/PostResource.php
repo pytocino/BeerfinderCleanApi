@@ -69,36 +69,37 @@ class PostResource extends JsonResource
      */
     private function getBeerReviewData(): ?array
     {
-        return $this->whenLoaded('beerReview', function () {
-            if (!$this->beerReview) {
-                return null;
-            }
+        // Si no hay relación de beerReview cargada, retornar null
+        if (!$this->relationLoaded('beerReview') || !$this->beerReview) {
+            return null;
+        }
 
-            return [
-                'id' => $this->beerReview->id,
-                'rating' => $this->beerReview->rating ?? null,
-                'review_text' => $this->beerReview->review_text ?? null,
-                'beer' => $this->when(
-                    $this->beerReview->relationLoaded('beer') && $this->beerReview->beer,
-                    fn() => [
-                        'id' => $this->beerReview->beer->id,
-                        'name' => $this->beerReview->beer->name,
-                        'brewery' => $this->when(
-                            $this->beerReview->beer->relationLoaded('brewery'),
-                            fn() => $this->beerReview->beer->brewery?->name
-                        ),
-                    ]
-                ),
-                'location' => $this->when(
-                    $this->beerReview->relationLoaded('location') && $this->beerReview->location,
-                    fn() => [
-                        'id' => $this->beerReview->location->id,
-                        'name' => $this->beerReview->location->name,
-                        'address' => $this->beerReview->location->address ?? null,
-                    ]
-                ),
+        $reviewData = [
+            'id' => $this->beerReview->id,
+            'rating' => $this->beerReview->rating ?? null,
+            'review_text' => $this->beerReview->review_text ?? null,
+            'beer' => null,
+            'location' => null,
+        ];
+
+        // Solo incluir datos de cerveza si la relación está cargada
+        if ($this->beerReview->relationLoaded('beer') && $this->beerReview->beer) {
+            $reviewData['beer'] = [
+                'id' => $this->beerReview->beer->id,
+                'name' => $this->beerReview->beer->name,
             ];
-        });
+        }
+
+        // Solo incluir datos de ubicación si la relación está cargada
+        if ($this->beerReview->relationLoaded('location') && $this->beerReview->location) {
+            $reviewData['location'] = [
+                'id' => $this->beerReview->location->id,
+                'name' => $this->beerReview->location->name,
+                'address' => $this->beerReview->location->address ?? null,
+            ];
+        }
+
+        return $reviewData;
     }
 
     /**

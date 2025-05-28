@@ -218,7 +218,14 @@ class AuthController extends Controller
     {
         $user = $this->authenticatedUser();
         $posts = $user->posts()
-            ->with(['user', 'beer', 'location'])
+            ->with([
+                'user', 
+                'beer', 
+                'location',
+                'beerReview:id,post_id,rating,review_text',
+                'beerReview.beer:id,name',
+                'beerReview.location:id,name'
+            ])
             ->latest()
             ->paginate(15);
 
@@ -234,7 +241,16 @@ class AuthController extends Controller
             ->pluck('users.id');
 
         $friendsPosts = Post::whereIn('user_id', $followingIds)
-            ->with(['user', 'beer', 'location', 'comments', 'likes'])
+            ->with([
+                'user', 
+                'beer', 
+                'location', 
+                'comments', 
+                'likes',
+                'beerReview:id,post_id,rating,review_text',
+                'beerReview.beer:id,name',
+                'beerReview.location:id,name'
+            ])
             ->latest()
             ->paginate(15);
 

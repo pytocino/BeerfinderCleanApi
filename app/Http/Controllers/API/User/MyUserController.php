@@ -82,7 +82,15 @@ class MyUserController extends Controller
     {
         $user = $this->authenticatedUser();
         $posts = $user->posts()
-            ->with(['user.profile', 'beer', 'location', 'comments.user'])
+            ->with([
+                'user.profile', 
+                'beer', 
+                'location', 
+                'comments.user',
+                'beerReview:id,post_id,rating,review_text',
+                'beerReview.beer:id,name',
+                'beerReview.location:id,name'
+            ])
             ->withCount(['likes', 'comments'])
             ->latest()
             ->paginate($request->per_page ?? 15);

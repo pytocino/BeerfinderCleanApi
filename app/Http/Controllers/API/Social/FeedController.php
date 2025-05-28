@@ -21,7 +21,10 @@ class FeedController extends Controller
             'user',
             'beer',
             'likes',      // <--- Cargar todos los likes
-            'comments'
+            'comments',
+            'beerReview:id,post_id,rating,review_text',
+            'beerReview.beer:id,name',
+            'beerReview.location:id,name'
         ])
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'page', $page); // Usar el parámetro page explícitamente
@@ -35,6 +38,7 @@ class FeedController extends Controller
         $page = $request->input('page', 1);
 
         // Usar auth() en lugar de $request->user()
+        // Usar auth() en lugar de $request->user()
         $followingIds = auth()->user()->following()->pluck('users.id')->toArray();
 
         // Si el usuario no sigue a nadie, devolver null
@@ -47,7 +51,10 @@ class FeedController extends Controller
                 'user',
                 'beer',
                 'likes',
-                'comments'
+                'comments',
+                'beerReview:id,post_id,rating,review_text',
+                'beerReview.beer:id,name',
+                'beerReview.location:id,name'
             ])
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'page', $page);
