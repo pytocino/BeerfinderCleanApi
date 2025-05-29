@@ -193,7 +193,7 @@ class Post extends Model
     public function getTaggedUsers(): Collection
     {
         if (!$this->hasUserTags()) {
-            return collect();
+            return new Collection();
         }
 
         $userIds = collect($this->tags)
@@ -210,7 +210,7 @@ class Post extends Model
     public function getTaggedBeers(): Collection
     {
         if (!$this->hasBeerTags()) {
-            return collect();
+            return new Collection();
         }
 
         $beerIds = collect($this->tags)
@@ -227,7 +227,7 @@ class Post extends Model
     public function getTaggedLocations(): Collection
     {
         if (!$this->hasLocationTags()) {
-            return collect();
+            return new Collection();
         }
 
         $locationIds = collect($this->tags)
@@ -245,9 +245,9 @@ class Post extends Model
     {
         if (!$this->hasTags()) {
             return [
-                'users' => collect(),
-                'beers' => collect(),
-                'locations' => collect(),
+                'users' => new Collection(),
+                'beers' => new Collection(),
+                'locations' => new Collection(),
             ];
         }
 
