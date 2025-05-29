@@ -26,7 +26,9 @@ class Post extends Model
         'user_id',
         'content',
         'photo_url',
+        'photo_public_id',
         'additional_photos',
+        'additional_photos_public_ids',
         'tags', // Cambió de user_tags a tags para soportar usuarios y cervezas
         'edited',
         'beer_id',
@@ -38,6 +40,7 @@ class Post extends Model
      */
     protected $casts = [
         'additional_photos' => 'array',
+        'additional_photos_public_ids' => 'array',
         'tags' => 'array', // Cambió de user_tags a tags
         'edited' => 'boolean',
     ];

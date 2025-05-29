@@ -296,9 +296,9 @@ class PostController extends Controller
     {
         return $request->validate([
             'content' => 'sometimes|required|string|max:2000',
-            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:153600',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'additional_photos' => 'nullable|array|max:5',
-            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:153600',
+            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'beer_id' => 'nullable|exists:beers,id',
             'location_id' => 'nullable|exists:locations,id',
             'tags' => 'nullable|array',
