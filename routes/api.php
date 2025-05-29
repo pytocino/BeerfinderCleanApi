@@ -59,6 +59,9 @@ Route::prefix('v1')->group(function () {
         Route::prefix('profile')->group(function () {
             // Profile personal
             Route::get('/', [MyUserController::class, 'getMyProfile']);
+            Route::put('/', [MyUserController::class, 'updateMyProfile']);
+            Route::put('/privacy', [MyUserController::class, 'updateMyPrivacySettings']);
+            Route::put('/notifications', [MyUserController::class, 'updateMyNotificationsSettings']);
 
             // Followers y seguidos
             Route::get('/followers', [MyUserController::class, 'getMyFollowers']);

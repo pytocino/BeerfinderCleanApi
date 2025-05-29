@@ -7,6 +7,15 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# Beerfinder Clean API
+
+API backend para la aplicación Beerfinder, construida con Laravel y enfocada en la comunidad cervecera.
+
+## 📚 Documentación
+
+- [📋 Sistema de Onboarding](ONBOARDING_DOCUMENTATION.md) - Configuración de perfiles y preferencias
+- [📝 Posts API](POSTS_API_DOCUMENTATION.md) - Gestión de publicaciones y contenido
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

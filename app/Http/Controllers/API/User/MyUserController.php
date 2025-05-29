@@ -151,4 +151,58 @@ class MyUserController extends Controller
             'total_favorites' => $totalFavorites,
         ]);
     }
+
+    public function updateMyProfile(Request $request)
+    {
+        $user = $this->authenticatedUser();
+        $user->update($request->only(['name', 'username', 'email']));
+
+        // Actualizar perfil si existe
+        if ($user->profile()) {
+            $user->profile()->update($request->only(['bio', 'location', 'phone', 'website', 'facebook', 'twitter', 'instagram']));
+        }
+
+        return response()->json(new UserResource($user));
+    }
+
+    public function updateMyPrivacySettings(Request $request)
+    {
+        $user = $this->authenticatedUser();
+        $user->update($request->only(['private_profile']));
+
+        $user->profile()->update($request->only(['show_online_status', 'share_location', 'allow_mentions']));
+
+        return response()->json(new UserResource($user));
+    }
+    
+    public function updateMyNotificationsSettings(Request $request)
+    {
+        $user = $this->authenticatedUser();
+    
+        // Solo los campos permitidos
+        $fields = [
+            'email_notifications',
+            'notify_new_followers',
+            'notify_likes',
+            'notify_comments',
+            'notify_mentions',
+            'notify_following_posts',
+            'notify_recommendations',
+            'notify_trends',
+            'notify_direct_messages',
+            'notify_group_messages',
+            'notify_events',
+            'notify_updates',
+            'notify_security',
+            'notify_promotions'
+        ];
+    
+        // Actualizar solo si existe el perfil
+        if ($user->profile()) {
+            $user->profile()->update($request->only($fields));
+        }
+    
+        return response()->json(new UserResource($user));
+    }
+
 }
