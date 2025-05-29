@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Content;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Models\{Post, User, BeerReview, Beer, Location};
+use App\Services\CloudinaryService;
 use App\Traits\HasUser;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,6 +15,13 @@ use Illuminate\Database\Eloquent\Builder;
 class PostController extends Controller
 {
     use HasUser;
+
+    protected $cloudinaryService;
+
+    public function __construct(CloudinaryService $cloudinaryService)
+    {
+        $this->cloudinaryService = $cloudinaryService;
+    }
 
     /**
      * Obtiene los posts con paginación optimizada.
@@ -288,9 +296,9 @@ class PostController extends Controller
     {
         return $request->validate([
             'content' => 'sometimes|required|string|max:2000',
-            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'photo_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:61440',
             'additional_photos' => 'nullable|array|max:5',
-            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:61440',
             'beer_id' => 'nullable|exists:beers,id',
             'location_id' => 'nullable|exists:locations,id',
             'tags' => 'nullable|array',
@@ -347,76 +355,121 @@ class PostController extends Controller
     }
 
     /**
-     * Procesa los archivos del post.
+     * Procesa los archivos del post usando Cloudinary.
      */
     private function processFiles(array $data, Request $request): array
     {
         if ($request->hasFile('photo_url')) {
-            $photoPath = $request->file('photo_url')->store('posts/main', 'public');
-            $data['photo_url'] = Storage::url($photoPath);
+            $result = $this->cloudinaryService->uploadImage(
+                $request->file('photo_url'),
+                'posts/main'
+            );
+
+            if ($result['success']) {
+                $data['photo_url'] = $result['url'];
+                $data['photo_public_id'] = $result['public_id'];
+            } else {
+                throw new \Exception('Error al subir imagen principal: ' . $result['error']);
+            }
         }
 
         if ($request->hasFile('additional_photos')) {
-            $additionalPhotosPaths = [];
+            $additionalPhotosUrls = [];
+            $additionalPhotosPublicIds = [];
+
             foreach ($request->file('additional_photos') as $photo) {
-                $path = $photo->store('posts/additional', 'public');
-                $additionalPhotosPaths[] = Storage::url($path);
+                $result = $this->cloudinaryService->uploadImage(
+                    $photo,
+                    'posts/additional'
+                );
+
+                if ($result['success']) {
+                    $additionalPhotosUrls[] = $result['url'];
+                    $additionalPhotosPublicIds[] = $result['public_id'];
+                } else {
+                    throw new \Exception('Error al subir imagen adicional: ' . $result['error']);
+                }
             }
-            $data['additional_photos'] = $additionalPhotosPaths;
+
+            $data['additional_photos'] = $additionalPhotosUrls;
+            $data['additional_photos_public_ids'] = $additionalPhotosPublicIds;
         } elseif (isset($data['additional_photos'])) {
             $data['additional_photos'] = [];
+            $data['additional_photos_public_ids'] = [];
         }
 
         return $data;
     }
 
     /**
-     * Procesa los archivos del post para actualización (elimina la imagen anterior si se sube una nueva).
+     * Procesa los archivos del post para actualización usando Cloudinary.
      */
     private function processFilesForUpdate(array $data, Request $request, Post $post): array
     {
         if ($request->hasFile('photo_url')) {
             // Eliminar imagen anterior si existe
-            if ($post->photo_url) {
-                $this->deleteSingleFile($post->photo_url);
+            if ($post->photo_public_id) {
+                $this->cloudinaryService->deleteImage($post->photo_public_id);
             }
-            
-            $photoPath = $request->file('photo_url')->store('posts/main', 'public');
-            $data['photo_url'] = Storage::url($photoPath);
+
+            $result = $this->cloudinaryService->uploadImage(
+                $request->file('photo_url'),
+                'posts/main'
+            );
+
+            if ($result['success']) {
+                $data['photo_url'] = $result['url'];
+                $data['photo_public_id'] = $result['public_id'];
+            } else {
+                throw new \Exception('Error al subir imagen principal: ' . $result['error']);
+            }
         }
 
         if ($request->hasFile('additional_photos')) {
             // Eliminar fotos adicionales anteriores si existen
-            if ($post->additional_photos && is_array($post->additional_photos)) {
-                foreach ($post->additional_photos as $photoPath) {
-                    $this->deleteSingleFile($photoPath);
+            if ($post->additional_photos_public_ids && is_array($post->additional_photos_public_ids)) {
+                foreach ($post->additional_photos_public_ids as $publicId) {
+                    $this->cloudinaryService->deleteImage($publicId);
                 }
             }
-            
-            $additionalPhotosPaths = [];
+
+            $additionalPhotosUrls = [];
+            $additionalPhotosPublicIds = [];
+
             foreach ($request->file('additional_photos') as $photo) {
-                $path = $photo->store('posts/additional', 'public');
-                $additionalPhotosPaths[] = Storage::url($path);
+                $result = $this->cloudinaryService->uploadImage(
+                    $photo,
+                    'posts/additional'
+                );
+
+                if ($result['success']) {
+                    $additionalPhotosUrls[] = $result['url'];
+                    $additionalPhotosPublicIds[] = $result['public_id'];
+                } else {
+                    throw new \Exception('Error al subir imagen adicional: ' . $result['error']);
+                }
             }
-            $data['additional_photos'] = $additionalPhotosPaths;
+
+            $data['additional_photos'] = $additionalPhotosUrls;
+            $data['additional_photos_public_ids'] = $additionalPhotosPublicIds;
         }
 
         return $data;
     }
 
     /**
-     * Elimina un archivo individual del storage.
+     * Elimina los archivos asociados a un post de Cloudinary.
      */
-    private function deleteSingleFile(string $fileUrl): void
+    private function deletePostFiles(Post $post): void
     {
-        // Si la URL empieza con /storage/, remover ese prefijo para obtener la ruta real
-        if (str_starts_with($fileUrl, '/storage/')) {
-            $path = str_replace('/storage/', '', $fileUrl);
-            Storage::disk('public')->delete($path);
-        } else {
-            // Si es una URL completa, usar el método original
-            $path = str_replace(Storage::url(''), '', $fileUrl);
-            Storage::disk('public')->delete($path);
+        if ($post->photo_public_id) {
+            $this->cloudinaryService->deleteImage($post->photo_public_id);
+        }
+
+        if ($post->additional_photos_public_ids && is_array($post->additional_photos_public_ids)) {
+            foreach ($post->additional_photos_public_ids as $publicId) {
+                $this->cloudinaryService->deleteImage($publicId);
+            }
         }
     }
 
@@ -462,21 +515,5 @@ class PostController extends Controller
         }
 
         return $processedTags;
-    }
-
-    /**
-     * Elimina los archivos asociados a un post.
-     */
-    private function deletePostFiles(Post $post): void
-    {
-        if ($post->photo_url) {
-            $this->deleteSingleFile($post->photo_url);
-        }
-
-        if ($post->additional_photos && is_array($post->additional_photos)) {
-            foreach ($post->additional_photos as $photoPath) {
-                $this->deleteSingleFile($photoPath);
-            }
-        }
     }
 }
