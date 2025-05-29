@@ -15,6 +15,7 @@
  */
 
 use App\Http\Controllers\API\Auth\AuthController;
+use App\Http\Controllers\API\Auth\ProfileCompletionController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\User\MyUserController;
 use App\Http\Controllers\API\User\UserController;
@@ -47,6 +48,13 @@ Route::prefix('v1')->group(function () {
 
     // Rutas que requieren autenticación
     Route::middleware('auth:sanctum')->group(function () {
+        // Rutas de onboarding/completar perfil
+        Route::prefix('onboarding')->group(function () {
+            Route::get('/status', [ProfileCompletionController::class, 'checkProfileStatus']);
+            Route::post('/complete', [ProfileCompletionController::class, 'completeProfile']);
+            Route::post('/skip', [ProfileCompletionController::class, 'skipProfileCompletion']);
+        });
+
         // Perfil y cuenta del usuario
         Route::prefix('profile')->group(function () {
             // Profile personal

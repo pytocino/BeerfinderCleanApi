@@ -47,6 +47,41 @@ class GoogleLoginController extends Controller
                     'username' => $username,
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'profile_completed' => false,
+                ]);
+
+                // Crear perfil básico vacío para usuarios de Google
+                $user->profile()->create([
+                    'user_id' => $user->id,
+                    'bio' => null,
+                    'location' => null,
+                    'birthdate' => null,
+                    'website' => null,
+                    'phone' => null,
+                    'instagram' => null,
+                    'twitter' => null,
+                    'facebook' => null,
+                    'timezone' => 'UTC',
+                    // Configuraciones de privacidad (valores por defecto)
+                    'allow_mentions' => true,
+                    'show_online_status' => true,
+                    'share_location' => false,
+                    // Notificaciones por email habilitadas por defecto
+                    'email_notifications' => true,
+                    // Notificaciones específicas (valores recomendados)
+                    'notify_new_followers' => true,
+                    'notify_likes' => true,
+                    'notify_comments' => true,
+                    'notify_mentions' => true,
+                    'notify_following_posts' => true,
+                    'notify_recommendations' => true,
+                    'notify_trends' => false,
+                    'notify_direct_messages' => true,
+                    'notify_group_messages' => true,
+                    'notify_events' => true,
+                    'notify_updates' => true,
+                    'notify_security' => true,
+                    'notify_promotions' => false,
                 ]);
             }
 
@@ -128,6 +163,41 @@ class GoogleLoginController extends Controller
                     'username' => $username,
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
+                    'profile_completed' => false,
+                ]);
+
+                // Crear perfil básico vacío para usuarios de Google
+                $user->profile()->create([
+                    'user_id' => $user->id,
+                    'bio' => null,
+                    'location' => null,
+                    'birthdate' => null,
+                    'website' => null,
+                    'phone' => null,
+                    'instagram' => null,
+                    'twitter' => null,
+                    'facebook' => null,
+                    'timezone' => 'UTC',
+                    // Configuraciones de privacidad (valores por defecto)
+                    'allow_mentions' => true,
+                    'show_online_status' => true,
+                    'share_location' => false,
+                    // Notificaciones por email habilitadas por defecto
+                    'email_notifications' => true,
+                    // Notificaciones específicas (valores recomendados)
+                    'notify_new_followers' => true,
+                    'notify_likes' => true,
+                    'notify_comments' => true,
+                    'notify_mentions' => true,
+                    'notify_following_posts' => true,
+                    'notify_recommendations' => true,
+                    'notify_trends' => false,
+                    'notify_direct_messages' => true,
+                    'notify_group_messages' => true,
+                    'notify_events' => true,
+                    'notify_updates' => true,
+                    'notify_security' => true,
+                    'notify_promotions' => false,
                 ]);
             }
             

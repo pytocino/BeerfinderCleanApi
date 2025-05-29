@@ -30,6 +30,7 @@ class User extends Authenticatable
         'is_admin',
         'last_active_at',
         'private_profile',
+        'profile_completed',
         'status',
     ];
 
@@ -54,6 +55,7 @@ class User extends Authenticatable
         'last_active_at' => 'datetime',
         'is_admin' => 'boolean',
         'private_profile' => 'boolean',
+        'profile_completed' => 'boolean',
     ];
 
     /**

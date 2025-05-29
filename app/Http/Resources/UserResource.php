@@ -52,6 +52,7 @@ class UserResource extends JsonResource
             'is_me' => $isMe,
             // Solo para el usuario autenticado:
             'email' => $this->when($isMe, $this->email),
+            'profile_completed' => $this->when($isMe, $this->profile_completed),
             'created_at' => $this->when($isMe, $this->created_at),
             'updated_at' => $this->when($isMe, $this->updated_at),
         ];

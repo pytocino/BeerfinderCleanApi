@@ -45,6 +45,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'profile_picture' => $validated['profile_picture'] ?? null,
             'private_profile' => false,
+            'profile_completed' => true, // Usuario registrado normalmente ya completa datos básicos
         ]);
 
         // Crear perfil extendido usando UserProfile y fillable definidos
