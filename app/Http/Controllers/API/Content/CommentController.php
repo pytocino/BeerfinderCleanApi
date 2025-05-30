@@ -88,9 +88,6 @@ class CommentController extends Controller
             'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
-        // Incrementar contador de comentarios del post
-        $post->increment('comments_count');
-
         // Cargar relaciones para la respuesta
         $comment->load(['user']);
 
