@@ -237,11 +237,19 @@ class PostController extends Controller
 
         if ($authUser) {
             $query->orWhereHas('user', function ($userQuery) use ($authUser) {
-                $userQuery->where('private_profile', true)
-                    ->whereHas('followers', function ($followerQuery) use ($authUser) {
-                        $followerQuery->where('user_follows.follower_id', $authUser->id)
-                            ->where('user_follows.status', 'accepted');
-                    });
+                $userQuery->where(function ($subQuery) use ($authUser) {
+                    // Posts del propio usuario autenticado (aunque tenga perfil privado)
+                    $subQuery->where('id', $authUser->id)
+                        // O posts de usuarios privados que sigue
+                        ->orWhere(function ($privateQuery) use ($authUser) {
+                            $privateQuery->where('private_profile', true)
+                                ->where('id', '!=', $authUser->id)
+                                ->whereHas('followers', function ($followerQuery) use ($authUser) {
+                                    $followerQuery->where('user_follows.follower_id', $authUser->id)
+                                        ->where('user_follows.status', 'accepted');
+                                });
+                        });
+                });
             });
         }
 

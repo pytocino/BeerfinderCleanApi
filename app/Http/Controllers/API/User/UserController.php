@@ -148,9 +148,14 @@ class UserController extends Controller
         $user = User::with('profile')->findOrFail($id);
 
         $following = $user->following()
-            ->wherePivot('status', 'accepted')
+            ->wherePivotIn('status', ['pending', 'accepted'])
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
-            ->get();
+            ->orderByRaw("CASE WHEN follows.status = 'pending' THEN 0 ELSE 1 END")
+            ->get()
+            ->map(function($followedUser) {
+                $followedUser->follow_status = $followedUser->pivot->status;
+                return $followedUser;
+            });
 
         return response()->json([
             'data' => $following,
