@@ -150,7 +150,7 @@ class UserController extends Controller
         $following = $user->following()
             ->wherePivotIn('status', ['pending', 'accepted'])
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
-            ->orderByRaw("CASE WHEN follows.status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByRaw("CASE WHEN user_follows.status = 'pending' THEN 0 ELSE 1 END")
             ->get()
             ->map(function($followedUser) {
                 $followedUser->follow_status = $followedUser->pivot->status;
