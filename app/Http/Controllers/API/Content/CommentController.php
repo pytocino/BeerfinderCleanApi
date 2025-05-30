@@ -147,9 +147,6 @@ class CommentController extends Controller
             return $this->errorResponse('No tienes permiso para eliminar este comentario', 403);
         }
 
-        // Decrementar contador de comentarios del post
-        $comment->post->decrement('comments_count');
-
         $comment->delete();
 
         return $this->successResponse(null, 'Comentario eliminado correctamente');
