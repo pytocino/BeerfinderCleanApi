@@ -21,53 +21,53 @@ class UserController extends Controller
      */
     public function getUserProfile($id)
     {
-        $user = User::with(['profile'])
-            ->findOrFail($id);
-
+        $user = User::with(['profile'])->findOrFail($id);
         $authUser = $this->authenticatedUser();
-        $isMe = $user->belongsToAuthenticatedUser();
-        $isFollowed = false;
-        if ($authUser && !$isMe && $user->private_profile) {
-            // Verifica si el usuario autenticado sigue al usuario consultado y está aceptado
-            $isFollowed = $user->followers()
+        
+        // Verificar relaciones básicas
+        $isMyProfile = $authUser && $authUser->id == $user->id;
+        $isFollowingUser = false;
+        
+        if ($authUser && !$isMyProfile) {
+            $isFollowingUser = $user->followers()
                 ->where('users.id', $authUser->id)
                 ->wherePivot('status', 'accepted')
                 ->exists();
         }
-
-        // Si el perfil es privado, no es el propio usuario y no le sigue, solo devolver datos mínimos
-        if ($user->private_profile && !$isMe && !$isFollowed) {
-            return response()->json(['data' => [new UserResource($user)], 'stats' => []]);
+        
+        // Determinar si puede ver el perfil completo
+        $canViewFullProfile = !$user->private_profile || $isMyProfile || $isFollowingUser;
+        
+        // Si no puede ver el perfil completo, devolver datos mínimos
+        if (!$canViewFullProfile) {
+            return response()->json([
+                'data' => new UserResource($user),
+                'stats' => [],
+                'is_followed' => false,
+                'is_private' => true,
+                'message' => 'Este perfil es privado'
+            ]);
         }
-
-        // Solo calcular estadísticas si el perfil no es privado, es el propio usuario o le sigue
-        $distinctLocations = count($user->reviewedLocationIds());
-        $distinctBeers = count($user->reviewedBeerIds());
-        $distinctStyles = count($user->reviewedStyleIds());
-        $distinctBreweries = count($user->reviewedBreweryIds());
-        $distinctCountries = count($user->reviewedStyleCountries());
-        $totalReviews = $user->beerReviews()->count();
-        $totalFavorites = $user->favoritedBeers()->count();
-
-        // Contar solo seguidores y seguidos aceptados
-        $followersCount = $user->followers()->wherePivot('status', 'accepted')->count();
-        $followingCount = $user->following()->wherePivot('status', 'accepted')->count();
-        $postsCount = $user->posts()->count();
+        
+        // Calcular estadísticas completas
+        $stats = [
+            'distinct_locations' => count($user->reviewedLocationIds()),
+            'distinct_beers' => count($user->reviewedBeerIds()),
+            'distinct_styles' => count($user->reviewedStyleIds()),
+            'distinct_breweries' => count($user->reviewedBreweryIds()),
+            'distinct_countries' => count($user->reviewedStyleCountries()),
+            'total_reviews' => $user->beerReviews()->count(),
+            'total_favorites' => $user->favoritedBeers()->count(),
+            'followers' => $user->followers()->wherePivot('status', 'accepted')->count(),
+            'following' => $user->following()->wherePivot('status', 'accepted')->count(),
+            'posts' => $user->posts()->count(),
+        ];
 
         return response()->json([
-            'data' => [new UserResource($user)],
-            'stats' => [
-                'distinct_locations' => $distinctLocations,
-                'distinct_beers' => $distinctBeers,
-                'distinct_styles' => $distinctStyles,
-                'distinct_breweries' => $distinctBreweries,
-                'distinct_countries' => $distinctCountries,
-                'total_reviews' => $totalReviews,
-                'total_favorites' => $totalFavorites,
-                'followers' => $followersCount,
-                'following' => $followingCount,
-                'posts' => $postsCount,
-            ]
+            'data' => new UserResource($user),
+            'stats' => $stats,
+            'is_followed' => $isFollowingUser,
+            'is_private' => false
         ]);
     }
 
@@ -76,27 +76,15 @@ class UserController extends Controller
      */
     public function getUserPosts($id): JsonResponse
     {
-        $user = User::with(['profile'])
-            ->withCount(['followers', 'following', 'posts', 'beerReviews', 'comments'])
-            ->findOrFail($id);
-
+        $user = User::with(['profile'])->findOrFail($id);
         $authUser = $this->authenticatedUser();
-        $isMe = $user->belongsToAuthenticatedUser();
-        $isFollowed = false;
-        if ($authUser && !$isMe && $user->private_profile) {
-            // Verifica si el usuario autenticado sigue al usuario consultado y está aceptado
-            $isFollowed = $user->followers()
-                ->where('users.id', $authUser->id)
-                ->wherePivot('status', 'accepted')
-                ->exists();
-        }
-
-        // Si el perfil es privado, no es el propio usuario y no le sigue, solo devolver datos mínimos
-        if ($user->private_profile && !$isMe && !$isFollowed) {
+        
+        // Verificar si puede ver los posts
+        $canViewPosts = $this->canViewUserContent($user, $authUser);
+        
+        if (!$canViewPosts) {
             return response()->json([
-                'posts' => [
-                    'data' => [],
-                ],
+                'posts' => ['data' => []],
                 'is_private' => true,
                 'message' => 'Este perfil es privado. Debes seguir al usuario para ver sus publicaciones.'
             ]);
@@ -105,10 +93,10 @@ class UserController extends Controller
         $posts = $user->posts()
             ->withCount(['likes', 'comments'])
             ->with([
-                'beer:id,name,brewery_id,style_id', 
+                'beer:id,name,brewery_id,style_id',
                 'beer.brewery:id,name',
                 'beer.style:id,name',
-                'location:id,name,address,city,latitude,longitude', 
+                'location:id,name,address,city,latitude,longitude',
                 'user',
                 'beerReview:id,post_id,beer_id,location_id,rating,review_text',
                 'beerReview.beer:id,name,brewery_id,style_id',
@@ -122,36 +110,22 @@ class UserController extends Controller
         $posts->getCollection()->transform(function ($post) {
             return new PostResource($post);
         });
-        return response()->json([
-            'posts' => $posts
-        ]);
+        
+        return response()->json(['posts' => $posts]);
     }
 
     /**
-     * Devuelve una lista simple de seguidores de un usuario (solo id, name, username, profile_picture)
+     * Devuelve seguidores del usuario
      */
     public function getUserFollowers(Request $request, $id): JsonResponse
     {
         $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
 
-        // Comprobar privacidad
-        if ($user->profile && $user->profile->private_profile) {
-            $isSelf = $authUser && $authUser->id === (int)$id;
-            if (!$isSelf) {
-                $isAcceptedFollower = false;
-                if ($authUser) {
-                    $isAcceptedFollower = $user->followers()
-                        ->where('users.id', $authUser->id)
-                        ->wherePivot('status', 'accepted')
-                        ->exists();
-                }
-                if (!$isAcceptedFollower) {
-                    return response()->json([
-                        'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
-                    ], 403);
-                }
-            }
+        if (!$this->canViewUserContent($user, $authUser)) {
+            return response()->json([
+                'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
+            ], 403);
         }
 
         $followers = $user->followers()
@@ -159,34 +133,21 @@ class UserController extends Controller
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
             ->get();
 
-        return response()->json($followers);
+        return response()->json(['data' => $followers]);
     }
 
     /**
-     * Devuelve una lista simple de usuarios seguidos por un usuario (solo id, name, username, profile_picture)
+     * Devuelve usuarios seguidos
      */
     public function getUserFollowing(Request $request, $id): JsonResponse
     {
         $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
 
-        // Comprobar privacidad
-        if ($user->profile && $user->profile->private_profile) {
-            $isSelf = $authUser && $authUser->id === (int)$id;
-            if (!$isSelf) {
-                $isAcceptedFollower = false;
-                if ($authUser) {
-                    $isAcceptedFollower = $user->followers()
-                        ->where('users.id', $authUser->id)
-                        ->wherePivot('status', 'accepted')
-                        ->exists();
-                }
-                if (!$isAcceptedFollower) {
-                    return response()->json([
-                        'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
-                    ], 403);
-                }
-            }
+        if (!$this->canViewUserContent($user, $authUser)) {
+            return response()->json([
+                'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
+            ], 403);
         }
 
         $following = $user->following()
@@ -194,6 +155,33 @@ class UserController extends Controller
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
             ->get();
 
-        return response()->json($following);
+        return response()->json(['data' => $following]);
+    }
+
+    /**
+     * Método auxiliar para verificar si se puede ver el contenido del usuario
+     */
+    private function canViewUserContent(User $user, ?User $authUser): bool
+    {
+        // Si el perfil no es privado, todos pueden ver
+        if (!$user->private_profile) {
+            return true;
+        }
+        
+        // Si no hay usuario autenticado, no puede ver perfil privado
+        if (!$authUser) {
+            return false;
+        }
+        
+        // Si es su propio perfil, puede ver
+        if ($authUser->id == $user->id) {
+            return true;
+        }
+        
+        // Si sigue al usuario con estado aceptado, puede ver
+        return $user->followers()
+            ->where('users.id', $authUser->id)
+            ->wherePivot('status', 'accepted')
+            ->exists();
     }
 }

@@ -29,6 +29,7 @@ use App\Http\Controllers\API\Location\LocationController;
 use App\Http\Controllers\API\Location\NearbyController;
 use App\Http\Controllers\API\Search\SearchController;
 use App\Http\Controllers\API\Brewery\BreweryController;
+use App\Http\Controllers\API\Social\SocialController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -105,6 +106,19 @@ Route::prefix('v1')->group(function () {
 
             // Stats de usuario
             Route::get('/{id}/stats', [UserController::class, 'getUserStats']);
+
+             // Seguir a un usuario
+            Route::post('/follow/{id}', [SocialController::class, 'follow']);
+            
+            // Dejar de seguir a un usuario
+            Route::delete('/unfollow/{id}', [SocialController::class, 'unfollow']);
+            
+            // Aceptar solicitud de seguimiento
+            Route::post('/{id}/accept-follow', [SocialController::class, 'acceptFollow']);
+            
+            // Rechazar solicitud de seguimiento
+            Route::delete('/{id}/reject-follow', [SocialController::class, 'rejectFollow']);
+
         });
 
         // Posts
