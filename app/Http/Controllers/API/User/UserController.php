@@ -26,14 +26,8 @@ class UserController extends Controller
         
         // Verificar relaciones básicas
         $isMyProfile = $authUser && $authUser->id == $user->id;
-        $isFollowingUser = false;
-        
-        if ($authUser && !$isMyProfile) {
-            $isFollowingUser = $user->followers()
-                ->where('users.id', $authUser->id)
-                ->wherePivot('status', 'accepted')
-                ->exists();
-        }
+        $followStatus = $this->getFollowStatus($user, $authUser);
+        $isFollowingUser = $followStatus === 'accepted';
         
         // Determinar si puede ver el perfil completo
         $canViewFullProfile = !$user->private_profile || $isMyProfile || $isFollowingUser;
@@ -44,6 +38,7 @@ class UserController extends Controller
                 'data' => new UserResource($user),
                 'stats' => [],
                 'is_followed' => false,
+                'follow_status' => $followStatus,
                 'is_private' => true,
                 'message' => 'Este perfil es privado'
             ]);
@@ -67,6 +62,7 @@ class UserController extends Controller
             'data' => new UserResource($user),
             'stats' => $stats,
             'is_followed' => $isFollowingUser,
+            'follow_status' => $followStatus,
             'is_private' => false
         ]);
     }
@@ -81,12 +77,18 @@ class UserController extends Controller
         
         // Verificar si puede ver los posts
         $canViewPosts = $this->canViewUserContent($user, $authUser);
+        $followStatus = $this->getFollowStatus($user, $authUser);
         
         if (!$canViewPosts) {
+            $message = $followStatus === 'pending' 
+                ? 'Solicitud de seguimiento pendiente. Espera a que el usuario la acepte.'
+                : 'Este perfil es privado. Debes seguir al usuario para ver sus publicaciones.';
+                
             return response()->json([
                 'posts' => ['data' => []],
                 'is_private' => true,
-                'message' => 'Este perfil es privado. Debes seguir al usuario para ver sus publicaciones.'
+                'follow_status' => $followStatus,
+                'message' => $message
             ]);
         }
 
@@ -111,7 +113,10 @@ class UserController extends Controller
             return new PostResource($post);
         });
         
-        return response()->json(['posts' => $posts]);
+        return response()->json([
+            'posts' => $posts,
+            'follow_status' => $followStatus
+        ]);
     }
 
     /**
@@ -121,10 +126,16 @@ class UserController extends Controller
     {
         $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
+        $followStatus = $this->getFollowStatus($user, $authUser);
 
         if (!$this->canViewUserContent($user, $authUser)) {
+            $message = $followStatus === 'pending'
+                ? 'Solicitud pendiente. El usuario debe aceptar tu solicitud para ver sus seguidores.'
+                : 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.';
+                
             return response()->json([
-                'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
+                'message' => $message,
+                'follow_status' => $followStatus
             ], 403);
         }
 
@@ -133,7 +144,10 @@ class UserController extends Controller
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
             ->get();
 
-        return response()->json(['data' => $followers]);
+        return response()->json([
+            'data' => $followers,
+            'follow_status' => $followStatus
+        ]);
     }
 
     /**
@@ -143,10 +157,16 @@ class UserController extends Controller
     {
         $user = User::with('profile')->findOrFail($id);
         $authUser = $this->authenticatedUser();
+        $followStatus = $this->getFollowStatus($user, $authUser);
 
         if (!$this->canViewUserContent($user, $authUser)) {
+            $message = $followStatus === 'pending'
+                ? 'Solicitud pendiente. El usuario debe aceptar tu solicitud para ver a quién sigue.'
+                : 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.';
+                
             return response()->json([
-                'message' => 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.'
+                'message' => $message,
+                'follow_status' => $followStatus
             ], 403);
         }
 
@@ -155,7 +175,26 @@ class UserController extends Controller
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
             ->get();
 
-        return response()->json(['data' => $following]);
+        return response()->json([
+            'data' => $following,
+            'follow_status' => $followStatus
+        ]);
+    }
+
+    /**
+     * Obtiene el estado de seguimiento entre el usuario autenticado y el usuario objetivo
+     */
+    private function getFollowStatus(User $targetUser, ?User $authUser): ?string
+    {
+        if (!$authUser || $authUser->id == $targetUser->id) {
+            return null; // No aplica si no hay usuario autenticado o es el mismo usuario
+        }
+
+        $follow = $targetUser->followers()
+            ->where('users.id', $authUser->id)
+            ->first();
+
+        return $follow ? $follow->pivot->status : null;
     }
 
     /**
@@ -179,9 +218,6 @@ class UserController extends Controller
         }
         
         // Si sigue al usuario con estado aceptado, puede ver
-        return $user->followers()
-            ->where('users.id', $authUser->id)
-            ->wherePivot('status', 'accepted')
-            ->exists();
+        return $this->getFollowStatus($user, $authUser) === 'accepted';
     }
 }
