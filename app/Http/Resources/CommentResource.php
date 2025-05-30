@@ -17,30 +17,27 @@ class CommentResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => new UserResource($this->whenLoaded('user')),
-            'post_id' => $this->post_id,
             'content' => $this->content,
-            'parent_id' => $this->parent_id,
-            'edited' => $this->edited,
-            'pinned' => $this->pinned,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'edited' => (bool) $this->edited,
             'edited_at' => $this->edited_at,
-            'likes_count' => $this->likes_count,
-            'is_reply' => $this->isReply(),
+            'excerpt' => $this->getExcerpt(),
             'has_replies' => $this->hasReplies(),
-            'replies_count' => $this->getRepliesCount(),
-            'is_edited' => $this->hasBeenEdited(),
-            'is_pinned' => $this->isPinned(),
-            'likes' => $this->whenLoaded('likes', function () {
-                return $this->likes->pluck('user_id');
-            }),
             'is_liked_by_user' => $this->when($request->user() !== null, function () use ($request) {
                 return $this->isLikedByUser($request->user()->id);
             }),
-            'excerpt' => $this->getExcerpt(),
-            'parent' => new CommentResource($this->whenLoaded('parent')),
+            'is_pinned' => (bool) $this->pinned,
+            'is_reply' => $this->isReply(),
+            'likes' => $this->whenLoaded('likes', function () {
+                return $this->likes->pluck('user_id');
+            }),
+            'likes_count' => $this->likes_count,
+            'parent_id' => $this->parent_id,
+            'post_id' => $this->post_id,
             'replies' => CommentResource::collection($this->whenLoaded('replies')),
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'replies_count' => $this->getRepliesCount(),
+            'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
 }

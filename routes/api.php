@@ -136,20 +136,15 @@ Route::prefix('v1')->group(function () {
         // Comentarios
         Route::prefix('comments')->group(function () {
             // CRUD básico de comentarios
-            Route::get('/', [CommentController::class, 'index']);
-            Route::get('/{id}', [CommentController::class, 'show']);
             Route::post('/posts/{id}', [CommentController::class, 'store']); // Crear comentario en un post
             Route::put('/{id}', [CommentController::class, 'update']);
             Route::delete('/{id}', [CommentController::class, 'destroy']);
 
             // Funcionalidades de likes en comentarios
             Route::post('/{id}/toggle-like', [CommentController::class, 'toggleLike']);
-            Route::get('/{id}/check-like', [CommentController::class, 'checkLike']);
-            Route::get('/{id}/likers', [CommentController::class, 'getLikers']);
 
             // Funcionalidades de administración
             Route::post('/{id}/toggle-pin', [CommentController::class, 'togglePin']);
-            Route::get('/{id}/stats', [CommentController::class, 'getStats']);
         });
 
         // Beer Reviews

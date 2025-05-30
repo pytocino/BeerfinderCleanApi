@@ -74,23 +74,13 @@ class Comment extends Model
     }
 
     /**
-     * Verifica si el comentario ha sido editado.
-     *
-     * @return bool
-     */
-    public function hasBeenEdited(): bool
-    {
-        return $this->edited;
-    }
-
-    /**
      * Verifica si el comentario está fijado.
      *
      * @return bool
      */
     public function isPinned(): bool
     {
-        return $this->pinned;
+        return (bool) $this->pinned;
     }
 
     /**
@@ -121,21 +111,6 @@ class Comment extends Model
     public function getRepliesCount(): int
     {
         return $this->replies()->count();
-    }
-
-    /**
-     * Edita el contenido del comentario.
-     *
-     * @param string $content
-     * @return bool
-     */
-    public function editContent(string $content): bool
-    {
-        return $this->update([
-            'content' => $content,
-            'edited' => true,
-            'edited_at' => now(),
-        ]);
     }
 
     /**
@@ -189,39 +164,9 @@ class Comment extends Model
         $wasAdded = Like::toggle($userId, $this);
         
         // Actualizar contador de likes
-        $this->updateLikesCount();
+        $this->update(['likes_count' => $this->likes()->count()]);
         
         return $wasAdded;
-    }
-
-    /**
-     * Obtiene el conteo actualizado de likes para este comentario.
-     *
-     * @return int
-     */
-    public function getLikesCount(): int
-    {
-        return Like::countFor($this);
-    }
-
-    /**
-     * Actualiza el contador de likes en el modelo.
-     *
-     * @return bool
-     */
-    public function updateLikesCount(): bool
-    {
-        return $this->update(['likes_count' => $this->getLikesCount()]);
-    }
-
-    /**
-     * Obtiene los usuarios que dieron like a este comentario.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getUsersWhoLiked()
-    {
-        return Like::getUsersWhoLiked($this);
     }
 
     /**
