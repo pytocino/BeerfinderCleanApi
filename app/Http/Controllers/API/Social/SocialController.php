@@ -16,8 +16,24 @@ class SocialController extends Controller
 
     public function follow(Request $request, $id): JsonResponse
     {
+        // Evitar seguirse a uno mismo
+        if ($this->getUserId() == $id) {
+            return response()->json([
+                'message' => 'No puedes seguirte a ti mismo',
+                'is_following' => false,
+                'status' => null
+            ], 400);
+        }
+
         // Cargar usuario con su perfil
         $followedUser = User::with('profile')->find($id);
+        if (!$followedUser) {
+            return response()->json([
+                'message' => 'Usuario no encontrado',
+                'is_following' => false,
+                'status' => null
+            ], 404);
+        }
 
         $follow = Follow::where('follower_id', $this->getUserId())
             ->where('following_id', $id)
@@ -44,17 +60,22 @@ class SocialController extends Controller
                     // Reenviar solicitud si fue rechazada
                     $follow->status = 'pending';
                     $follow->save();
-                    // TODO: Descomentar cuando se implemente el evento UserFollowed
-                    //event(new UserFollowed($this->authenticatedUser(), $followedUser));
+                    event(new UserFollowed($this->authenticatedUser(), $followedUser));
                     return response()->json([
                         'message' => 'Solicitud de seguimiento reenviada',
                         'is_following' => false,
                         'status' => 'pending'
                     ]);
+
+                default:
+                    // Estado desconocido, eliminar y crear nueva solicitud
+                    $follow->delete();
+                    break;
             }
         }
+
         // Determinar el estado basado en si el perfil es privado
-        $isPrivateProfile = $followedUser->profile && $followedUser->profile->private_profile;
+        $isPrivateProfile = $followedUser->private_profile; // Cambio aquí
         $status = $isPrivateProfile ? 'pending' : 'accepted';
 
         Follow::create([
@@ -63,8 +84,7 @@ class SocialController extends Controller
             'status' => $status,
         ]);
 
-        // TODO: Descomentar cuando se implemente el evento UserFollowed
-        //event(new UserFollowed($this->authenticatedUser(), $followedUser));
+        event(new UserFollowed($this->authenticatedUser(), $followedUser));
 
         $message = $status === 'accepted' ?
             'Ahora sigues a este usuario' :
@@ -82,6 +102,14 @@ class SocialController extends Controller
         $follow = Follow::where('follower_id', $this->getUserId())
             ->where('following_id', $id)
             ->first();
+
+        if (!$follow) {
+            return response()->json([
+                'message' => 'No estás siguiendo a este usuario',
+                'is_following' => false,
+                'status' => null
+            ], 404);
+        }
 
         $follow->delete();
         
@@ -102,6 +130,23 @@ class SocialController extends Controller
             ->where('following_id', $this->getUserId())
             ->where('status', 'pending')
             ->first();
+
+        if (!$follow) {
+            return response()->json([
+                'message' => 'No hay solicitud de seguimiento pendiente de este usuario',
+                'is_following' => false,
+                'status' => null
+            ], 404);
+        }
+
+        // Verificar que el estado sea realmente 'pending'
+        if ($follow->status !== 'pending') {
+            return response()->json([
+                'message' => 'La solicitud no está pendiente',
+                'is_following' => $follow->status === 'accepted',
+                'status' => $follow->status
+            ], 400);
+        }
 
         // Actualizamos el estado a aceptado
         $follow->status = 'accepted';
@@ -125,6 +170,23 @@ class SocialController extends Controller
             ->where('status', 'pending')
             ->first();
 
+        if (!$follow) {
+            return response()->json([
+                'message' => 'No hay solicitud de seguimiento pendiente de este usuario',
+                'is_following' => false,
+                'status' => null
+            ], 404);
+        }
+
+        // Verificar que el estado sea realmente 'pending'
+        if ($follow->status !== 'pending') {
+            return response()->json([
+                'message' => 'La solicitud no está pendiente',
+                'is_following' => $follow->status === 'accepted',
+                'status' => $follow->status
+            ], 400);
+        }
+
         // Eliminamos la solicitud en lugar de marcarla como rechazada
         $follow->delete();
 
@@ -132,6 +194,31 @@ class SocialController extends Controller
             'message' => 'Has rechazado la solicitud de seguimiento',
             'is_following' => false,
             'status' => null
+        ]);
+    }
+
+    /**
+     * Obtiene las solicitudes de seguimiento pendientes para el usuario autenticado
+     */
+    public function getPendingRequests(Request $request): JsonResponse
+    {
+        $pendingRequests = Follow::where('following_id', $this->getUserId())
+            ->where('status', 'pending')
+            ->with(['follower:id,name,username,profile_picture'])
+            ->get()
+            ->map(function ($follow) {
+                return [
+                    'id' => $follow->follower->id,
+                    'name' => $follow->follower->name,
+                    'username' => $follow->follower->username,
+                    'profile_picture' => $follow->follower->profile_picture,
+                    'requested_at' => $follow->created_at
+                ];
+            });
+
+        return response()->json([
+            'data' => $pendingRequests,
+            'count' => $pendingRequests->count()
         ]);
     }
 }
