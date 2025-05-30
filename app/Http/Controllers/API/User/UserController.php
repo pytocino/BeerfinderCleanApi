@@ -125,28 +125,18 @@ class UserController extends Controller
     public function getUserFollowers(Request $request, $id): JsonResponse
     {
         $user = User::with('profile')->findOrFail($id);
-        $authUser = $this->authenticatedUser();
-        $followStatus = $this->getFollowStatus($user, $authUser);
-
-        if (!$this->canViewUserContent($user, $authUser)) {
-            $message = $followStatus === 'pending'
-                ? 'Solicitud pendiente. El usuario debe aceptar tu solicitud para ver sus seguidores.'
-                : 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.';
-                
-            return response()->json([
-                'message' => $message,
-                'follow_status' => $followStatus
-            ], 403);
-        }
 
         $followers = $user->followers()
-            ->wherePivot('status', 'accepted')
+            ->wherePivotIn('status', ['accepted', 'pending'])
             ->select('users.id', 'users.name', 'users.username', 'users.profile_picture')
-            ->get();
+            ->get()
+            ->map(function($follower) {
+                $follower->follow_status = $follower->pivot->status;
+                return $follower;
+            });
 
         return response()->json([
             'data' => $followers,
-            'follow_status' => $followStatus
         ]);
     }
 
@@ -156,19 +146,6 @@ class UserController extends Controller
     public function getUserFollowing(Request $request, $id): JsonResponse
     {
         $user = User::with('profile')->findOrFail($id);
-        $authUser = $this->authenticatedUser();
-        $followStatus = $this->getFollowStatus($user, $authUser);
-
-        if (!$this->canViewUserContent($user, $authUser)) {
-            $message = $followStatus === 'pending'
-                ? 'Solicitud pendiente. El usuario debe aceptar tu solicitud para ver a quién sigue.'
-                : 'Este perfil es privado. Solo seguidores aceptados pueden ver esta información.';
-                
-            return response()->json([
-                'message' => $message,
-                'follow_status' => $followStatus
-            ], 403);
-        }
 
         $following = $user->following()
             ->wherePivot('status', 'accepted')
@@ -177,7 +154,6 @@ class UserController extends Controller
 
         return response()->json([
             'data' => $following,
-            'follow_status' => $followStatus
         ]);
     }
 
