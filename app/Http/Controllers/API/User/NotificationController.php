@@ -97,42 +97,6 @@ class NotificationController extends Controller
     }
 
     /**
-     * Elimina una notificación específica
-     */
-    public function destroy(Request $request, string $id): JsonResponse
-    {
-        $user = $this->authenticatedUser();
-        
-        $notification = $user->notifications()->find($id);
-        
-        if (!$notification) {
-            return response()->json([
-                'message' => 'Notificación no encontrada'
-            ], 404);
-        }
-
-        $notification->delete();
-
-        return response()->json([
-            'message' => 'Notificación eliminada'
-        ]);
-    }
-
-    /**
-     * Elimina todas las notificaciones leídas
-     */
-    public function clearRead(Request $request): JsonResponse
-    {
-        $user = $this->authenticatedUser();
-        
-        $deletedCount = $user->readNotifications()->delete();
-
-        return response()->json([
-            'message' => "Se eliminaron {$deletedCount} notificaciones leídas"
-        ]);
-    }
-
-    /**
      * Obtiene el conteo de notificaciones no leídas
      */
     public function unreadCount(Request $request): JsonResponse

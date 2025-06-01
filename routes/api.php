@@ -16,8 +16,8 @@
 
 use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\ProfileCompletionController;
-use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\User\MyUserController;
+use App\Http\Controllers\API\User\NotificationController;
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\Social\ConversationController;
 use App\Http\Controllers\API\Content\PostController;
@@ -83,25 +83,20 @@ Route::prefix('v1')->group(function () {
 
         Route::prefix('notifications')->group(function () {
             // Listar todas las notificaciones
-            Route::get('/', [\App\Http\Controllers\API\User\NotificationController::class, 'index']);
+            Route::get('/', [NotificationController::class, 'index']);
             
             // Obtener solo notificaciones no leídas
-            Route::get('/unread', [\App\Http\Controllers\API\User\NotificationController::class, 'unread']);
+            Route::get('/unread', [NotificationController::class, 'unread']);
             
             // Obtener conteo de notificaciones no leídas
-            Route::get('/unread-count', [\App\Http\Controllers\API\User\NotificationController::class, 'unreadCount']);
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
 
             // Marcar notificación específica como leída
-            Route::post('/{id}/read', [\App\Http\Controllers\API\User\NotificationController::class, 'markAsRead']);
+            Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
             
             // Marcar todas las notificaciones como leídas
-            Route::post('/mark-all-read', [\App\Http\Controllers\API\User\NotificationController::class, 'markAllAsRead']);
+            Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
             
-            // Eliminar notificación específica
-            Route::delete('/{id}', [\App\Http\Controllers\API\User\NotificationController::class, 'destroy']);
-            
-            // Eliminar todas las notificaciones leídas
-            Route::delete('/clear-read', [\App\Http\Controllers\API\User\NotificationController::class, 'clearRead']);
         });
 
         Route::prefix('conversations')->group(function () {
