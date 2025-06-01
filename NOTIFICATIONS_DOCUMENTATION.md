@@ -88,16 +88,6 @@ POST /api/v1/notifications/{id}/read
 POST /api/v1/notifications/mark-all-read
 ```
 
-### Eliminar notificación
-```
-DELETE /api/v1/notifications/{id}
-```
-
-### Eliminar todas las leídas
-```
-DELETE /api/v1/notifications/clear-read
-```
-
 ## Configuración de Notificaciones en Perfil
 
 Los usuarios pueden configurar qué tipos de notificaciones quieren recibir desde su perfil:
