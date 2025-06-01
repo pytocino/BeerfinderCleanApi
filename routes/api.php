@@ -82,8 +82,26 @@ Route::prefix('v1')->group(function () {
         });
 
         Route::prefix('notifications')->group(function () {
-            // Notificaciones
-            Route::get('/', [NotificationController::class, 'getMyNotifications']);
+            // Listar todas las notificaciones
+            Route::get('/', [\App\Http\Controllers\API\User\NotificationController::class, 'index']);
+            
+            // Obtener solo notificaciones no leídas
+            Route::get('/unread', [\App\Http\Controllers\API\User\NotificationController::class, 'unread']);
+            
+            // Obtener conteo de notificaciones no leídas
+            Route::get('/unread-count', [\App\Http\Controllers\API\User\NotificationController::class, 'unreadCount']);
+
+            // Marcar notificación específica como leída
+            Route::post('/{id}/read', [\App\Http\Controllers\API\User\NotificationController::class, 'markAsRead']);
+            
+            // Marcar todas las notificaciones como leídas
+            Route::post('/mark-all-read', [\App\Http\Controllers\API\User\NotificationController::class, 'markAllAsRead']);
+            
+            // Eliminar notificación específica
+            Route::delete('/{id}', [\App\Http\Controllers\API\User\NotificationController::class, 'destroy']);
+            
+            // Eliminar todas las notificaciones leídas
+            Route::delete('/clear-read', [\App\Http\Controllers\API\User\NotificationController::class, 'clearRead']);
         });
 
         Route::prefix('conversations')->group(function () {

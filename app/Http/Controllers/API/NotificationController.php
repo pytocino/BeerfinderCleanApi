@@ -4,16 +4,21 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
+use App\Traits\HasUser;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    use HasUser;
+
     /**
      * Obtener todas las notificaciones del usuario autenticado.
      */
     public function getMyNotifications()
     {
-        $notifications = auth()->user()->notifications()
+        $user = $this->authenticatedUser();
+        
+        $notifications = $user->notifications()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -25,7 +30,8 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
-        $notification = auth()->user()->notifications()->find($id);
+        $user = $this->authenticatedUser();
+        $notification = $user->notifications()->find($id);
 
         if (!$notification) {
             return response()->json(['message' => 'Notificación no encontrada.'], 404);
@@ -41,7 +47,8 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        $notifications = auth()->user()->unreadNotifications;
+        $user = $this->authenticatedUser();
+        $notifications = $user->unreadNotifications;
 
         foreach ($notifications as $notification) {
             $notification->markAsRead();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Content;
 
 use App\Events\PostCommented;
+use App\Events\CommentLiked;
 use App\Http\Controllers\Controller;
 use App\Models\Post;
 use App\Models\Comment;
@@ -21,7 +22,7 @@ class CommentController extends Controller
      */
     public function store(Request $request, $id): JsonResponse
     {
-        $post = Post::find($id);
+        $post = Post::findOrFail($id);
 
         $validated = $request->validate([
             'content' => 'required|string|max:500',
@@ -41,8 +42,8 @@ class CommentController extends Controller
         // Cargar relaciones para la respuesta
         $comment->load(['user']);
 
-        // TODO: Revisar problema con evento PostCommented
-        // event(new PostCommented($this->authenticatedUser(), $post, $comment));
+        // Disparar evento para notificaciones
+        event(new PostCommented($this->authenticatedUser(), $post, $comment));
 
         return response()->json([
             'message' => 'Comentario creado',
@@ -118,9 +119,14 @@ class CommentController extends Controller
      */
     public function toggleLike(Request $request, $id): JsonResponse
     {
-        $comment = Comment::find($id);
+        $comment = Comment::findOrFail($id);
 
         $wasAdded = $comment->toggleLike($this->getUserId());
+        
+        // Disparar evento si se agregó el like
+        if ($wasAdded) {
+            event(new CommentLiked($this->authenticatedUser(), $comment));
+        }
         
         // Cargar relaciones actualizadas
         $comment->load(['user', 'likes']);

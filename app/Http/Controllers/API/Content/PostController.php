@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\Content;
 
+use App\Events\UserTaggedInPost;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Models\{Post, User, BeerReview, Beer, Location};
@@ -75,6 +76,11 @@ class PostController extends Controller
 
             $data = $this->preparePostData($validated, $request);
             $post = Post::create($data);
+
+            // Procesar notificaciones de tags después de crear el post
+            if (isset($data['tags']) && !empty($data['tags'])) {
+                $this->processTagNotifications($post, $data['tags']);
+            }
 
             DB::commit();
 
@@ -523,5 +529,27 @@ class PostController extends Controller
         }
 
         return $processedTags;
+    }
+
+    /**
+     * Procesa las notificaciones de tags para usuarios etiquetados
+     */
+    private function processTagNotifications(Post $post, array $tags): void
+    {
+        $currentUser = $this->authenticatedUser();
+        
+        foreach ($tags as $tag) {
+            if ($tag['type'] === 'user') {
+                try {
+                    $taggedUser = \App\Models\User::find($tag['id']);
+                    if ($taggedUser && $taggedUser->id !== $currentUser->id) {
+                        event(new \App\Events\UserTaggedInPost($currentUser, $taggedUser, $post));
+                    }
+                } catch (\Exception $e) {
+                    // Usuario no encontrado, continuar
+                    continue;
+                }
+            }
+        }
     }
 }

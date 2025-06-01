@@ -16,6 +16,12 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\PostCommented::class => [
             \App\Listeners\SendCommentNotification::class,
         ],
+        \App\Events\CommentLiked::class => [
+            \App\Listeners\SendCommentLikeNotification::class,
+        ],
+        \App\Events\UserTaggedInPost::class => [
+            \App\Listeners\SendTagNotification::class,
+        ],
     ];
 
     public function boot(): void
