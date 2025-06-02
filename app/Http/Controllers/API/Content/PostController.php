@@ -603,9 +603,9 @@ class PostController extends Controller
         foreach ($tags as $tag) {
             if ($tag['type'] === 'user') {
                 try {
-                    $taggedUser = \App\Models\User::find($tag['id']);
+                    $taggedUser = User::find($tag['id']);
                     if ($taggedUser && $taggedUser->id !== $currentUser->id) {
-                        event(new \App\Events\UserTaggedInPost($currentUser, $taggedUser, $post));
+                        event(new UserTaggedInPost($currentUser, $taggedUser, $post));
                     }
                 } catch (\Exception $e) {
                     // Usuario no encontrado, continuar

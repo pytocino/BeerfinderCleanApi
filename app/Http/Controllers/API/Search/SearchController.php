@@ -19,11 +19,16 @@ use Illuminate\Http\Request;
 class SearchController extends Controller
 {
     /**
-     * Búsqueda global
+     * Búsqueda global con límites dinámicos
      * 
      * Permite buscar cervezas, cervecerías, estilos, ubicaciones y usuarios según los criterios especificados.
      * 
-     * @queryParam q string Término de búsqueda general. Example: IPA
+     * LÍMITES DINÁMICOS:
+     * - 1 carácter: Máximo 10 resultados, búsqueda solo al inicio de nombres
+     * - 2 caracteres: Máximo 20 resultados, búsqueda al inicio de nombres  
+     * - 3+ caracteres: Sin límites adicionales, búsqueda en cualquier parte
+     * 
+     * @queryParam q string Término de búsqueda general (mínimo 1 carácter). Example: I
      * @queryParam type string Tipo de entidad a buscar (beers, breweries, styles, locations, users). Si no se especifica, busca en todas. Example: beers
      * @queryParam country string Filtrar resultados por país (para cervezas, cervecerías, ubicaciones). Example: España
      * @queryParam city string Filtrar resultados por ciudad (para cervecerías, ubicaciones y cervezas). Example: Madrid
@@ -151,7 +156,7 @@ class SearchController extends Controller
     {
         // Validar parámetros de entrada
         $validated = $request->validate([
-            'q' => 'nullable|string|min:2|max:100',
+            'q' => 'nullable|string|min:1|max:100', // Cambiado: permite búsquedas desde 1 carácter
             'type' => 'nullable|string|in:beers,breweries,styles,locations,users',
             'country' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
@@ -170,11 +175,24 @@ class SearchController extends Controller
             'per_page' => 'nullable|integer|min:5|max:50'
         ]);
 
-        // Establecer valores predeterminados
-        $perPage = $validated['per_page'] ?? 10;
+        // Establecer valores predeterminados y límites dinámicos
+        $searchTerm = $validated['q'] ?? '';
+        $searchLength = strlen($searchTerm);
+        
+        // Límites dinámicos basados en la longitud del término de búsqueda
+        if ($searchLength === 1) {
+            $perPage = min($validated['per_page'] ?? 5, 10); // Máximo 10 resultados con 1 carácter
+            $maxResults = 10;
+        } elseif ($searchLength === 2) {
+            $perPage = min($validated['per_page'] ?? 10, 20); // Máximo 20 resultados con 2 caracteres
+            $maxResults = 20;
+        } else {
+            $perPage = $validated['per_page'] ?? 10; // Sin restricción adicional para 3+ caracteres
+            $maxResults = null;
+        }
+        
         $sort = $validated['sort'] ?? 'name';
         $order = $validated['order'] ?? 'asc';
-        $searchTerm = $validated['q'] ?? '';
 
         // Si no hay parámetros de búsqueda, mostrar los 5 registros más interesantes de cada entidad
         $defaultLimit = 5;
@@ -188,9 +206,16 @@ class SearchController extends Controller
             $beersQuery = Beer::query()->with(['brewery', 'style']);
             if (!$isDefault) {
                 if (!empty($searchTerm)) {
-                    $beersQuery->where(function ($query) use ($searchTerm) {
-                        $query->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('description', 'like', "%{$searchTerm}%");
+                    $beersQuery->where(function ($query) use ($searchTerm, $searchLength) {
+                        if ($searchLength === 1) {
+                            // Con 1 carácter: buscar solo al inicio del nombre para mayor precisión
+                            $query->where('name', 'like', "{$searchTerm}%")
+                                ->orWhere('description', 'like', "{$searchTerm}%");
+                        } else {
+                            // Con 2+ caracteres: búsqueda normal en cualquier parte
+                            $query->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('description', 'like', "%{$searchTerm}%");
+                        }
                     });
                 }
                 if (!empty($validated['country'])) {
@@ -218,15 +243,30 @@ class SearchController extends Controller
                 } else {
                     $beersQuery->orderBy('name', $order);
                 }
-                $beers = $beersQuery->paginate($perPage);
+                
+                // Aplicar límite dinámico si es necesario
+                if ($maxResults && $searchLength <= 2) {
+                    $beers = $beersQuery->limit($maxResults)->get();
+                    $total = $beers->count();
+                    $results['beers'] = [
+                        'data' => $beers,
+                        'total' => $total
+                    ];
+                } else {
+                    $beers = $beersQuery->paginate($perPage);
+                    $results['beers'] = [
+                        'data' => $beers->items(),
+                        'total' => $beers->total()
+                    ];
+                }
             } else {
                 // Por defecto: mostrar las cervezas más recientes
                 $beers = $beersQuery->orderBy('created_at', 'desc')->limit($defaultLimit)->get();
+                $results['beers'] = [
+                    'data' => $beers,
+                    'total' => $beers->count()
+                ];
             }
-            $results['beers'] = [
-                'data' => $isDefault ? $beers : $beers->items(),
-                'total' => $isDefault ? $beers->count() : $beers->total()
-            ];
         }
 
         // Cervecerías
@@ -234,9 +274,16 @@ class SearchController extends Controller
             $breweriesQuery = \App\Models\Brewery::query();
             if (!$isDefault) {
                 if (!empty($searchTerm)) {
-                    $breweriesQuery->where(function ($query) use ($searchTerm) {
-                        $query->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('description', 'like', "%{$searchTerm}%");
+                    $breweriesQuery->where(function ($query) use ($searchTerm, $searchLength) {
+                        if ($searchLength === 1) {
+                            // Con 1 carácter: buscar solo al inicio del nombre
+                            $query->where('name', 'like', "{$searchTerm}%")
+                                ->orWhere('description', 'like', "{$searchTerm}%");
+                        } else {
+                            // Con 2+ caracteres: búsqueda normal
+                            $query->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('description', 'like', "%{$searchTerm}%");
+                        }
                     });
                 }
                 if (!empty($validated['country'])) {
@@ -250,15 +297,30 @@ class SearchController extends Controller
                 } else {
                     $breweriesQuery->orderBy('name', $order);
                 }
-                $breweries = $breweriesQuery->paginate($perPage);
+                
+                // Aplicar límite dinámico si es necesario
+                if ($maxResults && $searchLength <= 2) {
+                    $breweries = $breweriesQuery->limit($maxResults)->get();
+                    $total = $breweries->count();
+                    $results['breweries'] = [
+                        'data' => $breweries,
+                        'total' => $total
+                    ];
+                } else {
+                    $breweries = $breweriesQuery->paginate($perPage);
+                    $results['breweries'] = [
+                        'data' => $breweries->items(),
+                        'total' => $breweries->total()
+                    ];
+                }
             } else {
                 // Por defecto: mostrar las cervecerías más recientes
                 $breweries = $breweriesQuery->orderBy('created_at', 'desc')->limit($defaultLimit)->get();
+                $results['breweries'] = [
+                    'data' => $breweries,
+                    'total' => $breweries->count()
+                ];
             }
-            $results['breweries'] = [
-                'data' => $isDefault ? $breweries : $breweries->items(),
-                'total' => $isDefault ? $breweries->count() : $breweries->total()
-            ];
         }
 
         // Estilos
@@ -266,9 +328,16 @@ class SearchController extends Controller
             $stylesQuery = BeerStyle::query();
             if (!$isDefault) {
                 if (!empty($searchTerm)) {
-                    $stylesQuery->where(function ($query) use ($searchTerm) {
-                        $query->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('description', 'like', "%{$searchTerm}%");
+                    $stylesQuery->where(function ($query) use ($searchTerm, $searchLength) {
+                        if ($searchLength === 1) {
+                            // Con 1 carácter: buscar solo al inicio del nombre
+                            $query->where('name', 'like', "{$searchTerm}%")
+                                ->orWhere('description', 'like', "{$searchTerm}%");
+                        } else {
+                            // Con 2+ caracteres: búsqueda normal
+                            $query->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('description', 'like', "%{$searchTerm}%");
+                        }
                     });
                 }
                 if (!empty($validated['origin_country'])) {
@@ -279,15 +348,30 @@ class SearchController extends Controller
                 } else {
                     $stylesQuery->orderBy('name', $order);
                 }
-                $styles = $stylesQuery->paginate($perPage);
+                
+                // Aplicar límite dinámico si es necesario
+                if ($maxResults && $searchLength <= 2) {
+                    $styles = $stylesQuery->limit($maxResults)->get();
+                    $total = $styles->count();
+                    $results['styles'] = [
+                        'data' => $styles,
+                        'total' => $total
+                    ];
+                } else {
+                    $styles = $stylesQuery->paginate($perPage);
+                    $results['styles'] = [
+                        'data' => $styles->items(),
+                        'total' => $styles->total()
+                    ];
+                }
             } else {
                 // Por defecto: mostrar los estilos más recientes
                 $styles = $stylesQuery->orderBy('created_at', 'desc')->limit($defaultLimit)->get();
+                $results['styles'] = [
+                    'data' => $styles,
+                    'total' => $styles->count()
+                ];
             }
-            $results['styles'] = [
-                'data' => $isDefault ? $styles : $styles->items(),
-                'total' => $isDefault ? $styles->count() : $styles->total()
-            ];
         }
 
         // Ubicaciones
@@ -295,10 +379,18 @@ class SearchController extends Controller
             $locationsQuery = Location::query();
             if (!$isDefault) {
                 if (!empty($searchTerm)) {
-                    $locationsQuery->where(function ($query) use ($searchTerm) {
-                        $query->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('description', 'like', "%{$searchTerm}%")
-                            ->orWhere('address', 'like', "%{$searchTerm}%");
+                    $locationsQuery->where(function ($query) use ($searchTerm, $searchLength) {
+                        if ($searchLength === 1) {
+                            // Con 1 carácter: buscar solo al inicio del nombre
+                            $query->where('name', 'like', "{$searchTerm}%")
+                                ->orWhere('description', 'like', "{$searchTerm}%")
+                                ->orWhere('address', 'like', "{$searchTerm}%");
+                        } else {
+                            // Con 2+ caracteres: búsqueda normal
+                            $query->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('description', 'like', "%{$searchTerm}%")
+                                ->orWhere('address', 'like', "%{$searchTerm}%");
+                        }
                     });
                 }
                 if (!empty($validated['country'])) {
@@ -328,15 +420,30 @@ class SearchController extends Controller
                         $locationsQuery->orderBy('name', $order);
                     }
                 }
-                $locations = $locationsQuery->paginate($perPage);
+                
+                // Aplicar límite dinámico si es necesario
+                if ($maxResults && $searchLength <= 2) {
+                    $locations = $locationsQuery->limit($maxResults)->get();
+                    $total = $locations->count();
+                    $results['locations'] = [
+                        'data' => $locations,
+                        'total' => $total
+                    ];
+                } else {
+                    $locations = $locationsQuery->paginate($perPage);
+                    $results['locations'] = [
+                        'data' => $locations->items(),
+                        'total' => $locations->total()
+                    ];
+                }
             } else {
                 // Por defecto: mostrar las ubicaciones más recientes
                 $locations = $locationsQuery->orderBy('created_at', 'desc')->limit($defaultLimit)->get();
+                $results['locations'] = [
+                    'data' => $locations,
+                    'total' => $locations->count()
+                ];
             }
-            $results['locations'] = [
-                'data' => $isDefault ? $locations : $locations->items(),
-                'total' => $isDefault ? $locations->count() : $locations->total()
-            ];
         }
 
         // Usuarios
@@ -344,9 +451,16 @@ class SearchController extends Controller
             $usersQuery = User::query();
             if (!$isDefault) {
                 if (!empty($searchTerm)) {
-                    $usersQuery->where(function ($query) use ($searchTerm) {
-                        $query->where('name', 'like', "%{$searchTerm}%")
-                            ->orWhere('username', 'like', "%{$searchTerm}%");
+                    $usersQuery->where(function ($query) use ($searchTerm, $searchLength) {
+                        if ($searchLength === 1) {
+                            // Con 1 carácter: buscar solo al inicio del nombre o username
+                            $query->where('name', 'like', "{$searchTerm}%")
+                                ->orWhere('username', 'like', "{$searchTerm}%");
+                        } else {
+                            // Con 2+ caracteres: búsqueda normal
+                            $query->where('name', 'like', "%{$searchTerm}%")
+                                ->orWhere('username', 'like', "%{$searchTerm}%");
+                        }
                     });
                 }
                 if ($sort === 'created_at') {
@@ -354,15 +468,30 @@ class SearchController extends Controller
                 } else {
                     $usersQuery->orderBy('name', $order);
                 }
-                $users = $usersQuery->paginate($perPage);
+                
+                // Aplicar límite dinámico si es necesario
+                if ($maxResults && $searchLength <= 2) {
+                    $users = $usersQuery->limit($maxResults)->get();
+                    $total = $users->count();
+                    $results['users'] = [
+                        'data' => $users,
+                        'total' => $total
+                    ];
+                } else {
+                    $users = $usersQuery->paginate($perPage);
+                    $results['users'] = [
+                        'data' => $users->items(),
+                        'total' => $users->total()
+                    ];
+                }
             } else {
                 // Por defecto: mostrar los usuarios más recientes
                 $users = $usersQuery->orderBy('created_at', 'desc')->limit($defaultLimit)->get();
+                $results['users'] = [
+                    'data' => $users,
+                    'total' => $users->count()
+                ];
             }
-            $results['users'] = [
-                'data' => $isDefault ? $users : $users->items(),
-                'total' => $isDefault ? $users->count() : $users->total()
-            ];
         }
 
         return response()->json(new SearchResource($results));
