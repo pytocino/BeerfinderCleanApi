@@ -26,6 +26,7 @@ class Beer extends Model
         'abv',
         'ibu',
         'image_url',
+        'is_verified',
     ];
 
     /**
@@ -36,6 +37,7 @@ class Beer extends Model
     protected $casts = [
         'abv' => 'float',
         'ibu' => 'integer',
+        'is_verified' => 'boolean',
     ];
 
     /**

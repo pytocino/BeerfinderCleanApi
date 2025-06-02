@@ -1,0 +1,146 @@
+{
+  "ejemplo_post_con_creacion_automatica": {
+    "description": "Ejemplo de cómo crear un post con etiquetas que incluyen creación automática",
+    "endpoint": "POST /api/posts",
+    "headers": {
+      "Authorization": "Bearer {token}",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "content": "¡Increíble noche cervecera con amigos en un lugar nuevo que descubrimos!",
+      "tags": [
+        {
+          "type": "user",
+          "id": 123,
+          "comment": "Usuario existente - solo necesita ID"
+        },
+        {
+          "type": "beer",
+          "name": "IPA Tropical Experimental",
+          "comment": "Cerveza nueva - se creará automáticamente con is_verified=false y brewery_id=null"
+        },
+        {
+          "type": "location",
+          "name": "Brewpub El Lúpulo Dorado",
+          "latitude": -34.6037,
+          "longitude": -58.3816,
+          "address": "Av. Corrientes 1234, Buenos Aires",
+          "comment": "Ubicación nueva - se creará automáticamente con verified=false"
+        }
+      ]
+    }
+  },
+  
+  "ejemplo_solo_cerveza_nueva": {
+    "description": "Crear solo una cerveza nueva sin ubicación",
+    "body": {
+      "content": "Probando una cerveza artesanal increíble",
+      "tags": [
+        {
+          "type": "beer",
+          "name": "Porter Chocolate"
+        }
+      ]
+    }
+  },
+  
+  "ejemplo_solo_ubicacion_nueva": {
+    "description": "Crear solo una ubicación nueva",
+    "body": {
+      "content": "En mi nuevo lugar favorito para cervezas",
+      "tags": [
+        {
+          "type": "location",
+          "name": "Bar Cervecero Central",
+          "latitude": -34.6118,
+          "longitude": -58.3960,
+          "address": "Av. Santa Fe 2100"
+        }
+      ]
+    }
+  },
+  
+  "ejemplo_cerveza_sin_brewery": {
+    "description": "Crear cerveza sin especificar cervecería",
+    "body": {
+      "content": "Cerveza casera experimental",
+      "tags": [
+        {
+          "type": "beer",
+          "name": "Homebrew Saison"
+        }
+      ]
+    }
+  },
+  
+  "ejemplo_mixto": {
+    "description": "Combinación de elementos existentes y nuevos",
+    "body": {
+      "content": "Reunión cervecera épica con lo mejor de ambos mundos",
+      "tags": [
+        {
+          "type": "user",
+          "id": 456
+        },
+        {
+          "type": "beer",
+          "id": 789
+        },
+        {
+          "type": "beer",
+          "name": "Nueva IPA Session",
+          "brewery_name": "Brewery Emergente"
+        },
+        {
+          "type": "location",
+          "id": 321
+        },
+        {
+          "type": "location",
+          "name": "Nuevo Taproom",
+          "latitude": -34.5891,
+          "longitude": -58.3974
+        }
+      ]
+    }
+  },
+  
+  "response_esperada": {
+    "status": 201,
+    "body": {
+      "post": {
+        "id": 123,
+        "content": "...",
+        "tags": [
+          {
+            "type": "user",
+            "id": 123
+          },
+          {
+            "type": "beer",
+            "id": 999
+          },
+          {
+            "type": "location", 
+            "id": 888
+          }
+        ],
+        "created_at": "2025-06-01T...",
+        "user": "...",
+        "likes_count": 0,
+        "comments_count": 0
+      }
+    }
+  },
+  
+  "notas_importantes": [
+    "Las cervezas creadas automáticamente tendrán is_verified = false",
+    "Las ubicaciones creadas automáticamente tendrán verified = false",
+    "Las cervecerías se crean automáticamente si se especifica brewery_name",
+    "Si no se especifica brewery_name, la cerveza se crea sin cervecería asociada",
+    "Para ubicaciones, latitude y longitude son opcionales pero recomendados",
+    "El sistema busca ubicaciones existentes en un radio de 100 metros si se proporcionan coordenadas",
+    "Los errores en tags individuales se registran pero no detienen el proceso",
+    "Los tags inválidos se ignoran silenciosamente"
+  ]
+}

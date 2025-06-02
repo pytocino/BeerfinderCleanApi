@@ -60,7 +60,7 @@ class SocialController extends Controller
                     // Reenviar solicitud si fue rechazada
                     $follow->status = 'pending';
                     $follow->save();
-                    event(new UserFollowed($this->authenticatedUser(), $followedUser));
+                    // No disparar evento aquí, se disparará después si es necesario
                     return response()->json([
                         'message' => 'Solicitud de seguimiento reenviada',
                         'is_following' => false,
@@ -151,6 +151,9 @@ class SocialController extends Controller
         // Actualizamos el estado a aceptado
         $follow->status = 'accepted';
         $follow->save();
+
+        // Disparar evento solo cuando se acepta la solicitud
+        event(new UserFollowed($follow->follower, $this->authenticatedUser()));
 
         return response()->json([
             'message' => 'Has aceptado la solicitud de seguimiento',

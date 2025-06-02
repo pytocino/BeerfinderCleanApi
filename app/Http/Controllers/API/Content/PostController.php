@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PostResource;
 use App\Models\{Post, User, BeerReview, Beer, Location};
 use App\Services\CloudinaryService;
+use App\Services\AutoCreationService;
 use App\Traits\HasUser;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -18,10 +19,12 @@ class PostController extends Controller
     use HasUser;
 
     protected $cloudinaryService;
+    protected $autoCreationService;
 
-    public function __construct(CloudinaryService $cloudinaryService)
+    public function __construct(CloudinaryService $cloudinaryService, AutoCreationService $autoCreationService)
     {
         $this->cloudinaryService = $cloudinaryService;
+        $this->autoCreationService = $autoCreationService;
     }
 
     /**
@@ -69,7 +72,7 @@ class PostController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $this->validatePostData($request);
+        $validated = $this->validatePostData($request, true);
 
         try {
             DB::beginTransaction();
@@ -295,7 +298,12 @@ class PostController extends Controller
             'additional_photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'tags' => 'nullable|array',
             'tags.*.type' => 'required|in:user,beer,location',
-            'tags.*.id' => 'required|integer',
+            // Permitir tanto ID existente como datos para creación
+            'tags.*.id' => 'sometimes|integer',
+            'tags.*.name' => 'sometimes|string|max:255',
+            'tags.*.latitude' => 'sometimes|numeric|between:-90,90',
+            'tags.*.longitude' => 'sometimes|numeric|between:-180,180',
+            'tags.*.address' => 'sometimes|string|max:500',
             'beer_id' => 'nullable|exists:beers,id',
             'location_id' => 'nullable|exists:locations,id',
         ];
@@ -317,7 +325,12 @@ class PostController extends Controller
             'location_id' => 'nullable|exists:locations,id',
             'tags' => 'nullable|array',
             'tags.*.type' => 'required|in:user,beer,location',
-            'tags.*.id' => 'required|integer',
+            // Permitir tanto ID existente como datos para creación
+            'tags.*.id' => 'sometimes|integer',
+            'tags.*.name' => 'sometimes|string|max:255',
+            'tags.*.latitude' => 'sometimes|numeric|between:-90,90',
+            'tags.*.longitude' => 'sometimes|numeric|between:-180,180',
+            'tags.*.address' => 'sometimes|string|max:500',
         ]);
     }
 
@@ -488,7 +501,7 @@ class PostController extends Controller
     }
 
     /**
-     * Procesa las etiquetas de usuarios y cervezas.
+     * Procesa las etiquetas de usuarios, cervezas y ubicaciones.
      */
     private function processTags(array $tags): array
     {
@@ -499,32 +512,81 @@ class PostController extends Controller
         $processedTags = [];
 
         foreach ($tags as $tag) {
-            if (!isset($tag['type'], $tag['id'])) {
+            if (!isset($tag['type'])) {
                 continue;
             }
 
-            // Validar que exista el recurso según el tipo
-            if ($tag['type'] === 'user') {
-                if (User::find($tag['id'])) {
-                    $processedTags[] = [
-                        'type' => 'user',
-                        'id' => (int) $tag['id']
-                    ];
+            try {
+                if ($tag['type'] === 'user') {
+                    // Para usuarios, solo validar que exista el ID
+                    if (isset($tag['id']) && User::find($tag['id'])) {
+                        $processedTags[] = [
+                            'type' => 'user',
+                            'id' => (int) $tag['id']
+                        ];
+                    }
+                } elseif ($tag['type'] === 'beer') {
+                    $beer = null;
+                    
+                    // Si se proporciona un ID, buscar la cerveza existente
+                    if (isset($tag['id'])) {
+                        $beer = Beer::find($tag['id']);
+                    }
+                    
+                    // Si no existe y se proporciona nombre, crear una nueva
+                    if (!$beer && isset($tag['name'])) {
+                        $beerName = $tag['name'];
+                        
+                        $beer = $this->autoCreationService->findOrCreateBeer($beerName);
+                    }
+                    
+                    if ($beer) {
+                        $processedTags[] = [
+                            'type' => 'beer',
+                            'id' => $beer->id
+                        ];
+                    }
+                } elseif ($tag['type'] === 'location') {
+                    $location = null;
+                    
+                    // Si se proporciona un ID, buscar la ubicación existente
+                    if (isset($tag['id'])) {
+                        $location = Location::find($tag['id']);
+                    }
+                    
+                    // Si no existe y se proporciona nombre, crear una nueva
+                    if (!$location && isset($tag['name'])) {
+                        $locationName = $tag['name'];
+                        $latitude = $tag['latitude'] ?? null;
+                        $longitude = $tag['longitude'] ?? null;
+                        $address = $tag['address'] ?? null;
+                        
+                        $location = $this->autoCreationService->findOrCreateLocation(
+                            $locationName,
+                            $latitude,
+                            $longitude
+                        );
+                        
+                        // Si se proporcionó address pero no estaba en la ubicación, actualizarla
+                        if ($address && !$location->address) {
+                            $location->update(['address' => $address]);
+                        }
+                    }
+                    
+                    if ($location) {
+                        $processedTags[] = [
+                            'type' => 'location',
+                            'id' => $location->id
+                        ];
+                    }
                 }
-            } elseif ($tag['type'] === 'beer') {
-                if (Beer::find($tag['id'])) {
-                    $processedTags[] = [
-                        'type' => 'beer',
-                        'id' => (int) $tag['id']
-                    ];
-                }
-            } elseif ($tag['type'] === 'location') {
-                if (Location::find($tag['id'])) {
-                    $processedTags[] = [
-                        'type' => 'location',
-                        'id' => (int) $tag['id']
-                    ];
-                }
+            } catch (\Exception $e) {
+                // Logar el error pero continuar procesando otros tags
+                Log::warning('Error al procesar tag', [
+                    'tag' => $tag,
+                    'error' => $e->getMessage()
+                ]);
+                continue;
             }
         }
 
