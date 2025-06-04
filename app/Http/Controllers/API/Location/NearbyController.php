@@ -56,6 +56,7 @@ class NearbyController extends Controller
             ->join('locations', 'beer_locations.location_id', '=', 'locations.id')
             ->whereNotNull('locations.latitude')
             ->whereNotNull('locations.longitude')
+            ->where('locations.status', 'active')
             ->havingRaw('distance_km <= ?', [$radius])
             ->orderBy('distance_km')
             ->with(['style', 'brewery'])
@@ -113,19 +114,20 @@ class NearbyController extends Controller
         $limit = $validated['limit'] ?? 20;
 
         $query = Location::selectRaw('
-                locations.*,
-                (
-                    6371 * acos(
-                        cos(radians(?)) 
-                        * cos(radians(latitude)) 
-                        * cos(radians(longitude) - radians(?)) 
-                        + sin(radians(?)) 
-                        * sin(radians(latitude))
-                    )
-                ) AS distance_km
+            locations.*,
+            (
+                6371 * acos(
+                cos(radians(?)) 
+                * cos(radians(latitude)) 
+                * cos(radians(longitude) - radians(?)) 
+                + sin(radians(?)) 
+                * sin(radians(latitude))
+                )
+            ) AS distance_km
             ', [$userLat, $userLng, $userLat])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
+            ->where('status', 'active')
             ->havingRaw('distance_km <= ?', [$radius])
             ->orderBy('distance_km');
 
