@@ -95,7 +95,7 @@ class CommentController extends Controller
      */
     public function getPostComments(Request $request, $id): JsonResponse
     {
-        $post = Post::find($id);
+        $post = Post::findOrFail($id);
 
         $comments = Comment::where('post_id', $post->id)
             ->whereNull('parent_id')
